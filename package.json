@@ -1,0 +1,47 @@
+{
+  "name": "taro-aihuashu",
+  "version": "1.0.0",
+  "private": true,
+  "description": "AI 恋爱话术多端项目 (Taro + React + Tailwind CSS)",
+  "templateInfo": {
+    "name": "react",
+    "typescript": false,
+    "css": "sass"
+  },
+  "scripts": {
+    "build:weapp": "taro build --type weapp",
+    "build:h5": "taro build --type h5",
+    "dev:weapp": "npm run build:weapp -- --watch",
+    "dev:h5": "npm run build:h5 -- --watch"
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@babel/runtime": "^7.15.4",
+    "@tarojs/components": "4.1.11",
+    "@tarojs/plugin-framework-react": "4.1.11",
+    "@tarojs/plugin-platform-alipay": "4.1.11",
+    "@tarojs/plugin-platform-h5": "4.1.11",
+    "@tarojs/plugin-platform-weapp": "4.1.11",
+    "@tarojs/react": "4.1.11",
+    "@tarojs/runtime": "4.1.11",
+    "@tarojs/taro": "4.1.11",
+    "lucide-react": "^0.292.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "zustand": "^4.4.7"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.15.5",
+    "@babel/preset-react": "^7.28.5",
+    "@tarojs/cli": "4.1.11",
+    "@tarojs/vite-runner": "4.1.11",
+    "@types/react": "^18.2.37",
+    "@vitejs/plugin-react": "^4.7.0",
+    "babel-preset-taro": "4.1.11",
+    "postcss": "^8.4.31",
+    "sass": "^1.69.5",
+    "tailwindcss": "^3.3.5",
+    "weapp-tailwindcss": "^3.0.0"
+  }
+}
