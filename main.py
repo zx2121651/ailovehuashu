@@ -1,5 +1,6 @@
 import cv2
 import mediapipe as mp
+import mediapipe.python.solutions as solutions
 import numpy as np
 import tkinter as tk
 from tkinter import filedialog, messagebox
@@ -7,6 +8,77 @@ from PIL import Image, ImageTk
 import json
 import time
 import threading
+import math
+
+class OneEuroFilter:
+    def __init__(self, t0, x0, dx0=0.0, min_cutoff=1.0, beta=0.0, d_cutoff=1.0):
+        self.min_cutoff = float(min_cutoff)
+        self.beta = float(beta)
+        self.d_cutoff = float(d_cutoff)
+        self.x_prev = float(x0)
+        self.dx_prev = float(dx0)
+        self.t_prev = float(t0)
+
+    def smoothing_factor(self, t_e, cutoff):
+        r = 2 * math.pi * cutoff * t_e
+        return r / (r + 1)
+
+    def exponential_smoothing(self, a, x, x_prev):
+        return a * x + (1 - a) * x_prev
+
+    def __call__(self, t, x):
+        t_e = t - self.t_prev
+
+        # 避免除以零或过小的时间增量
+        if t_e <= 0:
+            return x
+
+        # 根据截止频率和时间步计算平滑因子
+        a_d = self.smoothing_factor(t_e, self.d_cutoff)
+        dx = (x - self.x_prev) / t_e
+        dx_hat = self.exponential_smoothing(a_d, dx, self.dx_prev)
+
+        # 根据速度调整截止频率
+        cutoff = self.min_cutoff + self.beta * abs(dx_hat)
+        a = self.smoothing_factor(t_e, cutoff)
+        x_hat = self.exponential_smoothing(a, x, self.x_prev)
+
+        # 更新状态
+        self.x_prev = x_hat
+        self.dx_prev = dx_hat
+        self.t_prev = t
+
+        return x_hat
+
+class LandmarkFilter:
+    def __init__(self, min_cutoff=1.0, beta=0.0):
+        self.min_cutoff = min_cutoff
+        self.beta = beta
+        self.filters = {} # key: landmark_idx, value: {'x': filter, 'y': filter, 'z': filter}
+
+    def reset(self):
+        self.filters.clear()
+
+    def process(self, t, landmarks):
+        if not landmarks:
+            return None
+
+        smoothed_landmarks = []
+        for i, lm in enumerate(landmarks):
+            if i not in self.filters:
+                self.filters[i] = {
+                    'x': OneEuroFilter(t, lm['x'], min_cutoff=self.min_cutoff, beta=self.beta),
+                    'y': OneEuroFilter(t, lm['y'], min_cutoff=self.min_cutoff, beta=self.beta),
+                    'z': OneEuroFilter(t, lm['z'], min_cutoff=self.min_cutoff, beta=self.beta)
+                }
+                smoothed_landmarks.append({'x': lm['x'], 'y': lm['y'], 'z': lm['z'], 'v': lm['v']})
+            else:
+                x = self.filters[i]['x'](t, lm['x'])
+                y = self.filters[i]['y'](t, lm['y'])
+                z = self.filters[i]['z'](t, lm['z'])
+                smoothed_landmarks.append({'x': x, 'y': y, 'z': z, 'v': lm['v']})
+
+        return smoothed_landmarks
 
 class MotionCaptureApp:
     def __init__(self, window, window_title):
@@ -22,9 +94,9 @@ class MotionCaptureApp:
         self._canvas_image_id = None
 
         # MediaPipe 初始化
-        self.mp_holistic = mp.solutions.holistic
-        self.mp_drawing = mp.solutions.drawing_utils
-        self.mp_drawing_styles = mp.solutions.drawing_styles
+        self.mp_holistic = solutions.holistic
+        self.mp_drawing = solutions.drawing_utils
+        self.mp_drawing_styles = solutions.drawing_styles
         self.holistic = self.mp_holistic.Holistic(
             min_detection_confidence=0.5,
             min_tracking_confidence=0.5,
@@ -37,6 +109,20 @@ class MotionCaptureApp:
         self.frame_count = 0
         self.start_time = 0
 
+        # 配置状态变量
+        self.param_model_complexity = tk.IntVar(value=1)
+        self.param_min_det_conf = tk.DoubleVar(value=0.5)
+        self.param_min_track_conf = tk.DoubleVar(value=0.5)
+        self.param_enable_smoothing = tk.BooleanVar(value=True)
+        self.param_smooth_cutoff = tk.DoubleVar(value=1.0)
+        self.param_smooth_beta = tk.DoubleVar(value=0.0)
+
+        # 滤波器实例初始化
+        self.face_filter = LandmarkFilter(self.param_smooth_cutoff.get(), self.param_smooth_beta.get())
+        self.pose_filter = LandmarkFilter(self.param_smooth_cutoff.get(), self.param_smooth_beta.get())
+        self.lhand_filter = LandmarkFilter(self.param_smooth_cutoff.get(), self.param_smooth_beta.get())
+        self.rhand_filter = LandmarkFilter(self.param_smooth_cutoff.get(), self.param_smooth_beta.get())
+
         # 构建 UI
         self._build_ui()
 
@@ -44,29 +130,104 @@ class MotionCaptureApp:
         self.window.protocol("WM_DELETE_WINDOW", self.on_closing)
 
     def _build_ui(self):
-        # 顶部控制面板
-        control_frame = tk.Frame(self.window, pady=10)
-        control_frame.pack(side=tk.TOP, fill=tk.X)
+        # 主布局：左右分栏
+        self.paned_window = tk.PanedWindow(self.window, orient=tk.HORIZONTAL)
+        self.paned_window.pack(fill=tk.BOTH, expand=True)
 
-        self.btn_camera = tk.Button(control_frame, text="打开摄像头", width=15, command=self.open_camera)
-        self.btn_camera.pack(side=tk.LEFT, padx=10)
+        # 左侧：画布和底部状态栏
+        self.left_frame = tk.Frame(self.paned_window, bg='black')
+        self.paned_window.add(self.left_frame, minsize=600)
 
-        self.btn_video = tk.Button(control_frame, text="选择本地视频", width=15, command=self.open_video_file)
-        self.btn_video.pack(side=tk.LEFT, padx=10)
+        self.canvas = tk.Canvas(self.left_frame, bg='black', highlightthickness=0)
+        self.canvas.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
 
-        self.btn_toggle = tk.Button(control_frame, text="开始/暂停", width=15, command=self.toggle_play, state=tk.DISABLED)
-        self.btn_toggle.pack(side=tk.LEFT, padx=10)
+        self.status_label = tk.Label(self.left_frame, text="状态: 等待输入", fg="white", bg="#333", anchor="w", padx=10)
+        self.status_label.pack(side=tk.BOTTOM, fill=tk.X)
 
-        self.btn_record = tk.Button(control_frame, text="开始录制 (JSON)", width=20, command=self.toggle_record, state=tk.DISABLED, bg='lightgray')
-        self.btn_record.pack(side=tk.LEFT, padx=10)
+        # 右侧：控制面板
+        self.right_frame = tk.Frame(self.paned_window, width=350, padx=15, pady=15, bg='#f0f0f0')
+        self.paned_window.add(self.right_frame, minsize=350)
 
-        # 状态显示
-        self.status_label = tk.Label(control_frame, text="状态: 等待输入", fg="blue")
-        self.status_label.pack(side=tk.RIGHT, padx=20)
+        # --- 输入控制区 ---
+        tk.Label(self.right_frame, text="【 输入源控制 】", font=("Arial", 12, "bold"), bg='#f0f0f0').pack(pady=(0, 10))
+        btn_frame = tk.Frame(self.right_frame, bg='#f0f0f0')
+        btn_frame.pack(fill=tk.X)
 
-        # 视频画布区域
-        self.canvas = tk.Canvas(self.window, width=800, height=600, bg='black')
-        self.canvas.pack(side=tk.TOP, pady=10, expand=True)
+        self.btn_camera = tk.Button(btn_frame, text="打开摄像头", command=self.open_camera)
+        self.btn_camera.pack(side=tk.LEFT, expand=True, fill=tk.X, padx=2)
+
+        self.btn_video = tk.Button(btn_frame, text="选择本地视频", command=self.open_video_file)
+        self.btn_video.pack(side=tk.LEFT, expand=True, fill=tk.X, padx=2)
+
+        self.btn_toggle = tk.Button(self.right_frame, text="开始/暂停画面", command=self.toggle_play, state=tk.DISABLED, pady=5)
+        self.btn_toggle.pack(fill=tk.X, pady=(5, 15))
+
+        # --- 增强捕捉参数配置区 ---
+        tk.Label(self.right_frame, text="【 捕捉引擎配置 】", font=("Arial", 12, "bold"), bg='#f0f0f0').pack(pady=(10, 5))
+
+        # 1. 模型复杂度
+        tk.Label(self.right_frame, text="MediaPipe 模型复杂度 (高精度=慢)", bg='#f0f0f0', anchor="w").pack(fill=tk.X)
+        complex_frame = tk.Frame(self.right_frame, bg='#f0f0f0')
+        complex_frame.pack(fill=tk.X, pady=2)
+        tk.Radiobutton(complex_frame, text="0(快)", variable=self.param_model_complexity, value=0, command=self.reinit_holistic, bg='#f0f0f0').pack(side=tk.LEFT)
+        tk.Radiobutton(complex_frame, text="1(中)", variable=self.param_model_complexity, value=1, command=self.reinit_holistic, bg='#f0f0f0').pack(side=tk.LEFT)
+        tk.Radiobutton(complex_frame, text="2(准)", variable=self.param_model_complexity, value=2, command=self.reinit_holistic, bg='#f0f0f0').pack(side=tk.LEFT)
+
+        # 2. 置信度阈值
+        tk.Label(self.right_frame, text="检测置信度 (min_detection_confidence)", bg='#f0f0f0', anchor="w").pack(fill=tk.X, pady=(5, 0))
+        det_scale = tk.Scale(self.right_frame, variable=self.param_min_det_conf, from_=0.1, to_=0.9, resolution=0.1, orient=tk.HORIZONTAL, bg='#f0f0f0')
+        det_scale.bind("<ButtonRelease-1>", lambda e: self.reinit_holistic())
+        det_scale.pack(fill=tk.X)
+
+        tk.Label(self.right_frame, text="追踪置信度 (min_tracking_confidence)", bg='#f0f0f0', anchor="w").pack(fill=tk.X)
+        trk_scale = tk.Scale(self.right_frame, variable=self.param_min_track_conf, from_=0.1, to_=0.9, resolution=0.1, orient=tk.HORIZONTAL, bg='#f0f0f0')
+        trk_scale.bind("<ButtonRelease-1>", lambda e: self.reinit_holistic())
+        trk_scale.pack(fill=tk.X)
+
+        # --- 防抖滤波配置区 ---
+        tk.Label(self.right_frame, text="【 OneEuro 防抖滤波 (导出数据) 】", font=("Arial", 12, "bold"), bg='#f0f0f0').pack(pady=(15, 5))
+
+        tk.Checkbutton(self.right_frame, text="启用 3D 坐标数据平滑防抖", variable=self.param_enable_smoothing, bg='#f0f0f0', command=self.update_filter_params).pack(anchor="w")
+
+        tk.Label(self.right_frame, text="最小截止频率 (Min Cutoff) - 越小越平滑但有延迟", bg='#f0f0f0', anchor="w").pack(fill=tk.X, pady=(5, 0))
+        cutoff_scale = tk.Scale(self.right_frame, variable=self.param_smooth_cutoff, from_=0.01, to_=5.0, resolution=0.1, orient=tk.HORIZONTAL, bg='#f0f0f0')
+        cutoff_scale.bind("<ButtonRelease-1>", lambda e: self.update_filter_params())
+        cutoff_scale.pack(fill=tk.X)
+
+        tk.Label(self.right_frame, text="速度系数 (Beta) - 越大对快速运动响应越快", bg='#f0f0f0', anchor="w").pack(fill=tk.X)
+        beta_scale = tk.Scale(self.right_frame, variable=self.param_smooth_beta, from_=0.0, to_=2.0, resolution=0.01, orient=tk.HORIZONTAL, bg='#f0f0f0')
+        beta_scale.bind("<ButtonRelease-1>", lambda e: self.update_filter_params())
+        beta_scale.pack(fill=tk.X)
+
+        # --- 录制导出区 ---
+        tk.Frame(self.right_frame, height=2, bd=1, relief=tk.SUNKEN).pack(fill=tk.X, pady=15)
+        tk.Label(self.right_frame, text="【 数据捕捉录制 】", font=("Arial", 12, "bold"), bg='#f0f0f0').pack(pady=(0, 10))
+
+        self.btn_record = tk.Button(self.right_frame, text="🔴 开始录制 (导出平滑 JSON)", command=self.toggle_record, state=tk.DISABLED, bg='#e0e0e0', font=("Arial", 11, "bold"), pady=10)
+        self.btn_record.pack(fill=tk.X)
+
+    def update_filter_params(self):
+        cutoff = self.param_smooth_cutoff.get()
+        beta = self.param_smooth_beta.get()
+        self.face_filter.min_cutoff = cutoff
+        self.face_filter.beta = beta
+        self.pose_filter.min_cutoff = cutoff
+        self.pose_filter.beta = beta
+        self.lhand_filter.min_cutoff = cutoff
+        self.lhand_filter.beta = beta
+        self.rhand_filter.min_cutoff = cutoff
+        self.rhand_filter.beta = beta
+
+    def reinit_holistic(self):
+        if hasattr(self, 'holistic') and self.holistic is not None:
+            self.holistic.close()
+
+        self.holistic = self.mp_holistic.Holistic(
+            min_detection_confidence=self.param_min_det_conf.get(),
+            min_tracking_confidence=self.param_min_track_conf.get(),
+            model_complexity=self.param_model_complexity.get()
+        )
+        self.status_label.config(text=f"状态: 模型已重置 (复杂={self.param_model_complexity.get()})")
 
     def open_camera(self):
         self._start_video_source(0)
@@ -204,15 +365,30 @@ class MotionCaptureApp:
             self.mp_holistic.HAND_CONNECTIONS
         )
 
-        # 录制数据
+        # 提取关键点并平滑处理
+        t = time.time()
+        raw_face = self._extract_landmarks(results.face_landmarks)
+        raw_pose = self._extract_landmarks(results.pose_landmarks)
+        raw_lhand = self._extract_landmarks(results.left_hand_landmarks)
+        raw_rhand = self._extract_landmarks(results.right_hand_landmarks)
+
+        if self.param_enable_smoothing.get():
+            face_data = self.face_filter.process(t, raw_face)
+            pose_data = self.pose_filter.process(t, raw_pose)
+            lhand_data = self.lhand_filter.process(t, raw_lhand)
+            rhand_data = self.rhand_filter.process(t, raw_rhand)
+        else:
+            face_data, pose_data, lhand_data, rhand_data = raw_face, raw_pose, raw_lhand, raw_rhand
+
+        # 录制数据 (此时记录的为平滑后的数据)
         if self.is_recording:
             frame_data = {
                 "frame_id": self.frame_count,
-                "timestamp": time.time() - self.start_time,
-                "face": self._extract_landmarks(results.face_landmarks),
-                "pose": self._extract_landmarks(results.pose_landmarks),
-                "left_hand": self._extract_landmarks(results.left_hand_landmarks),
-                "right_hand": self._extract_landmarks(results.right_hand_landmarks)
+                "timestamp": t - self.start_time,
+                "face": face_data,
+                "pose": pose_data,
+                "left_hand": lhand_data,
+                "right_hand": rhand_data
             }
             self.recorded_data.append(frame_data)
             self.frame_count += 1
