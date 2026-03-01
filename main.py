@@ -1,6 +1,8 @@
 import cv2
 import mediapipe as mp
 import mediapipe.python.solutions as solutions
+from mediapipe.tasks import python
+from mediapipe.tasks.python import vision
 import numpy as np
 import tkinter as tk
 from tkinter import filedialog, messagebox
@@ -117,6 +119,14 @@ class MotionCaptureApp:
         self.param_smooth_cutoff = tk.DoubleVar(value=1.0)
         self.param_smooth_beta = tk.DoubleVar(value=0.0)
 
+        # 捕捉模式变量
+        self.param_capture_mode = tk.StringVar(value="single_holistic")
+        self.param_max_num_poses = tk.IntVar(value=3)
+
+        # MediaPipe PoseLandmarker (用于多人) 初始化
+        self.pose_landmarker = None
+        self._init_pose_landmarker()
+
         # 滤波器实例初始化
         self.face_filter = LandmarkFilter(self.param_smooth_cutoff.get(), self.param_smooth_beta.get())
         self.pose_filter = LandmarkFilter(self.param_smooth_cutoff.get(), self.param_smooth_beta.get())
@@ -128,6 +138,21 @@ class MotionCaptureApp:
 
         # 窗口关闭事件
         self.window.protocol("WM_DELETE_WINDOW", self.on_closing)
+
+    def _init_pose_landmarker(self):
+        base_options = python.BaseOptions(model_asset_path='pose_landmarker_full.task')
+        options = vision.PoseLandmarkerOptions(
+            base_options=base_options,
+            running_mode=vision.RunningMode.VIDEO,
+            num_poses=self.param_max_num_poses.get(),
+            min_pose_detection_confidence=self.param_min_det_conf.get(),
+            min_pose_presence_confidence=self.param_min_track_conf.get(),
+            min_tracking_confidence=self.param_min_track_conf.get(),
+            output_segmentation_masks=False
+        )
+        if self.pose_landmarker is not None:
+            self.pose_landmarker.close()
+        self.pose_landmarker = vision.PoseLandmarker.create_from_options(options)
 
     def _build_ui(self):
         # 主布局：左右分栏
@@ -148,8 +173,16 @@ class MotionCaptureApp:
         self.right_frame = tk.Frame(self.paned_window, width=350, padx=15, pady=15, bg='#f0f0f0')
         self.paned_window.add(self.right_frame, minsize=350)
 
+        # --- 模式选择区 ---
+        tk.Label(self.right_frame, text="【 捕捉模式 】", font=("Arial", 12, "bold"), bg='#f0f0f0', fg='#d32f2f').pack(pady=(0, 5))
+        mode_frame = tk.Frame(self.right_frame, bg='#f0f0f0')
+        mode_frame.pack(fill=tk.X, pady=(0, 10))
+        tk.Radiobutton(mode_frame, text="单人精细捕捉 (面部+双手+全身)", variable=self.param_capture_mode, value="single_holistic", command=self.on_mode_change, bg='#f0f0f0', font=("Arial", 9, "bold")).pack(anchor="w")
+        tk.Radiobutton(mode_frame, text="多人骨骼捕捉 (最多N人身体)", variable=self.param_capture_mode, value="multi_pose", command=self.on_mode_change, bg='#f0f0f0', font=("Arial", 9, "bold")).pack(anchor="w")
+
         # --- 输入控制区 ---
-        tk.Label(self.right_frame, text="【 输入源控制 】", font=("Arial", 12, "bold"), bg='#f0f0f0').pack(pady=(0, 10))
+        tk.Frame(self.right_frame, height=2, bd=1, relief=tk.SUNKEN).pack(fill=tk.X, pady=5)
+        tk.Label(self.right_frame, text="【 输入源控制 】", font=("Arial", 12, "bold"), bg='#f0f0f0').pack(pady=(5, 10))
         btn_frame = tk.Frame(self.right_frame, bg='#f0f0f0')
         btn_frame.pack(fill=tk.X)
 
@@ -183,6 +216,12 @@ class MotionCaptureApp:
         trk_scale = tk.Scale(self.right_frame, variable=self.param_min_track_conf, from_=0.1, to_=0.9, resolution=0.1, orient=tk.HORIZONTAL, bg='#f0f0f0')
         trk_scale.bind("<ButtonRelease-1>", lambda e: self.reinit_holistic())
         trk_scale.pack(fill=tk.X)
+
+        # 多人模式参数
+        tk.Label(self.right_frame, text="最大追踪人数 (仅多人模式)", bg='#f0f0f0', anchor="w", fg='#1976d2').pack(fill=tk.X)
+        ppl_scale = tk.Scale(self.right_frame, variable=self.param_max_num_poses, from_=1, to_=5, resolution=1, orient=tk.HORIZONTAL, bg='#f0f0f0')
+        ppl_scale.bind("<ButtonRelease-1>", lambda e: self._init_pose_landmarker())
+        ppl_scale.pack(fill=tk.X)
 
         # --- 防抖滤波配置区 ---
         tk.Label(self.right_frame, text="【 OneEuro 防抖滤波 (导出数据) 】", font=("Arial", 12, "bold"), bg='#f0f0f0').pack(pady=(15, 5))
@@ -218,15 +257,22 @@ class MotionCaptureApp:
         self.rhand_filter.min_cutoff = cutoff
         self.rhand_filter.beta = beta
 
+    def on_mode_change(self):
+        mode = self.param_capture_mode.get()
+        if mode == "single_holistic":
+            self.status_label.config(text="状态: 已切换到【单人精细捕捉】模式")
+        else:
+            self.status_label.config(text="状态: 已切换到【多人骨骼捕捉】模式")
+
     def reinit_holistic(self):
         if hasattr(self, 'holistic') and self.holistic is not None:
             self.holistic.close()
-
         self.holistic = self.mp_holistic.Holistic(
             min_detection_confidence=self.param_min_det_conf.get(),
             min_tracking_confidence=self.param_min_track_conf.get(),
             model_complexity=self.param_model_complexity.get()
         )
+        self._init_pose_landmarker()
         self.status_label.config(text=f"状态: 模型已重置 (复杂={self.param_model_complexity.get()})")
 
     def open_camera(self):
@@ -318,80 +364,91 @@ class MotionCaptureApp:
 
         self.status_label.config(text="状态: 准备就绪")
 
-    def _extract_landmarks(self, landmark_list):
+    def _extract_landmarks(self, landmark_list, from_task_api=False):
         """将 MediaPipe 的 landmarks 转换为字典列表，提取 x, y, z 和可见度"""
         if not landmark_list:
             return None
-        return [{"x": lm.x, "y": lm.y, "z": lm.z, "v": lm.visibility} for lm in landmark_list.landmark]
+        if from_task_api:
+            return [{"x": lm.x, "y": lm.y, "z": lm.z, "v": lm.visibility if hasattr(lm, 'visibility') else 1.0} for lm in landmark_list]
+        else:
+            return [{"x": lm.x, "y": lm.y, "z": lm.z, "v": lm.visibility if hasattr(lm, 'visibility') else 1.0} for lm in landmark_list.landmark]
 
-    def process_frame(self, frame):
-        """使用 MediaPipe Holistic 处理视频帧"""
-        # 将 BGR 转换为 RGB
+    def process_frame(self, frame, timestamp_ms):
         image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         image.flags.writeable = False
-
-        # 执行检测
-        results = self.holistic.process(image)
-
-        image.flags.writeable = True
-        image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
-
-        # 在图像上绘制特征点
-        # 1. 面部网格
-        self.mp_drawing.draw_landmarks(
-            image,
-            results.face_landmarks,
-            self.mp_holistic.FACEMESH_TESSELATION,
-            landmark_drawing_spec=None,
-            connection_drawing_spec=self.mp_drawing_styles.get_default_face_mesh_tesselation_style()
-        )
-        # 2. 姿态（骨骼）
-        self.mp_drawing.draw_landmarks(
-            image,
-            results.pose_landmarks,
-            self.mp_holistic.POSE_CONNECTIONS,
-            landmark_drawing_spec=self.mp_drawing_styles.get_default_pose_landmarks_style()
-        )
-        # 3. 左手
-        self.mp_drawing.draw_landmarks(
-            image,
-            results.left_hand_landmarks,
-            self.mp_holistic.HAND_CONNECTIONS
-        )
-        # 4. 右手
-        self.mp_drawing.draw_landmarks(
-            image,
-            results.right_hand_landmarks,
-            self.mp_holistic.HAND_CONNECTIONS
-        )
-
-        # 提取关键点并平滑处理
         t = time.time()
-        raw_face = self._extract_landmarks(results.face_landmarks)
-        raw_pose = self._extract_landmarks(results.pose_landmarks)
-        raw_lhand = self._extract_landmarks(results.left_hand_landmarks)
-        raw_rhand = self._extract_landmarks(results.right_hand_landmarks)
 
-        if self.param_enable_smoothing.get():
-            face_data = self.face_filter.process(t, raw_face)
-            pose_data = self.pose_filter.process(t, raw_pose)
-            lhand_data = self.lhand_filter.process(t, raw_lhand)
-            rhand_data = self.rhand_filter.process(t, raw_rhand)
+        if self.param_capture_mode.get() == "single_holistic":
+            # 模式 1：单人全身超精细
+            results = self.holistic.process(image)
+            image.flags.writeable = True
+            image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+
+            self.mp_drawing.draw_landmarks(
+                image, results.face_landmarks, self.mp_holistic.FACEMESH_TESSELATION,
+                landmark_drawing_spec=None, connection_drawing_spec=self.mp_drawing_styles.get_default_face_mesh_tesselation_style()
+            )
+            self.mp_drawing.draw_landmarks(
+                image, results.pose_landmarks, self.mp_holistic.POSE_CONNECTIONS,
+                landmark_drawing_spec=self.mp_drawing_styles.get_default_pose_landmarks_style()
+            )
+            self.mp_drawing.draw_landmarks(image, results.left_hand_landmarks, self.mp_holistic.HAND_CONNECTIONS)
+            self.mp_drawing.draw_landmarks(image, results.right_hand_landmarks, self.mp_holistic.HAND_CONNECTIONS)
+
+            raw_face = self._extract_landmarks(results.face_landmarks)
+            raw_pose = self._extract_landmarks(results.pose_landmarks)
+            raw_lhand = self._extract_landmarks(results.left_hand_landmarks)
+            raw_rhand = self._extract_landmarks(results.right_hand_landmarks)
+
+            if self.param_enable_smoothing.get():
+                face_data = self.face_filter.process(t, raw_face)
+                pose_data = self.pose_filter.process(t, raw_pose)
+                lhand_data = self.lhand_filter.process(t, raw_lhand)
+                rhand_data = self.rhand_filter.process(t, raw_rhand)
+            else:
+                face_data, pose_data, lhand_data, rhand_data = raw_face, raw_pose, raw_lhand, raw_rhand
+
+            if self.is_recording:
+                self.recorded_data.append({
+                    "frame_id": self.frame_count, "timestamp": t - self.start_time,
+                    "face": face_data, "pose": pose_data, "left_hand": lhand_data, "right_hand": rhand_data,
+                    "people_poses": None # 区分模式
+                })
+                self.frame_count += 1
+
         else:
-            face_data, pose_data, lhand_data, rhand_data = raw_face, raw_pose, raw_lhand, raw_rhand
+            # 模式 2：多人骨骼姿态
+            mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=image)
+            results = self.pose_landmarker.detect_for_video(mp_image, int(timestamp_ms))
+            image.flags.writeable = True
+            image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
 
-        # 录制数据 (此时记录的为平滑后的数据)
-        if self.is_recording:
-            frame_data = {
-                "frame_id": self.frame_count,
-                "timestamp": t - self.start_time,
-                "face": face_data,
-                "pose": pose_data,
-                "left_hand": lhand_data,
-                "right_hand": rhand_data
-            }
-            self.recorded_data.append(frame_data)
-            self.frame_count += 1
+            all_poses_data = []
+
+            if results.pose_landmarks:
+                for i, pose_landmarks in enumerate(results.pose_landmarks):
+                    # 绘制每个人
+                    proto_landmarks = mp.framework.formats.landmark_pb2.NormalizedLandmarkList()
+                    proto_landmarks.landmark.extend([
+                        mp.framework.formats.landmark_pb2.NormalizedLandmark(x=lm.x, y=lm.y, z=lm.z, visibility=lm.visibility if hasattr(lm, 'visibility') else 1.0)
+                        for lm in pose_landmarks
+                    ])
+                    self.mp_drawing.draw_landmarks(
+                        image, proto_landmarks, mp.solutions.pose.POSE_CONNECTIONS,
+                        landmark_drawing_spec=self.mp_drawing_styles.get_default_pose_landmarks_style()
+                    )
+
+                    # 提取数据 (注意多人模式的防抖比较复杂，因为每次检测的 index 不一定对应同一个人，所以这里多人模式暂时跳过防抖以避免幽灵重影)
+                    pose_data = self._extract_landmarks(pose_landmarks, from_task_api=True)
+                    all_poses_data.append(pose_data)
+
+            if self.is_recording:
+                self.recorded_data.append({
+                    "frame_id": self.frame_count, "timestamp": t - self.start_time,
+                    "face": None, "pose": None, "left_hand": None, "right_hand": None,
+                    "people_poses": all_poses_data
+                })
+                self.frame_count += 1
 
         return image
 
@@ -400,7 +457,9 @@ class MotionCaptureApp:
             ret, frame = self.vid.read()
             if ret:
                 # 处理图像
-                processed_frame = self.process_frame(frame)
+                timestamp_ms = self.vid.get(cv2.CAP_PROP_POS_MSEC)
+                if timestamp_ms <= 0: timestamp_ms = time.time() * 1000
+                processed_frame = self.process_frame(frame, timestamp_ms)
 
                 # 转换图像以便在 Tkinter 中显示
                 cv2image = cv2.cvtColor(processed_frame, cv2.COLOR_BGR2RGB)
