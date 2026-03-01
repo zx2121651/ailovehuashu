@@ -11,6 +11,7 @@ import json
 import time
 import threading
 import math
+from bvh_exporter import BVHExporter
 
 class OneEuroFilter:
     def __init__(self, t0, x0, dx0=0.0, min_cutoff=1.0, beta=0.0, d_cutoff=1.0):
@@ -240,10 +241,19 @@ class MotionCaptureApp:
 
         # --- 录制导出区 ---
         tk.Frame(self.right_frame, height=2, bd=1, relief=tk.SUNKEN).pack(fill=tk.X, pady=15)
-        tk.Label(self.right_frame, text="【 数据捕捉录制 】", font=("Arial", 12, "bold"), bg='#f0f0f0').pack(pady=(0, 10))
+        tk.Label(self.right_frame, text="【 数据捕捉录制 & 导出 】", font=("Arial", 12, "bold"), bg='#f0f0f0').pack(pady=(0, 10))
 
-        self.btn_record = tk.Button(self.right_frame, text="🔴 开始录制 (导出平滑 JSON)", command=self.toggle_record, state=tk.DISABLED, bg='#e0e0e0', font=("Arial", 11, "bold"), pady=10)
+        self.btn_record = tk.Button(self.right_frame, text="🔴 开始动作录制", command=self.toggle_record, state=tk.DISABLED, bg='#e0e0e0', font=("Arial", 11, "bold"), pady=8)
         self.btn_record.pack(fill=tk.X)
+
+        export_btn_frame = tk.Frame(self.right_frame, bg='#f0f0f0')
+        export_btn_frame.pack(fill=tk.X, pady=(5, 0))
+
+        self.btn_export_json = tk.Button(export_btn_frame, text="导出 JSON", command=lambda: self.export_data('json'), state=tk.DISABLED)
+        self.btn_export_json.pack(side=tk.LEFT, expand=True, fill=tk.X, padx=2)
+
+        self.btn_export_bvh = tk.Button(export_btn_frame, text="导出 BVH (动画标准)", command=lambda: self.export_data('bvh'), state=tk.DISABLED)
+        self.btn_export_bvh.pack(side=tk.LEFT, expand=True, fill=tk.X, padx=2)
 
     def update_filter_params(self):
         cutoff = self.param_smooth_cutoff.get()
@@ -328,39 +338,79 @@ class MotionCaptureApp:
             self.recorded_data = []
             self.frame_count = 0
             self.start_time = time.time()
-            self.btn_record.config(text="停止录制并导出", bg='red', fg='white')
+            self.btn_record.config(text="⏹ 停止录制", bg='red', fg='white')
+            self.btn_export_json.config(state=tk.DISABLED)
+            self.btn_export_bvh.config(state=tk.DISABLED)
             self.status_label.config(text="状态: 录制中...", fg="red")
         else:
-            # 停止录制并导出
+            # 停止录制
             self.is_recording = False
-            self.btn_record.config(text="开始录制 (JSON)", bg='lightgray', fg='black')
-            self.status_label.config(text="状态: 录制停止，正在导出...", fg="blue")
-            self.export_data()
+            self.btn_record.config(text="🔴 重新开始录制", bg='lightgray', fg='black')
 
-    def export_data(self):
+            if self.frame_count > 0:
+                self.btn_export_json.config(state=tk.NORMAL)
+                # BVH 导出当前只支持单人模式的骨骼数据，或者是多人模式的第一个人
+                self.btn_export_bvh.config(state=tk.NORMAL)
+                self.status_label.config(text=f"状态: 录制已停止，包含 {self.frame_count} 帧。请选择导出格式", fg="blue")
+            else:
+                self.status_label.config(text="状态: 录制停止 (无数据)")
+
+    def export_data(self, fmt='json'):
         if not self.recorded_data:
             messagebox.showinfo("提示", "没有捕捉到任何数据")
-            self.status_label.config(text="状态: 准备就绪")
             return
 
-        save_path = filedialog.asksaveasfilename(
-            defaultextension=".json",
-            initialfile=f"motion_capture_{int(time.time())}.json",
-            title="保存捕捉数据",
-            filetypes=(("JSON files", "*.json"), ("All files", "*.*"))
-        )
+        fps = self.frame_count / (time.time() - self.start_time) if self.frame_count > 0 else 30.0
 
-        if save_path:
-            try:
-                with open(save_path, 'w', encoding='utf-8') as f:
-                    json.dump({
-                        "frames": self.frame_count,
-                        "fps": self.frame_count / (time.time() - self.start_time),
-                        "data": self.recorded_data
-                    }, f)
-                messagebox.showinfo("成功", f"数据已成功导出至:\n{save_path}")
-            except Exception as e:
-                messagebox.showerror("错误", f"导出数据失败:\n{str(e)}")
+        if fmt == 'json':
+            save_path = filedialog.asksaveasfilename(
+                defaultextension=".json",
+                initialfile=f"mocap_{int(time.time())}.json",
+                title="保存 JSON 数据",
+                filetypes=(("JSON files", "*.json"), ("All files", "*.*"))
+            )
+            if save_path:
+                try:
+                    with open(save_path, 'w', encoding='utf-8') as f:
+                        json.dump({
+                            "frames": self.frame_count,
+                            "fps": fps,
+                            "data": self.recorded_data
+                        }, f)
+                    messagebox.showinfo("成功", f"JSON 已成功导出:\n{save_path}")
+                except Exception as e:
+                    messagebox.showerror("错误", f"导出 JSON 失败:\n{str(e)}")
+
+        elif fmt == 'bvh':
+            save_path = filedialog.asksaveasfilename(
+                defaultextension=".bvh",
+                initialfile=f"mocap_{int(time.time())}.bvh",
+                title="保存 BVH 动画",
+                filetypes=(("BVH files", "*.bvh"), ("All files", "*.*"))
+            )
+            if save_path:
+                try:
+                    # 提取纯 pose 的数组序列
+                    pose_sequence = []
+                    for frame in self.recorded_data:
+                        if self.param_capture_mode.get() == 'single_holistic':
+                            pose_sequence.append(frame.get("pose"))
+                        else:
+                            # 多人模式默认导出第一个人（Index 0）作为主角色
+                            poses = frame.get("people_poses")
+                            if poses and len(poses) > 0:
+                                pose_sequence.append(poses[0])
+                            else:
+                                pose_sequence.append(None)
+
+                    exporter = BVHExporter()
+                    bvh_content = exporter.convert_pose_frames_to_bvh(pose_sequence, fps=fps)
+
+                    with open(save_path, 'w', encoding='utf-8') as f:
+                        f.write(bvh_content)
+                    messagebox.showinfo("成功", f"BVH 动画已成功导出:\n{save_path}")
+                except Exception as e:
+                    messagebox.showerror("错误", f"导出 BVH 失败:\n{str(e)}")
 
         self.status_label.config(text="状态: 准备就绪")
 
