@@ -1,6 +1,5 @@
 import cv2
 import mediapipe as mp
-import mediapipe.python.solutions as solutions
 from mediapipe.tasks import python
 from mediapipe.tasks.python import vision
 import numpy as np
@@ -11,7 +10,11 @@ import json
 import time
 import threading
 import math
+import os
+import urllib.request
 from bvh_exporter import BVHExporter
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+import matplotlib.pyplot as plt
 
 class OneEuroFilter:
     def __init__(self, t0, x0, dx0=0.0, min_cutoff=1.0, beta=0.0, d_cutoff=1.0):
@@ -87,7 +90,7 @@ class MotionCaptureApp:
     def __init__(self, window, window_title):
         self.window = window
         self.window.title(window_title)
-        self.window.geometry("1000x700")
+        self.window.geometry("1200x800")
 
         # 视频/摄像头相关状态
         self.vid = None
@@ -97,9 +100,9 @@ class MotionCaptureApp:
         self._canvas_image_id = None
 
         # MediaPipe 初始化
-        self.mp_holistic = solutions.holistic
-        self.mp_drawing = solutions.drawing_utils
-        self.mp_drawing_styles = solutions.drawing_styles
+        self.mp_holistic = mp.solutions.holistic
+        self.mp_drawing = mp.solutions.drawing_utils
+        self.mp_drawing_styles = mp.solutions.drawing_styles
         self.holistic = self.mp_holistic.Holistic(
             min_detection_confidence=0.5,
             min_tracking_confidence=0.5,
@@ -141,7 +144,18 @@ class MotionCaptureApp:
         self.window.protocol("WM_DELETE_WINDOW", self.on_closing)
 
     def _init_pose_landmarker(self):
-        base_options = python.BaseOptions(model_asset_path='pose_landmarker_full.task')
+        model_path = 'pose_landmarker_full.task'
+        if not os.path.exists(model_path):
+            print("Downloading multi-person pose landmarker model...")
+            url = "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_full/float16/1/pose_landmarker_full.task"
+            try:
+                urllib.request.urlretrieve(url, model_path)
+                print("Model downloaded successfully.")
+            except Exception as e:
+                print(f"Error downloading model: {e}")
+                return
+
+        base_options = python.BaseOptions(model_asset_path=model_path)
         options = vision.PoseLandmarkerOptions(
             base_options=base_options,
             running_mode=vision.RunningMode.VIDEO,
@@ -155,19 +169,87 @@ class MotionCaptureApp:
             self.pose_landmarker.close()
         self.pose_landmarker = vision.PoseLandmarker.create_from_options(options)
 
+    def _init_3d_plot(self):
+        self.fig = plt.Figure(figsize=(5, 4), dpi=100)
+        self.fig.patch.set_facecolor('black')
+        self.ax = self.fig.add_subplot(111, projection='3d')
+        self.ax.set_facecolor('black')
+
+        # 隐藏坐标轴
+        self.ax.grid(False)
+        self.ax.set_xticks([])
+        self.ax.set_yticks([])
+        self.ax.set_zticks([])
+        self.ax.axis('off')
+
+        # 设置视角范围
+        self.ax.set_xlim([-1.0, 1.0])
+        self.ax.set_ylim([1.0, -1.0]) # 反转 Y 轴，匹配人眼直觉
+        self.ax.set_zlim([-1.0, 1.0])
+
+        # MediaPipe 姿态拓扑连接线
+        self.pose_connections = [
+            (11, 12), (11, 13), (13, 15), (12, 14), (14, 16), # 手臂与肩
+            (11, 23), (12, 24), (23, 24),                     # 躯干
+            (23, 25), (24, 26), (25, 27), (26, 28),           # 腿部
+            (0, 1), (1, 2), (2, 3), (3, 7),                   # 脸部简化(左)
+            (0, 4), (4, 5), (5, 6), (6, 8)                    # 脸部简化(右)
+        ]
+
+        # 初始化 3D 线段对象
+        self.lines_3d = []
+        for _ in self.pose_connections:
+            line, = self.ax.plot([0, 0], [0, 0], [0, 0], c='cyan', lw=2)
+            self.lines_3d.append(line)
+
+        self.scatter_3d = self.ax.scatter([], [], [], c='magenta', s=20)
+
+        # 嵌入 Tkinter
+        self.plot_canvas = FigureCanvasTkAgg(self.fig, master=self.left_frame)
+        self.plot_canvas.draw()
+
+        # 将 3D 画布放入 left_frame 的下半部分
+        self.left_frame.add(self.plot_canvas.get_tk_widget(), minsize=350)
+
+    def _update_3d_plot(self, pose_data):
+        if not pose_data or len(pose_data) < 33:
+            return
+
+        # 提取坐标 (注意：MediaPipe 的坐标默认原点在左上角，我们在这里做一个简单的居中平移)
+        xs = [p['x'] - 0.5 for p in pose_data]
+        ys = [p['y'] - 0.5 for p in pose_data]
+        zs = [p['z'] for p in pose_data]
+
+        # 更新关节点散点
+        self.scatter_3d._offsets3d = (xs, ys, zs)
+
+        # 更新连接线
+        for i, connection in enumerate(self.pose_connections):
+            start_idx, end_idx = connection
+            self.lines_3d[i].set_data(
+                [xs[start_idx], xs[end_idx]],
+                [ys[start_idx], ys[end_idx]]
+            )
+            self.lines_3d[i].set_3d_properties([zs[start_idx], zs[end_idx]])
+
+        self.plot_canvas.draw_idle()
+
     def _build_ui(self):
         # 主布局：左右分栏
         self.paned_window = tk.PanedWindow(self.window, orient=tk.HORIZONTAL)
         self.paned_window.pack(fill=tk.BOTH, expand=True)
 
-        # 左侧：画布和底部状态栏
-        self.left_frame = tk.Frame(self.paned_window, bg='black')
+        # 左侧：分上下两层 (上面 2D 视频，下面 3D 骨架)
+        self.left_frame = tk.PanedWindow(self.paned_window, orient=tk.VERTICAL, bg='black')
         self.paned_window.add(self.left_frame, minsize=600)
 
         self.canvas = tk.Canvas(self.left_frame, bg='black', highlightthickness=0)
-        self.canvas.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+        self.left_frame.add(self.canvas, minsize=350)
 
-        self.status_label = tk.Label(self.left_frame, text="状态: 等待输入", fg="white", bg="#333", anchor="w", padx=10)
+        # 3D 绘图区 (Matplotlib)
+        self._init_3d_plot()
+
+        self.status_label = tk.Label(self.window, text="状态: 等待输入", fg="white", bg="#333", anchor="w", padx=10)
         self.status_label.pack(side=tk.BOTTOM, fill=tk.X)
 
         # 右侧：控制面板
@@ -466,6 +548,10 @@ class MotionCaptureApp:
                 })
                 self.frame_count += 1
 
+            # 更新 3D 预览（主视角人）
+            if pose_data:
+                self._update_3d_plot(pose_data)
+
         else:
             # 模式 2：多人骨骼姿态
             mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=image)
@@ -491,6 +577,10 @@ class MotionCaptureApp:
                     # 提取数据 (注意多人模式的防抖比较复杂，因为每次检测的 index 不一定对应同一个人，所以这里多人模式暂时跳过防抖以避免幽灵重影)
                     pose_data = self._extract_landmarks(pose_landmarks, from_task_api=True)
                     all_poses_data.append(pose_data)
+
+            # 更新 3D 预览（渲染检测到的第一个人）
+            if all_poses_data and len(all_poses_data) > 0:
+                self._update_3d_plot(all_poses_data[0])
 
             if self.is_recording:
                 self.recorded_data.append({
