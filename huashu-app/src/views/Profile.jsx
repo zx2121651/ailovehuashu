@@ -16,11 +16,11 @@ export default function Profile() {
   const [isPointsDrawerOpen, setIsPointsDrawerOpen] = useState(false);
 
   return (
-    <div className="h-full flex flex-col bg-[#F5F7FA] animate-in fade-in duration-300 relative">
-      <div className="bg-gradient-to-b from-pink-100/80 to-[#F5F7FA] px-5 pt-10 pb-2 relative z-10">
+    <div className="h-full flex flex-col bg-transparent animate-in fade-in duration-300 relative">
+      <div className="bg-gradient-to-b from-pink-200/40 to-[#F5F7FA] px-5 pt-10 pb-2 relative z-10">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4 cursor-pointer group" onClick={() => setIsEditProfileOpen(true)}>
-            <div className="w-[68px] h-[68px] bg-white p-1 rounded-full shadow-md relative overflow-hidden group-hover:scale-105 transition-transform">
+            <div className="w-[68px] h-[68px] love-card p-1 rounded-full shadow-md relative overflow-hidden group-hover:scale-105 transition-transform">
               <img src={userProfile.avatar} className="w-full h-full rounded-full object-cover" alt="User" />
               <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-full">
                 <Edit3 size={16} className="text-white" />
@@ -37,15 +37,15 @@ export default function Profile() {
                    </span>
                 )}
               </div>
-              <p className="text-[11px] text-gray-500 mt-1.5 flex items-center bg-white/60 w-max px-2.5 py-0.5 rounded-full border border-white/40 shadow-sm">
+              <p className="text-[11px] text-gray-500 mt-1.5 flex items-center love-card/60 w-max px-2.5 py-0.5 rounded-full border border-white/40 shadow-sm">
                 ID: {userProfile.id} <Copy size={10} className="ml-1 cursor-pointer hover:text-pink-500" onClick={(e) => { e.stopPropagation(); handleCopy(null, userProfile.id); }} />
               </p>
             </div>
           </div>
-          <div onClick={() => setShowSettings(true)} className="text-gray-600 cursor-pointer bg-white/50 p-2 rounded-full shadow-sm backdrop-blur-sm hover:text-pink-500 transition-colors"><Settings size={20} /></div>
+          <div onClick={() => setShowSettings(true)} className="text-gray-600 cursor-pointer love-card/50 p-2 rounded-full shadow-sm backdrop-blur-sm hover:text-pink-500 transition-colors"><Settings size={20} /></div>
         </div>
 
-        <div className="flex justify-around bg-white rounded-[1.25rem] p-4 shadow-sm mt-5 mb-1 border border-white/50">
+        <div className="flex justify-around love-card rounded-[1.25rem] p-4 shadow-sm mt-5 mb-1 border border-white/50">
           <div className="text-center flex flex-col items-center">
             <div className="font-extrabold text-[20px] text-gray-800">{userProfile.daysLearned}<span className="text-[10px] text-gray-400 font-normal ml-0.5">天</span></div>
             <div className="text-[11px] text-gray-500 mt-0.5 font-medium">累计学习</div>
@@ -102,7 +102,7 @@ export default function Profile() {
           </div>
         </div>
 
-        <div className="bg-white rounded-[1.25rem] shadow-sm p-4 mb-4 border border-gray-50">
+        <div className="love-card rounded-[1.25rem] shadow-sm p-4 mb-4 border border-gray-50">
           <h3 className="text-[13px] font-bold text-gray-800 mb-3 flex items-center"><BookOpen size={16} className="text-indigo-500 mr-1.5" /> 我的内容</h3>
           <div className="grid grid-cols-4 gap-4">
             {[
@@ -112,14 +112,14 @@ export default function Profile() {
               { id: 'notes', icon: <FileText size={20} className="text-orange-500" />, label: '错题本' }
             ].map((item, i) => (
               <div key={i} onClick={() => setActiveServicePage({ id: item.id })} className="flex flex-col items-center justify-center cursor-pointer active:opacity-70 transition-opacity">
-                <div className="bg-gray-50 p-2.5 rounded-full mb-1.5 border border-gray-100/80">{item.icon}</div>
+                <div className="bg-transparent p-2.5 rounded-full mb-1.5 border border-transparent/80">{item.icon}</div>
                 <span className="text-[11px] text-gray-600 font-medium">{item.label}</span>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="bg-white rounded-[1.25rem] shadow-sm p-4 mb-4 border border-gray-50">
+        <div className="love-card rounded-[1.25rem] shadow-sm p-4 mb-4 border border-gray-50">
           <h3 className="text-[13px] font-bold text-gray-800 mb-3 flex items-center"><Sparkles size={16} className="text-pink-500 mr-1.5" /> 核心服务</h3>
           <div className="grid grid-cols-4 gap-4">
             {[
@@ -129,7 +129,7 @@ export default function Profile() {
               { id: 'support', icon: <Headset size={20} className="text-orange-500" />, label: '专属客服' }
             ].map((item, i) => (
               <div key={i} onClick={() => item.id === 'distributor' ? setActiveTab('distributor') : setActiveServicePage({ id: item.id })} className="flex flex-col items-center justify-center cursor-pointer active:opacity-70 transition-opacity">
-                <div className="bg-gray-50 p-2.5 rounded-full mb-1.5 border border-gray-100/80">{item.icon}</div>
+                <div className="bg-transparent p-2.5 rounded-full mb-1.5 border border-transparent/80">{item.icon}</div>
                 <span className="text-[11px] text-gray-600 font-medium">{item.label}</span>
               </div>
             ))}
@@ -148,7 +148,7 @@ export default function Profile() {
           </div>
         )}
 
-        <div className="bg-white rounded-[1.25rem] shadow-sm p-1 border border-gray-50">
+        <div className="love-card rounded-[1.25rem] shadow-sm p-1 border border-gray-50">
           <ProfileListItem icon={<Award size={18} className="text-yellow-500" />} title="我的特权" subtitle="去查看" onClick={() => setShowVipModal(true)} />
           <ProfileListItem icon={<HelpCircle size={18} className="text-gray-500" />} title="帮助与反馈" border={false} onClick={() => setActiveServicePage({ id: 'feedback' })} />
         </div>

@@ -135,7 +135,7 @@ export default function Discover() {
 
   if (loading && categories.length === 0) {
     return (
-      <div className="h-full flex items-center justify-center bg-white">
+      <div className="h-full flex items-center justify-center love-card">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-500 mx-auto"></div>
           <p className="text-gray-500 mt-4 text-sm">加载中...</p>
@@ -145,8 +145,8 @@ export default function Discover() {
   }
 
   return (
-    <div className="h-full flex flex-col bg-white animate-in fade-in slide-in-from-right-4 duration-300 relative">
-      <div className="bg-white px-5 pt-8 pb-3 z-30 shadow-sm relative flex items-center border-b border-gray-100">
+    <div className="h-full flex flex-col love-card animate-in fade-in slide-in-from-right-4 duration-300 relative">
+      <div className="love-card px-5 pt-8 pb-3 z-30 shadow-sm relative flex items-center border-b border-transparent">
         <div className="relative flex-1">
            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><Search size={16} className={`transition-colors ${isSearchFocused ? 'text-pink-500' : 'text-gray-400'}`} /></div>
            <input
@@ -164,7 +164,7 @@ export default function Discover() {
       {isSearchFocused && !searchQuery && (
         <>
           <div className="absolute inset-0 bg-black/20 z-20 top-[68px] animate-in fade-in duration-200"></div>
-          <div className="absolute top-[68px] left-0 right-0 bg-white z-30 p-5 shadow-lg border-b border-gray-100 rounded-b-3xl animate-in slide-in-from-top-2 duration-200">
+          <div className="absolute top-[68px] left-0 right-0 love-card z-30 p-5 shadow-lg border-b border-transparent rounded-b-3xl animate-in slide-in-from-top-2 duration-200">
             <div className="flex justify-between items-center mb-4">
               <h3 className="font-bold text-gray-800 text-sm">全网热搜</h3>
               <RefreshCw size={14} className="text-gray-400 cursor-pointer hover:text-pink-500 transition-transform active:rotate-180 duration-300" onClick={() => showToast('已刷新热搜词')} />
@@ -174,7 +174,7 @@ export default function Discover() {
                 <span
                   key={idx}
                   onClick={() => { setDiscoverState(prev => ({ ...prev, searchQuery: hot, isSearchFocused: false })); }}
-                  className={`text-xs px-3.5 py-1.5 rounded-full cursor-pointer transition-colors shadow-sm ${idx < 2 ? 'text-pink-600 bg-pink-50 font-medium border border-pink-100' : 'text-gray-600 bg-gray-50 border border-gray-100 hover:bg-gray-100'}`}
+                  className={`text-xs px-3.5 py-1.5 rounded-full cursor-pointer transition-colors shadow-sm ${idx < 2 ? 'text-pink-600 bg-pink-50 font-medium border border-pink-100' : 'text-gray-600 bg-transparent border border-transparent hover:bg-gray-100'}`}
                 >
                   {idx < 2 && <Flame size={12} className="inline mr-1 text-red-500" />}
                   {hot}
@@ -185,10 +185,10 @@ export default function Discover() {
         </>
       )}
 
-      <div className="flex flex-1 overflow-hidden bg-gray-50 relative z-10">
-        <div className="w-[90px] bg-rose-50/30 backdrop-blur-md overflow-y-auto scrollbar-hide pb-24 border-r border-rose-100/60 shadow-[2px_0_15px_-5px_rgba(244,63,94,0.05)] z-10">
+      <div className="flex flex-1 overflow-hidden bg-transparent relative z-10">
+        <div className="w-[90px] bg-slate-50/50 backdrop-blur-md overflow-y-auto scrollbar-hide pb-24 border-r border-slate-100 shadow-[2px_0_15px_-5px_rgba(244,63,94,0.05)] z-10">
           {categories.map(cat => (
-            <div key={cat.id} onClick={() => { setDiscoverState({ activeCategory: cat.id, searchQuery: '', sort: '推荐', filterTag: '全部', activeTag: '全部', isSearchFocused: false }); }} className={`py-4 flex flex-col items-center justify-center relative transition-colors cursor-pointer ${activeCategory === cat.id && !searchQuery ? 'bg-white shadow-[inset_4px_0_0_#F43F5E]' : 'hover:bg-rose-50/50'}`}>
+            <div key={cat.id} onClick={() => { setDiscoverState({ activeCategory: cat.id, searchQuery: '', sort: '推荐', filterTag: '全部', activeTag: '全部', isSearchFocused: false }); }} className={`py-4 flex flex-col items-center justify-center relative transition-colors cursor-pointer ${activeCategory === cat.id && !searchQuery ? 'love-card shadow-[inset_4px_0_0_#EC4899]' : 'hover:bg-slate-100/50'}`}>
               <div className="relative"><span className={`text-[22px] mb-1 block transition-transform transform ${activeCategory === cat.id && !searchQuery ? 'scale-110' : ''}`}>{cat.icon}</span></div>
               <span className={`text-[11px] mt-1 ${activeCategory === cat.id && !searchQuery ? 'text-pink-600 font-bold' : 'text-gray-500 font-medium'}`}>{cat.name}</span>
               <span className="text-[9px] text-gray-400 mt-0.5 scale-90">{cat.count} 篇</span>
@@ -210,7 +210,7 @@ export default function Discover() {
                   <span
                     key={sortTab.key}
                     onClick={() => setDiscoverState(prev => ({ ...prev, sort: sortTab.label }))}
-                    className={`text-[11px] px-3 py-1.5 rounded-full font-bold whitespace-nowrap shadow-sm cursor-pointer transition-colors ${sort === sortTab.label ? 'bg-gray-900 text-white' : 'bg-white text-gray-600 border border-gray-100'}`}
+                    className={`text-[11px] px-3 py-1.5 rounded-full font-bold whitespace-nowrap shadow-sm cursor-pointer transition-colors ${sort === sortTab.label ? 'bg-gray-900 text-white' : 'love-card text-gray-600 border border-transparent'}`}
                   >
                     {sortTab.label}
                   </span>
@@ -225,7 +225,7 @@ export default function Discover() {
                     <span
                       key={tag.id}
                       onClick={() => setDiscoverState(prev => ({ ...prev, activeTag: tag.name }))}
-                      className={`text-[11px] px-3.5 py-1.5 rounded-xl whitespace-nowrap transition-colors cursor-pointer shadow-sm ${activeTag === tag.name ? 'bg-gradient-to-r from-rose-400 to-pink-500 text-white font-bold shadow-md shadow-rose-200/50 border-none' : 'bg-white text-gray-500 border border-rose-100/60 hover:border-rose-300 hover:text-rose-500'}`}
+                      className={`text-[11px] px-3.5 py-1.5 rounded-xl whitespace-nowrap transition-colors cursor-pointer shadow-sm ${activeTag === tag.name ? 'bg-gradient-to-r from-rose-400 to-pink-500 text-white font-bold shadow-md shadow-rose-200/50 border-none' : 'love-card text-gray-500 border border-slate-100 hover:border-rose-300 hover:text-rose-500'}`}
                     >
                       {tag.name}
                     </span>
@@ -242,22 +242,22 @@ export default function Discover() {
                               <span className="bg-indigo-500 text-white text-[9px] px-2 py-0.5 rounded-full font-bold shadow-sm">官方推荐</span>
                            </div>
                            <p className="font-bold text-[14px] text-gray-900 line-clamp-2 leading-snug mb-2.5">{script.question}</p>
-                           <p className="text-[12px] text-indigo-700/80 bg-white/60 p-2.5 rounded-xl line-clamp-2 border border-white/50">{script.answers?.[0] || '暂无回复'}</p>
+                           <p className="text-[12px] text-indigo-700/80 love-card/60 p-2.5 rounded-xl line-clamp-2 border border-white/50">{script.answers?.[0] || '暂无回复'}</p>
                         </div>
                       ))}
                     </ScrollableRow>
                   </div>
                 )}
 
-                <div className="mb-4 bg-gradient-to-r from-pink-500 to-rose-400 rounded-2xl p-4 text-white shadow-md shadow-pink-200 relative overflow-hidden flex items-center justify-between cursor-pointer active:scale-95 transition-transform" onClick={() => setActiveServicePage({ id: 'topic' })}>
-                  <div className="absolute -right-4 -top-4 w-24 h-24 bg-white/20 rounded-full blur-xl"></div>
+                <div className="mb-4 bg-gradient-to-r from-pink-400 to-pink-500 rounded-2xl p-4 text-white shadow-md shadow-pink-200 relative overflow-hidden flex items-center justify-between cursor-pointer active:scale-95 transition-transform" onClick={() => setActiveServicePage({ id: 'topic' })}>
+                  <div className="absolute -right-4 -top-4 w-24 h-24 love-card/20 rounded-full blur-xl"></div>
                   <div className="absolute -bottom-6 -left-6 w-20 h-20 bg-pink-600/30 rounded-full blur-lg"></div>
                   <div className="relative z-10">
-                    <span className="bg-white/20 text-[10px] px-2 py-0.5 rounded-md backdrop-blur-sm mb-1.5 flex items-center w-max border border-white/20"><Compass size={12} className="mr-1"/> 必看专题</span>
+                    <span className="love-card/20 text-[10px] px-2 py-0.5 rounded-md backdrop-blur-sm mb-1.5 flex items-center w-max border border-white/20"><Compass size={12} className="mr-1"/> 必看专题</span>
                     <h4 className="font-bold text-[15px] mb-0.5">七夕特辑：高分表白话术</h4>
                     <p className="text-[11px] text-white/90 flex items-center"><TrendingUp size={12} className="mr-1"/> 收录 50+ 句直击灵魂的告白</p>
                   </div>
-                  <div className="w-8 h-8 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center relative z-10 border border-white/30">
+                  <div className="w-8 h-8 love-card/20 backdrop-blur-sm rounded-full flex items-center justify-center relative z-10 border border-white/30">
                     <ChevronRight size={16} className="text-white" />
                   </div>
                 </div>
@@ -278,7 +278,7 @@ export default function Discover() {
                 <p className="text-sm text-gray-600 font-bold mb-1">未找到匹配的话术</p>
                 <p className="text-xs text-gray-400 mb-6 text-center px-4">你可以尝试更换搜索词，或者直接让 AI 导师为你定制专属回复</p>
                 <div className="flex space-x-3 w-full px-6">
-                  <button className="flex-1 text-xs bg-white border border-gray-200 py-2.5 rounded-xl text-gray-600 shadow-sm font-medium" onClick={() => setDiscoverState(prev => ({ ...prev, searchQuery: '' }))}>清除搜索</button>
+                  <button className="flex-1 text-xs love-card border border-gray-200 py-2.5 rounded-xl text-gray-600 shadow-sm font-medium" onClick={() => setDiscoverState(prev => ({ ...prev, searchQuery: '' }))}>清除搜索</button>
                   <button className="flex-1 text-xs bg-pink-500 text-white py-2.5 rounded-xl shadow-md shadow-pink-200 font-bold flex items-center justify-center" onClick={() => { setActiveTab('ai'); setAiState({ chatInput: searchQuery }); }}>
                     <Sparkles size={14} className="mr-1" /> 问 AI 导师
                   </button>
@@ -289,7 +289,7 @@ export default function Discover() {
         </div>
 
         <div
-          className="absolute bottom-24 right-4 bg-gradient-to-r from-rose-500 to-pink-500 text-white rounded-full shadow-[0_8px_20px_rgba(244,63,94,0.3)] ring-2 ring-white/50 flex items-center justify-center cursor-pointer active:scale-90 transition-transform z-40 group px-3.5 py-2.5 space-x-1.5"
+          className="absolute bottom-24 right-4 bg-gradient-to-r from-rose-500 to-pink-500 text-white rounded-full shadow-[0_8px_20px_rgba(236,72,153,0.3)] ring-2 ring-white/50 flex items-center justify-center cursor-pointer active:scale-90 transition-transform z-40 group px-3.5 py-2.5 space-x-1.5"
           onClick={() => setIsContributeDrawerOpen(true)}
         >
           <PenTool size={16} className="group-hover:rotate-12 transition-transform" />

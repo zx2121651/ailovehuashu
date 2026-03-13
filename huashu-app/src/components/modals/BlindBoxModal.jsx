@@ -36,7 +36,7 @@ const BlindBoxModal = ({ isOpen, onClose, user, onSignInSuccess, showToast }) =>
 
         {/* Close Button */}
         {result && (
-          <button onClick={onClose} className="absolute top-4 right-4 p-1 text-gray-400 hover:text-gray-600 bg-white rounded-full shadow-sm z-10">
+          <button onClick={onClose} className="absolute top-4 right-4 p-1 text-gray-400 hover:text-gray-600 love-card rounded-full shadow-sm z-10">
             <X size={20} />
           </button>
         )}
@@ -74,7 +74,7 @@ const BlindBoxModal = ({ isOpen, onClose, user, onSignInSuccess, showToast }) =>
 
             {/* Blind Box Content Card */}
             {result.blindBox && (
-              <div className="w-full bg-white border border-indigo-100 rounded-2xl p-4 mb-6 shadow-inner text-left relative overflow-hidden">
+              <div className="w-full love-card border border-indigo-100 rounded-2xl p-4 mb-6 shadow-inner text-left relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-bl from-pink-100 to-transparent rounded-bl-3xl opacity-50"></div>
                 <span className="text-[10px] font-bold text-indigo-500 uppercase tracking-wider mb-2 block">
                   {result.blindBox.type === 'QUOTE' ? '今日语录' : (result.blindBox.type === 'TIP' ? '脱单锦囊' : '精选话术')}

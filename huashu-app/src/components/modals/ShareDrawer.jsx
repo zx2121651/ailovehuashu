@@ -16,10 +16,10 @@ export default function ShareDrawer({ isOpen, onClose, script }) {
         className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300"
         onClick={onClose}
       ></div>
-      <div className="bg-[#F5F7FA] rounded-t-3xl w-full max-h-[90vh] flex flex-col relative z-10 animate-in slide-in-from-bottom-full duration-300">
+      <div className="bg-transparent rounded-t-3xl w-full max-h-[90vh] flex flex-col relative z-10 animate-in slide-in-from-bottom-full duration-300">
 
         {/* Header */}
-        <div className="flex justify-between items-center p-5 bg-white rounded-t-3xl rounded-b-xl shadow-sm z-10">
+        <div className="flex justify-between items-center p-5 love-card rounded-t-3xl rounded-b-xl shadow-sm z-10">
           <h2 className="text-lg font-bold text-gray-800 flex items-center">
             <Share2 className="mr-2 text-pink-500" size={20} />
             分享神回复
@@ -43,7 +43,7 @@ export default function ShareDrawer({ isOpen, onClose, script }) {
             </div>
 
             {/* Poster Content */}
-            <div className="p-6 bg-white/60 backdrop-blur-sm">
+            <div className="p-6 love-card/60 backdrop-blur-sm">
               <div className="mb-6 relative">
                 <span className="absolute -left-2 -top-2 text-3xl text-blue-200 font-serif">"</span>
                 <p className="text-gray-600 text-sm font-medium leading-relaxed z-10 relative pl-4">
@@ -60,7 +60,7 @@ export default function ShareDrawer({ isOpen, onClose, script }) {
             </div>
 
             {/* Poster Footer */}
-            <div className="bg-white p-4 flex items-center justify-between border-t border-gray-100">
+            <div className="love-card p-4 flex items-center justify-between border-t border-transparent">
               <div className="flex items-center space-x-2">
                 <div className="w-10 h-10 bg-gray-200 rounded-xl"></div>
                 <div>
@@ -75,7 +75,7 @@ export default function ShareDrawer({ isOpen, onClose, script }) {
         </div>
 
         {/* Actions */}
-        <div className="p-5 bg-white border-t border-gray-100 pb-8 flex space-x-4">
+        <div className="p-5 love-card border-t border-transparent pb-8 flex space-x-4">
           <button
             onClick={onClose}
             className="flex-1 py-3.5 rounded-2xl bg-gray-100 text-gray-700 font-bold text-sm"

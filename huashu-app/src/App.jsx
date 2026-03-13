@@ -37,14 +37,14 @@ function MainApp() {
   } = useContext(AppContext);
 
   return (
-    <div className="flex justify-center min-h-screen bg-gray-50 font-sans">
-      <div className="w-full max-w-md h-[100dvh] bg-white sm:shadow-xl sm:border-x sm:border-gray-200 overflow-hidden relative flex flex-col mx-auto">
+    <div className="flex justify-center min-h-screen bg-transparent font-sans">
+      <div className="w-full max-w-md h-[100dvh] love-card sm:shadow-xl sm:border-x sm:border-gray-200 overflow-hidden relative flex flex-col mx-auto">
 
         {!token ? (
           <Login />
         ) : (
           <>
-            <div className="flex-1 overflow-hidden relative bg-white" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', overflowY: 'auto' }}>
+            <div className="flex-1 overflow-hidden relative love-card" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', overflowY: 'auto' }}>
           {activeTab === 'home' && <HomeView />}
           {activeTab === 'discover' && <DiscoverView />}
           {activeTab === 'community' && <Community />}
@@ -58,7 +58,7 @@ function MainApp() {
           {activeTab === 'story_play' && <StoryPlay />}
         </div>
 
-            <div className="absolute bottom-0 w-full bg-white/95 backdrop-blur-xl border-t border-gray-100 pb-safe pt-2.5 px-5 pb-6 z-30 shadow-[0_-10px_20px_-10px_rgba(0,0,0,0.05)]">
+            <div className="absolute bottom-0 w-full nav-bottom-glass pb-safe pt-2.5 px-5 pb-6 z-30 shadow-[0_-10px_20px_-10px_rgba(0,0,0,0.05)]">
               <div className="flex justify-between items-center mt-1.5 relative">
                 <NavItem icon={<Home size={22} />} label="首页" isActive={activeTab === 'home'} onClick={() => setActiveTab('home')} />
                 <NavItem icon={<Star size={22} />} label="剧本杀" isActive={activeTab === 'story'} onClick={() => setActiveTab('story')} />
@@ -71,7 +71,7 @@ function MainApp() {
 
             {/* Floating AI Button (moved from nav to bottom-right to fit 5 tabs) */}
             {activeTab !== 'ai' && activeTab !== 'community' && (
-              <div onClick={() => setActiveTab('ai')} className="fixed bottom-[105px] right-5 w-14 h-14 bg-gradient-to-tr from-gray-800 to-gray-700 rounded-full flex items-center justify-center text-white shadow-lg shadow-gray-400/30 cursor-pointer active:scale-95 transition-transform z-40 border-2 border-white">
+              <div onClick={() => setActiveTab('ai')} className="fixed bottom-[105px] right-5 w-14 h-14 bg-gradient-to-tr from-pink-400 to-rose-400 rounded-full flex items-center justify-center text-white shadow-lg shadow-pink-400/40 cursor-pointer active:scale-95 transition-transform z-40 border-2 border-white">
                  <Sparkles size={24} className="animate-pulse" />
               </div>
             )}

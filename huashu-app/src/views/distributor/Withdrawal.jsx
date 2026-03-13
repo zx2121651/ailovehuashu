@@ -64,7 +64,7 @@ const Withdrawal = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 animate-in fade-in slide-in-from-right-4 duration-300">
-      <div className="sticky top-0 z-50 bg-white border-b border-slate-100 flex items-center justify-between px-4 py-3">
+      <div className="sticky top-0 z-50 love-card border-b border-slate-100 flex items-center justify-between px-4 py-3">
         <button onClick={() => setActiveTab('distributor')} className="p-2 -ml-2 text-slate-600 active:bg-slate-100 rounded-full">
           <ChevronLeft size={24} />
         </button>
@@ -73,7 +73,7 @@ const Withdrawal = () => {
       </div>
 
       <div className="p-4 space-y-4">
-        <div className="bg-white rounded-2xl shadow-sm p-5 border border-slate-100">
+        <div className="love-card rounded-2xl shadow-sm p-5 border border-slate-100">
           <p className="text-sm text-slate-500 mb-4">提现金额</p>
           <div className="flex items-end border-b border-slate-200 pb-2 mb-3">
             <span className="text-3xl font-medium text-slate-800 mb-1 mr-2">¥</span>
@@ -96,7 +96,7 @@ const Withdrawal = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+        <div className="love-card rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
           <div className="p-4 border-b border-slate-50">
             <h3 className="font-medium text-slate-800 mb-4">收款账户 (支付宝)</h3>
             <div className="space-y-4">
@@ -107,7 +107,7 @@ const Withdrawal = () => {
                   value={account}
                   onChange={(e) => setAccount(e.target.value)}
                   placeholder="请输入支付宝账号"
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none focus:border-indigo-500 focus:bg-white transition-colors"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none focus:border-indigo-500 focus:love-card transition-colors"
                 />
               </div>
               <div>
@@ -117,7 +117,7 @@ const Withdrawal = () => {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="请输入账号对应真实姓名"
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none focus:border-indigo-500 focus:bg-white transition-colors"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none focus:border-indigo-500 focus:love-card transition-colors"
                 />
               </div>
             </div>

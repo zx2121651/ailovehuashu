@@ -19,10 +19,10 @@ export default function PointsDrawer({ isOpen, onClose, profile, onShowToast }) 
         className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300"
         onClick={onClose}
       ></div>
-      <div className="bg-[#F5F7FA] rounded-t-3xl w-full max-h-[95vh] flex flex-col relative z-10 animate-in slide-in-from-bottom-full duration-300 h-full">
+      <div className="bg-transparent rounded-t-3xl w-full max-h-[95vh] flex flex-col relative z-10 animate-in slide-in-from-bottom-full duration-300 h-full">
 
         {/* Header */}
-        <div className="flex justify-between items-center p-5 bg-white rounded-t-3xl shadow-sm z-10 sticky top-0">
+        <div className="flex justify-between items-center p-5 love-card rounded-t-3xl shadow-sm z-10 sticky top-0">
           <h2 className="text-lg font-bold text-gray-800 flex items-center">
             积分与段位
           </h2>
@@ -75,7 +75,7 @@ export default function PointsDrawer({ isOpen, onClose, profile, onShowToast }) 
             </div>
 
             {/* Rank Card */}
-            <div className="bg-white/80 backdrop-blur-md rounded-[1.25rem] p-5 shadow-sm border border-white relative z-10">
+            <div className="love-card/80 backdrop-blur-md rounded-[1.25rem] p-5 shadow-sm border border-white relative z-10">
               <div className="flex justify-between items-center mb-3">
                 <div className="flex items-center space-x-2">
                   <div className="w-10 h-10 bg-gradient-to-br from-yellow-100 to-orange-100 rounded-full flex items-center justify-center border-2 border-white shadow-inner">
@@ -115,12 +115,12 @@ export default function PointsDrawer({ isOpen, onClose, profile, onShowToast }) 
               <TrendingUp size={16} className="text-orange-500 mr-1.5" /> 赚取积分
             </h3>
             <div className="flex space-x-3 overflow-x-auto scrollbar-hide pb-2">
-              <div className="min-w-[140px] bg-white rounded-[1rem] p-3 shadow-sm border border-gray-50">
+              <div className="min-w-[140px] love-card rounded-[1rem] p-3 shadow-sm border border-gray-50">
                 <p className="text-xs font-bold text-gray-800 mb-1">每日签到</p>
                 <p className="text-[10px] text-gray-500 mb-2">+10 ~ 50 积分</p>
                 <button className="w-full bg-orange-50 text-orange-600 text-[11px] font-bold py-1.5 rounded-lg active:bg-orange-100">去签到</button>
               </div>
-              <div className="min-w-[140px] bg-white rounded-[1rem] p-3 shadow-sm border border-gray-50">
+              <div className="min-w-[140px] love-card rounded-[1rem] p-3 shadow-sm border border-gray-50">
                 <p className="text-xs font-bold text-gray-800 mb-1">贡献话术</p>
                 <p className="text-[10px] text-gray-500 mb-2">采纳得 +50 积分</p>
                 <button className="w-full bg-orange-50 text-orange-600 text-[11px] font-bold py-1.5 rounded-lg active:bg-orange-100">去发布</button>
@@ -137,7 +137,7 @@ export default function PointsDrawer({ isOpen, onClose, profile, onShowToast }) 
                <span className="text-[11px] text-gray-400 flex items-center cursor-pointer"><Info size={12} className="mr-1"/> 积分规则</span>
              </div>
 
-             <div className="bg-white rounded-[1.25rem] shadow-sm border border-gray-50 overflow-hidden">
+             <div className="love-card rounded-[1.25rem] shadow-sm border border-gray-50 overflow-hidden">
                {transactions.map((t, i) => (
                  <div key={t.id} className={`p-4 flex justify-between items-center ${i !== transactions.length - 1 ? 'border-b border-gray-50' : ''}`}>
                    <div>
@@ -149,7 +149,7 @@ export default function PointsDrawer({ isOpen, onClose, profile, onShowToast }) 
                    </div>
                  </div>
                ))}
-               <div className="p-3 text-center text-xs text-gray-400 bg-gray-50/50">已显示最近 30 天记录</div>
+               <div className="p-3 text-center text-xs text-gray-400 bg-transparent/50">已显示最近 30 天记录</div>
              </div>
           </div>
 

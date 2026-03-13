@@ -29,7 +29,7 @@ export default function Login() {
           <div className="w-24 h-24 bg-gradient-to-tr from-pink-500 to-rose-400 rounded-[2rem] flex items-center justify-center shadow-xl shadow-pink-200/50 rotate-3 transition-transform group-hover:rotate-6">
             <MessageCircle size={48} className="text-white drop-shadow-md" />
           </div>
-          <div className="absolute -bottom-2 -right-2 w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg">
+          <div className="absolute -bottom-2 -right-2 w-10 h-10 love-card rounded-full flex items-center justify-center shadow-lg">
              <Heart size={20} className="text-pink-500 animate-pulse" />
           </div>
         </div>
@@ -49,7 +49,7 @@ export default function Login() {
              { icon: <Heart size={18} />, text: '情感问答，专家支招', color: 'text-pink-500', bg: 'bg-pink-50' },
              { icon: <ShieldCheck size={18} />, text: '隐私保护，安全无忧', color: 'text-green-500', bg: 'bg-green-50' },
            ].map((item, idx) => (
-             <div key={idx} className="flex items-center space-x-3 bg-white/60 backdrop-blur-sm p-3 rounded-2xl border border-white/80 shadow-sm">
+             <div key={idx} className="flex items-center space-x-3 love-card/60 backdrop-blur-sm p-3 rounded-2xl border border-white/80 shadow-sm">
                 <div className={`w-8 h-8 rounded-full ${item.bg} ${item.color} flex items-center justify-center shadow-inner`}>
                    {item.icon}
                 </div>

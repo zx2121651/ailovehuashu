@@ -48,7 +48,7 @@ export default function AI() {
 
   return (
     <div className="h-full flex flex-col bg-[#F4F5F7] animate-in zoom-in-95 duration-300">
-      <div className="bg-white px-5 pt-8 pb-3 z-20 shadow-sm relative flex items-center justify-between">
+      <div className="love-card px-5 pt-8 pb-3 z-20 shadow-sm relative flex items-center justify-between">
         <ChevronLeft size={24} className="text-gray-800 cursor-pointer hover:text-pink-500" onClick={() => setActiveTab('home')} />
         <div className="text-center">
           <h1 className="text-[17px] font-bold text-gray-800 flex items-center justify-center">
@@ -69,12 +69,12 @@ export default function AI() {
             </div>
             <div className={`max-w-[80%] ${msg.role === 'user' ? '' : 'w-full'}`}>
               {msg.type === 'text' && (
-                <div className={`p-3.5 rounded-2xl shadow-sm text-[14px] leading-relaxed break-words ${msg.role === 'user' ? 'bg-gradient-to-r from-pink-500 to-rose-500 text-white rounded-tr-none shadow-pink-200' : 'bg-white border border-gray-100/50 text-gray-800 rounded-tl-none'}`}>
+                <div className={`p-3.5 rounded-2xl shadow-sm text-[14px] leading-relaxed break-words ${msg.role === 'user' ? 'bg-gradient-to-r from-pink-500 to-rose-500 text-white rounded-tr-none shadow-pink-200' : 'love-card border border-transparent/50 text-gray-800 rounded-tl-none'}`}>
                   {msg.content}
                 </div>
               )}
               {msg.type === 'suggestions' && (
-                <div className="bg-white p-4 rounded-2xl rounded-tl-none shadow-sm border border-gray-100/50 text-sm text-gray-800 space-y-4">
+                <div className="love-card p-4 rounded-2xl rounded-tl-none shadow-sm border border-transparent/50 text-sm text-gray-800 space-y-4">
                   <p className="font-bold text-gray-900 border-b border-gray-50 pb-2">{msg.content}</p>
                   {msg.suggestions.map((sug, idx) => {
                     const colorMap = {
@@ -127,9 +127,9 @@ export default function AI() {
                         btnHover: 'hover:bg-purple-200'
                       },
                       gray: {
-                        bg: 'bg-gray-50/50',
-                        border: 'border-gray-100',
-                        badgeBg: 'bg-gray-500',
+                        bg: 'bg-transparent/50',
+                        border: 'border-transparent',
+                        badgeBg: 'bg-transparent0',
                         text: 'text-gray-600',
                         btnBg: 'bg-gray-100/50',
                         btnHover: 'hover:bg-gray-200'
@@ -162,7 +162,7 @@ export default function AI() {
         {isAiTyping && (
            <div className="flex items-start animate-fade-in-up">
               <div className="w-9 h-9 rounded-full bg-gradient-to-br from-pink-400 to-rose-500 flex items-center justify-center shadow-md shadow-pink-200 mr-3 shrink-0 mt-1"><Sparkles size={18} className="text-white" /></div>
-              <div className="bg-white p-3.5 rounded-2xl rounded-tl-none shadow-sm border border-gray-100/50 text-[14px] text-gray-800 flex items-center space-x-1.5"><Loader2 size={16} className="animate-spin text-pink-500" /><span className="text-gray-400 text-xs">AI 正在思考中...</span></div>
+              <div className="love-card p-3.5 rounded-2xl rounded-tl-none shadow-sm border border-transparent/50 text-[14px] text-gray-800 flex items-center space-x-1.5"><Loader2 size={16} className="animate-spin text-pink-500" /><span className="text-gray-400 text-xs">AI 正在思考中...</span></div>
            </div>
         )}
         <div ref={chatEndRef} />
@@ -171,13 +171,13 @@ export default function AI() {
       <div className="absolute bottom-20 w-full bg-[#F4F5F7] z-40">
         <ScrollableRow className="flex px-3 pb-2 space-x-2">
           {['帮我幽默回复', '高情商拒绝', '怎么自然邀约', '帮我写个晚安'].map((chip, idx) => (
-            <span key={idx} onClick={() => setAiState({ chatInput: chip })} className="bg-white text-gray-600 text-[12px] px-3 py-1.5 rounded-full shadow-sm border border-gray-100 whitespace-nowrap cursor-pointer active:bg-pink-50 active:text-pink-500 transition-colors">{chip}</span>
+            <span key={idx} onClick={() => setAiState({ chatInput: chip })} className="love-card text-gray-600 text-[12px] px-3 py-1.5 rounded-full shadow-sm border border-transparent whitespace-nowrap cursor-pointer active:bg-pink-50 active:text-pink-500 transition-colors">{chip}</span>
           ))}
         </ScrollableRow>
         <div className="border-t border-gray-200/80 p-3 px-4 bg-[#F4F5F7]">
           <div className="flex items-center space-x-3">
             <Mic size={26} className="text-gray-600 shrink-0 cursor-pointer hover:text-black" onClick={() => showToast('暂未获取麦克风权限')} />
-            <div className="flex-1 bg-white border border-gray-200 rounded-full flex items-center px-3 py-1.5 focus-within:border-pink-300 transition-colors shadow-sm">
+            <div className="flex-1 love-card border border-gray-200 rounded-full flex items-center px-3 py-1.5 focus-within:border-pink-300 transition-colors shadow-sm">
               <input type="text" value={chatInput} onChange={(e) => setAiState({ chatInput: e.target.value })} onKeyDown={(e) => e.key === 'Enter' && handleSendChat()} placeholder="粘贴对方说的话..." className="flex-1 bg-transparent text-[15px] outline-none py-1 px-1"/>
               <Smile size={24} className="text-gray-400 mx-1 cursor-pointer hover:text-gray-600" onClick={() => showToast('表情包加载中...')} />
             </div>
