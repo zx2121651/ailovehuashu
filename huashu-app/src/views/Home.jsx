@@ -113,7 +113,7 @@ export default function Home() {
 
         {/* 热门搜索词标签 */}
         <ScrollableRow className="flex items-center mt-4 space-x-2 pb-1">
-          <span className="text-[11px] font-bold text-gray-700 shrink-0 flex items-center"><TrendingUp size={14} className="mr-1 text-red-500" /> 猜你想搜</span>
+          <span className="text-[11px] font-bold text-gray-700 shrink-0 flex items-center"><TrendingUp size={14} className="mr-1 text-pink-500" /> 猜你想搜</span>
           {['相亲怎么聊', '被拒绝', '生日祝福', '惹她生气'].map((tag, idx) => (
              <span key={idx} onClick={() => executeSearch(tag)} className="text-[11px] bg-gray-50 border border-gray-100 text-gray-500 px-3 py-1.5 rounded-full whitespace-nowrap cursor-pointer shadow-sm hover:bg-pink-50 hover:text-pink-500 transition-colors">{tag}</span>
           ))}
@@ -174,7 +174,7 @@ export default function Home() {
 
       {/* 新人限时特惠卡片 */}
       <div className="px-4 mt-4 animate-fade-in-up delay-[180ms]">
-        <div className="bg-gradient-to-r from-red-500 to-pink-600 rounded-[1.25rem] p-4 text-white shadow-md shadow-red-200/50 flex justify-between items-center relative overflow-hidden cursor-pointer active:scale-95 transition-transform" onClick={() => setShowVipModal(true)}>
+        <div className="bg-gradient-to-r from-pink-400 to-purple-400 rounded-[1.25rem] p-4 text-white shadow-md shadow-red-200/50 flex justify-between items-center relative overflow-hidden cursor-pointer active:scale-95 transition-transform" onClick={() => setShowVipModal(true)}>
            <div className="absolute -left-6 -top-6 w-20 h-20 bg-white/10 rounded-full blur-lg"></div>
            <div className="relative z-10 flex-1">
               <div className="flex items-center space-x-2 mb-1">
@@ -183,7 +183,7 @@ export default function Home() {
               </div>
               <p className="text-[11px] text-white/90 font-medium">终身 Pro 会员仅需 ¥98，立省 ¥201</p>
            </div>
-           <div className="relative z-10 bg-white text-red-500 font-extrabold px-4 py-2 rounded-full text-xs shadow-sm flex-shrink-0 ml-2">
+           <div className="relative z-10 bg-white text-pink-500 font-extrabold px-4 py-2 rounded-full text-xs shadow-sm flex-shrink-0 ml-2">
               立即抢购
            </div>
         </div>
@@ -273,7 +273,7 @@ export default function Home() {
 
       {/* 每日情商挑战 */}
       <div className="px-4 mt-3 animate-fade-in-up delay-[320ms]">
-        <div className="bg-gradient-to-br from-rose-50 to-pink-50 border border-pink-100 rounded-[1.5rem] p-5 shadow-[0_8px_30px_rgb(0,0,0,0.04)] relative overflow-hidden group hover:shadow-[0_8px_30px_rgb(236,72,153,0.1)] transition-all duration-500">
+        <div className="bg-gradient-to-br from-white to-pink-50/50 border border-pink-100 rounded-[1.5rem] p-5 shadow-[0_8px_30px_rgb(0,0,0,0.04)] relative overflow-hidden group hover:shadow-[0_8px_30px_rgb(236,72,153,0.1)] transition-all duration-500">
            <div className="absolute top-0 right-0 bg-gradient-to-r from-pink-400 to-rose-400 text-white text-[10px] px-3 py-1.5 rounded-bl-2xl font-bold flex items-center shadow-sm"><Target size={12} className="mr-1"/> 每日心动测验</div>
            <div className="absolute -bottom-4 -right-4 text-pink-500/10 transform rotate-12 group-hover:scale-110 transition-transform duration-700"><Heart size={80} className="fill-current" /></div>
            <h3 className="font-bold text-gray-800 text-[15px] mb-2 flex items-center relative z-10">情商挑战：送命题怎么回？ <Sparkles size={14} className="ml-1 text-pink-400" /></h3>
@@ -322,13 +322,13 @@ export default function Home() {
       {/* 恋爱避坑指南 */}
       <div className="mt-4 animate-fade-in-up delay-[400ms]">
         <div className="flex justify-between items-center px-5 mb-3">
-          <h3 className="font-bold text-gray-800 text-[17px] flex items-center"><AlertTriangle size={18} className="text-red-500 mr-1.5" /> 恋爱避坑指南</h3>
+          <h3 className="font-bold text-gray-800 text-[17px] flex items-center"><AlertTriangle size={18} className="text-pink-500 mr-1.5" /> 恋爱避坑指南</h3>
           <span className="text-[11px] text-gray-400 flex items-center cursor-pointer hover:text-pink-500" onClick={() => setActiveServicePage({ id: 'all-pitfalls' })}>更多避坑 <ChevronRight size={14} /></span>
         </div>
         <ScrollableRow className="flex px-5 pb-4 space-x-3.5">
           {articles.slice(0, 3).map((item, idx) => (
             <div key={idx} onClick={() => handleOpenArticle(item)} className="bg-white border border-gray-100 p-3.5 rounded-2xl shadow-sm min-w-[150px] flex-shrink-0 cursor-pointer hover:bg-gray-50 transition-colors">
-              <div className="w-8 h-8 rounded-full bg-red-50 text-red-500 flex items-center justify-center mb-2.5">
+              <div className="w-8 h-8 rounded-full bg-red-50 text-pink-500 flex items-center justify-center mb-2.5">
                 <AlertTriangle size={14} />
               </div>
               <h4 className="font-bold text-[13px] text-gray-800 mb-1">{item.title.substring(0, 10)}...</h4>
@@ -342,7 +342,7 @@ export default function Home() {
       <div className="px-4 mt-2 pb-6 animate-fade-in-up delay-500">
         <div className="flex justify-between items-center mb-4 px-1">
           <h3 className="font-bold text-gray-800 text-[17px]">高分回复榜</h3>
-          <span className="text-[10px] bg-red-50 text-red-500 px-2 py-1 rounded-md font-bold flex items-center border border-red-100"><Flame size={12} className="mr-1 fill-current" /> 全网热搜</span>
+          <span className="text-[10px] bg-red-50 text-pink-500 px-2 py-1 rounded-md font-bold flex items-center border border-red-100"><Flame size={12} className="mr-1 fill-current" /> 全网热搜</span>
         </div>
         <div className="space-y-3.5">
           {topScripts.map((script) => (

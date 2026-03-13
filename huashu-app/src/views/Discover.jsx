@@ -186,9 +186,9 @@ export default function Discover() {
       )}
 
       <div className="flex flex-1 overflow-hidden bg-gray-50 relative z-10">
-        <div className="w-[90px] bg-rose-50/30 backdrop-blur-md overflow-y-auto scrollbar-hide pb-24 border-r border-rose-100/60 shadow-[2px_0_15px_-5px_rgba(244,63,94,0.05)] z-10">
+        <div className="w-[90px] bg-slate-50/50 backdrop-blur-md overflow-y-auto scrollbar-hide pb-24 border-r border-slate-100 shadow-[2px_0_15px_-5px_rgba(244,63,94,0.05)] z-10">
           {categories.map(cat => (
-            <div key={cat.id} onClick={() => { setDiscoverState({ activeCategory: cat.id, searchQuery: '', sort: '推荐', filterTag: '全部', activeTag: '全部', isSearchFocused: false }); }} className={`py-4 flex flex-col items-center justify-center relative transition-colors cursor-pointer ${activeCategory === cat.id && !searchQuery ? 'bg-white shadow-[inset_4px_0_0_#F43F5E]' : 'hover:bg-rose-50/50'}`}>
+            <div key={cat.id} onClick={() => { setDiscoverState({ activeCategory: cat.id, searchQuery: '', sort: '推荐', filterTag: '全部', activeTag: '全部', isSearchFocused: false }); }} className={`py-4 flex flex-col items-center justify-center relative transition-colors cursor-pointer ${activeCategory === cat.id && !searchQuery ? 'bg-white shadow-[inset_4px_0_0_#EC4899]' : 'hover:bg-slate-100/50'}`}>
               <div className="relative"><span className={`text-[22px] mb-1 block transition-transform transform ${activeCategory === cat.id && !searchQuery ? 'scale-110' : ''}`}>{cat.icon}</span></div>
               <span className={`text-[11px] mt-1 ${activeCategory === cat.id && !searchQuery ? 'text-pink-600 font-bold' : 'text-gray-500 font-medium'}`}>{cat.name}</span>
               <span className="text-[9px] text-gray-400 mt-0.5 scale-90">{cat.count} 篇</span>
@@ -225,7 +225,7 @@ export default function Discover() {
                     <span
                       key={tag.id}
                       onClick={() => setDiscoverState(prev => ({ ...prev, activeTag: tag.name }))}
-                      className={`text-[11px] px-3.5 py-1.5 rounded-xl whitespace-nowrap transition-colors cursor-pointer shadow-sm ${activeTag === tag.name ? 'bg-gradient-to-r from-rose-400 to-pink-500 text-white font-bold shadow-md shadow-rose-200/50 border-none' : 'bg-white text-gray-500 border border-rose-100/60 hover:border-rose-300 hover:text-rose-500'}`}
+                      className={`text-[11px] px-3.5 py-1.5 rounded-xl whitespace-nowrap transition-colors cursor-pointer shadow-sm ${activeTag === tag.name ? 'bg-gradient-to-r from-rose-400 to-pink-500 text-white font-bold shadow-md shadow-rose-200/50 border-none' : 'bg-white text-gray-500 border border-slate-100 hover:border-rose-300 hover:text-rose-500'}`}
                     >
                       {tag.name}
                     </span>
@@ -249,7 +249,7 @@ export default function Discover() {
                   </div>
                 )}
 
-                <div className="mb-4 bg-gradient-to-r from-pink-500 to-rose-400 rounded-2xl p-4 text-white shadow-md shadow-pink-200 relative overflow-hidden flex items-center justify-between cursor-pointer active:scale-95 transition-transform" onClick={() => setActiveServicePage({ id: 'topic' })}>
+                <div className="mb-4 bg-gradient-to-r from-pink-400 to-pink-500 rounded-2xl p-4 text-white shadow-md shadow-pink-200 relative overflow-hidden flex items-center justify-between cursor-pointer active:scale-95 transition-transform" onClick={() => setActiveServicePage({ id: 'topic' })}>
                   <div className="absolute -right-4 -top-4 w-24 h-24 bg-white/20 rounded-full blur-xl"></div>
                   <div className="absolute -bottom-6 -left-6 w-20 h-20 bg-pink-600/30 rounded-full blur-lg"></div>
                   <div className="relative z-10">
@@ -289,7 +289,7 @@ export default function Discover() {
         </div>
 
         <div
-          className="absolute bottom-24 right-4 bg-gradient-to-r from-rose-500 to-pink-500 text-white rounded-full shadow-[0_8px_20px_rgba(244,63,94,0.3)] ring-2 ring-white/50 flex items-center justify-center cursor-pointer active:scale-90 transition-transform z-40 group px-3.5 py-2.5 space-x-1.5"
+          className="absolute bottom-24 right-4 bg-gradient-to-r from-rose-500 to-pink-500 text-white rounded-full shadow-[0_8px_20px_rgba(236,72,153,0.3)] ring-2 ring-white/50 flex items-center justify-center cursor-pointer active:scale-90 transition-transform z-40 group px-3.5 py-2.5 space-x-1.5"
           onClick={() => setIsContributeDrawerOpen(true)}
         >
           <PenTool size={16} className="group-hover:rotate-12 transition-transform" />

@@ -81,7 +81,7 @@ function StoryPlay() {
   if (loading) return <div className="h-screen flex items-center justify-center">加载中...</div>;
   if (error) return <div className="h-screen flex flex-col items-center justify-center p-6 text-center">
     <div className="text-red-500 mb-4">{error}</div>
-    <button onClick={() => setActiveTab('story')} className="bg-rose-500 text-white px-6 py-2 rounded-full">返回</button>
+    <button onClick={() => setActiveTab('story')} className="bg-pink-500 text-white px-6 py-2 rounded-full">返回</button>
   </div>;
 
   const { story, progress, currentNode } = data;
@@ -175,7 +175,7 @@ function StoryPlay() {
                 animate={{ opacity: 1, scale: 1 }}
                 className="bg-white rounded-3xl p-8 text-center shadow-2xl w-full max-w-sm mx-auto my-12 relative overflow-hidden"
               >
-                <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-rose-400 to-pink-500"></div>
+                <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-pink-400 to-rose-400"></div>
                 <div className="w-20 h-20 bg-rose-50 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
                   <CheckCircle2 className="w-10 h-10 text-rose-500" />
                 </div>
@@ -190,7 +190,7 @@ function StoryPlay() {
                 </div>
 
                 <div className="space-y-3">
-                  <button onClick={handleReset} className="w-full bg-rose-500 hover:bg-rose-600 text-white font-medium py-3.5 rounded-xl transition-colors shadow-sm">
+                  <button onClick={handleReset} className="w-full bg-pink-500 hover:bg-pink-600 text-white font-medium py-3.5 rounded-xl transition-colors shadow-sm">
                     再次挑战
                   </button>
                   <button onClick={() => setActiveTab('story')} className="w-full bg-white hover:bg-gray-50 text-gray-700 font-medium py-3.5 rounded-xl transition-colors border border-gray-200 shadow-sm">

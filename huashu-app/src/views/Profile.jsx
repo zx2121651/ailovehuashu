@@ -17,7 +17,7 @@ export default function Profile() {
 
   return (
     <div className="h-full flex flex-col bg-[#F5F7FA] animate-in fade-in duration-300 relative">
-      <div className="bg-gradient-to-b from-pink-100/80 to-[#F5F7FA] px-5 pt-10 pb-2 relative z-10">
+      <div className="bg-gradient-to-b from-pink-200/40 to-[#F5F7FA] px-5 pt-10 pb-2 relative z-10">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4 cursor-pointer group" onClick={() => setIsEditProfileOpen(true)}>
             <div className="w-[68px] h-[68px] bg-white p-1 rounded-full shadow-md relative overflow-hidden group-hover:scale-105 transition-transform">

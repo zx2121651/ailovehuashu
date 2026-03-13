@@ -71,7 +71,7 @@ function MainApp() {
 
             {/* Floating AI Button (moved from nav to bottom-right to fit 5 tabs) */}
             {activeTab !== 'ai' && activeTab !== 'community' && (
-              <div onClick={() => setActiveTab('ai')} className="fixed bottom-[105px] right-5 w-14 h-14 bg-gradient-to-tr from-gray-800 to-gray-700 rounded-full flex items-center justify-center text-white shadow-lg shadow-gray-400/30 cursor-pointer active:scale-95 transition-transform z-40 border-2 border-white">
+              <div onClick={() => setActiveTab('ai')} className="fixed bottom-[105px] right-5 w-14 h-14 bg-gradient-to-tr from-pink-400 to-rose-400 rounded-full flex items-center justify-center text-white shadow-lg shadow-pink-400/40 cursor-pointer active:scale-95 transition-transform z-40 border-2 border-white">
                  <Sparkles size={24} className="animate-pulse" />
               </div>
             )}
