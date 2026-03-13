@@ -16,9 +16,9 @@ exports.getStories = async (req, res) => {
 
 exports.createStory = async (req, res) => {
     try {
-        const { title, description, coverImage, isPremium, pointsRequired, status } = req.body;
+        const { title, description, coverImage, category, authorName, difficulty, isPremium, pointsRequired, status } = req.body;
         const story = await prisma.interactiveStory.create({
-            data: { title, description, coverImage, isPremium, pointsRequired, status }
+            data: { title, description, coverImage, category, authorName, difficulty: difficulty ? parseInt(difficulty) : 1, isPremium, pointsRequired, status }
         });
         res.json({ success: true, data: story });
     } catch (error) {
@@ -29,7 +29,7 @@ exports.createStory = async (req, res) => {
 exports.updateStory = async (req, res) => {
     try {
         const { id } = req.params;
-        const data = req.body;
+        const data = { ...req.body }; if(data.difficulty) data.difficulty = parseInt(data.difficulty);
         const story = await prisma.interactiveStory.update({ where: { id: parseInt(id) }, data });
         res.json({ success: true, data: story });
     } catch (error) {
@@ -79,7 +79,7 @@ exports.createNode = async (req, res) => {
 exports.updateNode = async (req, res) => {
     try {
         const { id } = req.params;
-        const data = req.body;
+        const data = { ...req.body }; if(data.difficulty) data.difficulty = parseInt(data.difficulty);
         const node = await prisma.storyNode.update({ where: { id: parseInt(id) }, data });
         res.json({ success: true, data: node });
     } catch (error) {

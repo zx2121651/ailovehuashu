@@ -428,6 +428,9 @@ model InteractiveStory {
   title          String
   description    String?
   coverImage     String?
+  category       String?
+  authorName     String?
+  difficulty     Int      @default(1)
   isPremium      Boolean  @default(false)
   pointsRequired Int      @default(0)
   status         String   @default("ACTIVE") // ACTIVE, DRAFT, INACTIVE
