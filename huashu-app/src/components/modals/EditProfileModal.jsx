@@ -24,10 +24,10 @@ export default function EditProfileModal({ isOpen, onClose, profile, setProfile,
         className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300"
         onClick={onClose}
       ></div>
-      <div className="bg-[#F5F7FA] rounded-t-3xl w-full max-h-[90vh] flex flex-col relative z-10 animate-in slide-in-from-bottom-full duration-300">
+      <div className="bg-transparent rounded-t-3xl w-full max-h-[90vh] flex flex-col relative z-10 animate-in slide-in-from-bottom-full duration-300">
 
         {/* Header */}
-        <div className="flex justify-between items-center p-5 bg-white rounded-t-3xl shadow-sm z-10">
+        <div className="flex justify-between items-center p-5 love-card rounded-t-3xl shadow-sm z-10">
           <h2 className="text-lg font-bold text-gray-800 flex items-center">
             编辑资料
           </h2>
@@ -58,7 +58,7 @@ export default function EditProfileModal({ isOpen, onClose, profile, setProfile,
           </div>
 
           {/* Form Fields */}
-          <div className="bg-white rounded-[1.25rem] p-4 shadow-sm border border-gray-50 space-y-4">
+          <div className="love-card rounded-[1.25rem] p-4 shadow-sm border border-gray-50 space-y-4">
 
             {/* Nickname */}
             <div>
@@ -69,7 +69,7 @@ export default function EditProfileModal({ isOpen, onClose, profile, setProfile,
                 type="text"
                 value={tempProfile.name}
                 onChange={(e) => setTempProfile({...tempProfile, name: e.target.value})}
-                className="w-full bg-gray-50/50 border border-gray-100 rounded-xl px-4 py-3 text-sm text-gray-800 outline-none focus:border-pink-300 focus:bg-white transition-all shadow-inner"
+                className="w-full bg-transparent/50 border border-transparent rounded-xl px-4 py-3 text-sm text-gray-800 outline-none focus:border-pink-300 focus:love-card transition-all shadow-inner"
                 placeholder="请输入昵称"
                 maxLength={12}
               />
@@ -85,7 +85,7 @@ export default function EditProfileModal({ isOpen, onClose, profile, setProfile,
                   <button
                     key={g}
                     onClick={() => setTempProfile({...tempProfile, gender: g})}
-                    className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-all ${tempProfile.gender === g ? 'bg-pink-500 text-white shadow-md shadow-pink-200' : 'bg-gray-50 border border-gray-100 text-gray-600 hover:bg-gray-100'}`}
+                    className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-all ${tempProfile.gender === g ? 'bg-pink-500 text-white shadow-md shadow-pink-200' : 'bg-transparent border border-transparent text-gray-600 hover:bg-gray-100'}`}
                   >
                     {g}
                   </button>
@@ -101,7 +101,7 @@ export default function EditProfileModal({ isOpen, onClose, profile, setProfile,
               <textarea
                 value={tempProfile.bio}
                 onChange={(e) => setTempProfile({...tempProfile, bio: e.target.value})}
-                className="w-full bg-gray-50/50 border border-gray-100 rounded-xl px-4 py-3 text-sm text-gray-800 outline-none focus:border-pink-300 focus:bg-white transition-all resize-none shadow-inner"
+                className="w-full bg-transparent/50 border border-transparent rounded-xl px-4 py-3 text-sm text-gray-800 outline-none focus:border-pink-300 focus:love-card transition-all resize-none shadow-inner"
                 placeholder="介绍一下自己吧，例如：正在努力学习脱单..."
                 rows={3}
                 maxLength={50}
@@ -113,7 +113,7 @@ export default function EditProfileModal({ isOpen, onClose, profile, setProfile,
         </div>
 
         {/* Actions */}
-        <div className="p-5 bg-white border-t border-gray-100 flex space-x-4">
+        <div className="p-5 love-card border-t border-transparent flex space-x-4">
           <button
             onClick={handleSave}
             className="flex-1 py-3.5 rounded-2xl bg-gradient-to-r from-pink-500 to-rose-500 text-white font-bold shadow-lg shadow-pink-200 text-sm flex items-center justify-center active:scale-95 transition-transform"

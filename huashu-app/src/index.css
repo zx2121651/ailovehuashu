@@ -1,3 +1,104 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* ====== 恋爱话术国风主题全局变量 ====== */
+:root {
+  --color-primary: #ff4d85; /* 桃花粉主色 */
+  --color-primary-light: #ff8fb0;
+  --color-primary-fade: rgba(255, 77, 133, 0.1);
+  --color-secondary: #ff85a1; /* 柔和次主色 */
+  --color-accent: #ffb5a7; /* 暖橘点缀 */
+
+  --bg-app: #fdfafb; /* 极简暖白底色 */
+  --bg-card: #ffffff;
+
+  --text-main: #2d3748;
+  --text-muted: #718096;
+  --text-light: #a0aec0;
+
+  /* 圆角统一定义 */
+  --radius-sm: 8px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-xl: 32px;
+
+  /* 呼吸阴影 */
+  --shadow-soft: 0 4px 20px rgba(255, 77, 133, 0.08);
+  --shadow-glow: 0 8px 30px rgba(255, 77, 133, 0.2);
+}
+
+body {
+  background-color: var(--bg-app) !important;
+  color: var(--text-main);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  letter-spacing: 0.5px;
+}
+
+/* 覆盖原生滚动条 */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+::-webkit-scrollbar-thumb {
+  background-color: var(--color-primary-fade);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* ====== 全局卡片风格 ====== */
+.love-card {
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-soft);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+}
+.love-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-glow);
+}
+
+/* ====== 渐变按钮 ====== */
+.btn-love {
+  background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+  color: white;
+  border-radius: 999px;
+  box-shadow: var(--shadow-glow);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-weight: 600;
+  border: none;
+}
+.btn-love:active {
+  transform: scale(0.95);
+  box-shadow: var(--shadow-soft);
+}
+
+/* 底部导航重写 */
+.nav-bottom-glass {
+  background: rgba(255, 255, 255, 0.85) !important;
+  backdrop-filter: saturate(180%) blur(20px) !important;
+  border-top: 1px solid rgba(255, 77, 133, 0.08) !important;
+}
+
+/* ====== 输入框与交互 ====== */
+.input-love {
+  background: #f7f9fa;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  transition: all 0.3s ease;
+}
+.input-love:focus {
+  background: white;
+  border-color: var(--color-primary-light);
+  box-shadow: 0 0 0 4px var(--color-primary-fade);
+  outline: none;
+}
+
+/* 小红书风格的瀑布流卡片间隙 */
+.waterfall-gap {
+  gap: 12px;
+}

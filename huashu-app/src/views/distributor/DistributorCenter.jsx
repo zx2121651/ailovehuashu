@@ -66,7 +66,7 @@ const DistributorCenter = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 pb-24 animate-in fade-in slide-in-from-right-4 duration-300">
-      <div className="sticky top-0 z-50 bg-white border-b border-slate-100 flex items-center justify-between px-4 py-3">
+      <div className="sticky top-0 z-50 love-card border-b border-slate-100 flex items-center justify-between px-4 py-3">
         <button onClick={() => setActiveTab('profile')} className="p-2 -ml-2 text-slate-600 active:bg-slate-100 rounded-full">
           <ChevronLeft size={24} />
         </button>
@@ -83,7 +83,7 @@ const DistributorCenter = () => {
             </div>
             <button
               onClick={() => setActiveTab('distributor_withdraw')}
-              className="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-full text-sm font-medium backdrop-blur-sm transition-colors"
+              className="px-4 py-2 love-card/20 hover:love-card/30 rounded-full text-sm font-medium backdrop-blur-sm transition-colors"
             >
               去提现
             </button>
@@ -103,7 +103,7 @@ const DistributorCenter = () => {
         <div className="grid grid-cols-2 gap-4">
           <button
             onClick={() => setActiveTab('distributor_team')}
-            className="flex flex-col items-center justify-center bg-white p-5 rounded-2xl shadow-sm border border-slate-100 active:scale-95 transition-transform"
+            className="flex flex-col items-center justify-center love-card p-5 rounded-2xl shadow-sm border border-slate-100 active:scale-95 transition-transform"
           >
             <div className="w-12 h-12 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center mb-3">
               <Users size={24} />
@@ -114,7 +114,7 @@ const DistributorCenter = () => {
 
           <button
             onClick={() => setShowPoster(true)}
-            className="flex flex-col items-center justify-center bg-white p-5 rounded-2xl shadow-sm border border-slate-100 active:scale-95 transition-transform"
+            className="flex flex-col items-center justify-center love-card p-5 rounded-2xl shadow-sm border border-slate-100 active:scale-95 transition-transform"
           >
             <div className="w-12 h-12 rounded-full bg-pink-50 text-pink-500 flex items-center justify-center mb-3">
               <QrCode size={24} />
@@ -127,13 +127,13 @@ const DistributorCenter = () => {
 
       {showPoster && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm px-8 animate-in fade-in duration-200" onClick={() => setShowPoster(false)}>
-          <div className="bg-white w-full max-w-sm rounded-3xl overflow-hidden shadow-2xl relative" onClick={e => e.stopPropagation()} ref={posterRef}>
+          <div className="love-card w-full max-w-sm rounded-3xl overflow-hidden shadow-2xl relative" onClick={e => e.stopPropagation()} ref={posterRef}>
             <div className="bg-gradient-to-br from-rose-500 to-pink-600 p-8 text-center text-white">
               <h2 className="text-2xl font-black italic tracking-wider mb-2">话术库精选</h2>
               <p className="text-sm opacity-90">高情商恋爱话术，助你轻松脱单</p>
             </div>
             <div className="p-8 flex flex-col items-center bg-rose-50/30">
-              <div className="bg-white p-3 rounded-2xl shadow-sm border border-rose-100 mb-4">
+              <div className="love-card p-3 rounded-2xl shadow-sm border border-rose-100 mb-4">
                 <QRCodeSVG value={shareUrl} size={160} level="H" includeMargin={false} fgColor="#e11d48" />
               </div>
               <p className="text-sm text-slate-500 mb-2">扫描上方二维码注册</p>

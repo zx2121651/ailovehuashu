@@ -88,7 +88,7 @@ function StoryPlay() {
   const isCompleted = progress.status === 'COMPLETED';
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col overflow-hidden relative">
+    <div className="min-h-screen bg-transparent flex flex-col overflow-hidden relative">
       {/* 顶部导航 */}
       <div className="absolute top-0 left-0 right-0 p-4 flex justify-between items-center z-20 text-white">
         <button onClick={() => setActiveTab('story')} className="p-2 bg-black/30 backdrop-blur rounded-full hover:bg-black/50 transition">
@@ -130,7 +130,7 @@ function StoryPlay() {
               >
                 {/* 讲述人 */}
                 {currentNode.speakerName && (
-                  <div className="inline-flex items-center px-3 py-1 bg-white/10 backdrop-blur rounded-full text-white text-sm font-medium mb-3 border border-white/20 shadow-sm">
+                  <div className="inline-flex items-center px-3 py-1 love-card/10 backdrop-blur rounded-full text-white text-sm font-medium mb-3 border border-white/20 shadow-sm">
                     <User className="w-4 h-4 mr-1.5 text-rose-300" /> {currentNode.speakerName}
                   </div>
                 )}
@@ -149,7 +149,7 @@ function StoryPlay() {
                         key={choice.id}
                         onClick={() => handleMakeChoice(choice)}
                         disabled={isSubmitting}
-                        className="w-full bg-white/10 backdrop-blur-md hover:bg-white/20 border border-white/20 text-white p-4 rounded-xl text-left transition-all relative overflow-hidden group"
+                        className="w-full love-card/10 backdrop-blur-md hover:love-card/20 border border-white/20 text-white p-4 rounded-xl text-left transition-all relative overflow-hidden group"
                       >
                         <div className="flex">
                           <span className="text-rose-400 font-bold mr-3">{String.fromCharCode(65 + index)}.</span>
@@ -173,7 +173,7 @@ function StoryPlay() {
               <motion.div
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="bg-white rounded-3xl p-8 text-center shadow-2xl w-full max-w-sm mx-auto my-12 relative overflow-hidden"
+                className="love-card rounded-3xl p-8 text-center shadow-2xl w-full max-w-sm mx-auto my-12 relative overflow-hidden"
               >
                 <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-pink-400 to-rose-400"></div>
                 <div className="w-20 h-20 bg-rose-50 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
@@ -182,7 +182,7 @@ function StoryPlay() {
                 <h2 className="text-2xl font-bold text-gray-900 mb-2">剧本达成</h2>
                 <p className="text-gray-500 mb-6">本次互动的最终好感度结算</p>
 
-                <div className="bg-gray-50 rounded-2xl p-6 mb-8 border border-gray-100">
+                <div className="bg-transparent rounded-2xl p-6 mb-8 border border-transparent">
                   <div className="text-4xl font-black text-rose-500 mb-1">
                     {progress.affectionScore > 0 ? '+' : ''}{progress.affectionScore}
                   </div>
@@ -193,7 +193,7 @@ function StoryPlay() {
                   <button onClick={handleReset} className="w-full bg-pink-500 hover:bg-pink-600 text-white font-medium py-3.5 rounded-xl transition-colors shadow-sm">
                     再次挑战
                   </button>
-                  <button onClick={() => setActiveTab('story')} className="w-full bg-white hover:bg-gray-50 text-gray-700 font-medium py-3.5 rounded-xl transition-colors border border-gray-200 shadow-sm">
+                  <button onClick={() => setActiveTab('story')} className="w-full love-card hover:bg-transparent text-gray-700 font-medium py-3.5 rounded-xl transition-colors border border-gray-200 shadow-sm">
                     返回列表
                   </button>
                 </div>

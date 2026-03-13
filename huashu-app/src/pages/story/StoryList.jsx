@@ -30,15 +30,15 @@ function StoryList() {
   };
 
   const getStatusBadge = (status) => {
-    if (status === 'COMPLETED') return <span className="bg-white/20 backdrop-blur-sm text-white border border-white/30 text-xs px-2 py-1 rounded-full ml-2">已通关</span>;
+    if (status === 'COMPLETED') return <span className="love-card/20 backdrop-blur-sm text-white border border-white/30 text-xs px-2 py-1 rounded-full ml-2">已通关</span>;
     if (status === 'IN_PROGRESS') return <span className="bg-pink-500/50 backdrop-blur-sm text-white border border-pink-400/50 text-xs px-2 py-1 rounded-full ml-2">进行中</span>;
     return <span className="bg-black/30 backdrop-blur-sm text-white border border-white/20 text-xs px-2 py-1 rounded-full ml-2">未开始</span>;
   };
 
   return (
-    <div className="pb-20 bg-gray-50 min-h-screen">
+    <div className="pb-20 bg-transparent min-h-screen">
       {/* 1. 顶部栏 (Header) */}
-      <div className="bg-white/80 backdrop-blur-md text-slate-800 p-4 sticky top-0 z-10 flex items-center justify-between shadow-sm border-b border-pink-50">
+      <div className="love-card/80 backdrop-blur-md text-slate-800 p-4 sticky top-0 z-10 flex items-center justify-between shadow-sm border-b border-pink-50">
         <h1 className="text-xl font-bold flex items-center">
           <Heart className="w-5 h-5 text-pink-400 mr-2 fill-current" />
           互动情景模拟
@@ -48,7 +48,7 @@ function StoryList() {
       <div className="p-4">
         {/* 2. 引导提示框 (Tip Box) */}
         <div className="bg-gradient-to-r from-pink-50 to-rose-50 border border-pink-100 p-4 rounded-2xl flex items-start mb-6 shadow-sm">
-          <div className="bg-white p-1.5 rounded-full shadow-sm mr-3 flex-shrink-0 mt-0.5">
+          <div className="love-card p-1.5 rounded-full shadow-sm mr-3 flex-shrink-0 mt-0.5">
             <Sparkles className="w-4 h-4 text-pink-500" />
           </div>
           <p className="text-sm text-slate-700 leading-relaxed">
@@ -68,7 +68,7 @@ function StoryList() {
             {stories.map(story => (
               <div
                 key={story.id}
-                className="group relative bg-white rounded-3xl shadow-md border border-gray-50 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer"
+                className="group relative love-card rounded-3xl shadow-md border border-gray-50 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer"
                 onClick={() => setActiveTab('story_play', { id: story.id })}
               >
                 {/* 3. 沉浸式大图 (Story Cards) */}

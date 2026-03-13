@@ -42,7 +42,7 @@ const MyTeam = () => {
     }
 
     return (
-      <div className="divide-y divide-slate-100 bg-white px-4">
+      <div className="divide-y divide-slate-100 love-card px-4">
         {list.map(member => (
           <div key={member.id} className="py-4 flex items-center justify-between">
             <div className="flex items-center">
@@ -68,7 +68,7 @@ const MyTeam = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 animate-in fade-in slide-in-from-right-4 duration-300">
-      <div className="sticky top-0 z-50 bg-white border-b border-slate-100">
+      <div className="sticky top-0 z-50 love-card border-b border-slate-100">
         <div className="flex items-center justify-between px-4 py-3">
           <button onClick={() => setActiveTab('distributor')} className="p-2 -ml-2 text-slate-600 rounded-full">
             <ChevronLeft size={24} />

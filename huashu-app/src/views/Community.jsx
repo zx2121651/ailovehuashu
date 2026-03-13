@@ -264,9 +264,9 @@ export default function Community() {
   };
 
   return (
-    <div className="bg-gray-50 min-h-full pb-24 relative">
+    <div className="bg-transparent min-h-full pb-24 relative">
       {/* Header */}
-      <div className="sticky top-0 z-30 bg-white/80 backdrop-blur-md px-5 py-3 border-b border-gray-100">
+      <div className="sticky top-0 z-30 love-card/80 backdrop-blur-md px-5 py-3 border-b border-transparent">
         <div className="flex justify-between items-center mb-2">
           <h1 className="text-xl font-extrabold text-gray-800">圈子</h1>
           {/* Tab switch for sorting */}
@@ -275,7 +275,7 @@ export default function Community() {
               <button
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key)}
-                className={`text-[11px] px-3 py-1 font-bold rounded-md transition-colors ${activeTab === tab.key ? 'bg-white shadow-sm text-gray-800' : 'text-gray-500'}`}
+                className={`text-[11px] px-3 py-1 font-bold rounded-md transition-colors ${activeTab === tab.key ? 'love-card shadow-sm text-gray-800' : 'text-gray-500'}`}
               >{tab.label}</button>
             ))}
           </div>
@@ -285,7 +285,7 @@ export default function Community() {
         <div className="flex space-x-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
           <button
              onClick={() => setActiveCategoryId('')}
-             className={`shrink-0 text-xs px-3 py-1.5 rounded-full font-bold transition-colors ${!activeCategoryId ? 'bg-pink-500 text-white shadow-sm shadow-pink-200' : 'bg-white text-gray-500 border border-gray-200'}`}
+             className={`shrink-0 text-xs px-3 py-1.5 rounded-full font-bold transition-colors ${!activeCategoryId ? 'bg-pink-500 text-white shadow-sm shadow-pink-200' : 'love-card text-gray-500 border border-gray-200'}`}
           >
             全部
           </button>
@@ -293,7 +293,7 @@ export default function Community() {
              <button
                key={c.id}
                onClick={() => setActiveCategoryId(c.id)}
-               className={`shrink-0 text-xs px-3 py-1.5 rounded-full font-bold transition-colors ${activeCategoryId === c.id ? 'bg-pink-500 text-white shadow-sm shadow-pink-200' : 'bg-white text-gray-500 border border-gray-200'}`}
+               className={`shrink-0 text-xs px-3 py-1.5 rounded-full font-bold transition-colors ${activeCategoryId === c.id ? 'bg-pink-500 text-white shadow-sm shadow-pink-200' : 'love-card text-gray-500 border border-gray-200'}`}
              >
                {c.name}
              </button>
@@ -306,7 +306,7 @@ export default function Community() {
         {loading ? (
           // Skeleton Loader
           Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="bg-white p-5 rounded-3xl shadow-sm border border-gray-100 animate-pulse">
+            <div key={i} className="love-card p-5 rounded-3xl shadow-sm border border-transparent animate-pulse">
               <div className="flex items-center space-x-3 mb-4">
                 <div className="w-10 h-10 bg-gray-200 rounded-full"></div>
                 <div className="space-y-2">
@@ -326,7 +326,7 @@ export default function Community() {
         ) : (
           <>
             {posts.map((post, idx) => (
-              <div key={post.id} className="bg-white p-5 rounded-3xl shadow-sm border border-gray-100 transition-all hover:shadow-md relative">
+              <div key={post.id} className="love-card p-5 rounded-3xl shadow-sm border border-transparent transition-all hover:shadow-md relative">
                 {/* User Info */}
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center space-x-3">
@@ -355,8 +355,8 @@ export default function Community() {
 
                 {/* Inline Action Sheet */}
                 {activeActionSheetPostId === post.id && (
-                  <div className="absolute right-5 top-14 bg-white shadow-xl rounded-xl border border-gray-100 py-2 w-28 z-20 animate-in fade-in zoom-in-95 duration-200">
-                    <button onClick={() => openReportModal(post.id)} className="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-gray-50 flex items-center">
+                  <div className="absolute right-5 top-14 love-card shadow-xl rounded-xl border border-transparent py-2 w-28 z-20 animate-in fade-in zoom-in-95 duration-200">
+                    <button onClick={() => openReportModal(post.id)} className="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-transparent flex items-center">
                       <AlertTriangle size={14} className="mr-2" /> 举报
                     </button>
                   </div>
@@ -414,7 +414,7 @@ export default function Community() {
 
               {/* Inline Comment Section */}
               {activeCommentPostId === post.id && (
-                <div className="mt-4 bg-gray-50 rounded-2xl p-4 animate-in slide-in-from-top-2 duration-200">
+                <div className="mt-4 bg-transparent rounded-2xl p-4 animate-in slide-in-from-top-2 duration-200">
                   <CommentSection targetType="POST" targetId={post.id} />
                 </div>
               )}
@@ -452,8 +452,8 @@ export default function Community() {
       {/* Create Post Modal */}
       {showCreateModal && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 animate-in fade-in duration-200" onClick={() => setShowCreateModal(false)}>
-          <div className="bg-white w-full sm:w-[400px] sm:rounded-[2rem] rounded-t-[2rem] h-[85vh] sm:h-auto sm:max-h-[90vh] flex flex-col shadow-2xl animate-in slide-in-from-bottom-full duration-300" onClick={e => e.stopPropagation()}>
-            <div className="flex justify-between items-center p-5 border-b border-gray-100">
+          <div className="love-card w-full sm:w-[400px] sm:rounded-[2rem] rounded-t-[2rem] h-[85vh] sm:h-auto sm:max-h-[90vh] flex flex-col shadow-2xl animate-in slide-in-from-bottom-full duration-300" onClick={e => e.stopPropagation()}>
+            <div className="flex justify-between items-center p-5 border-b border-transparent">
               <span className="text-gray-400 cursor-pointer p-1" onClick={() => setShowCreateModal(false)}>取消</span>
               <h3 className="font-bold text-gray-800 text-lg">发动态</h3>
               <button onClick={handleSubmitPost} disabled={submitting} className={`px-4 py-1.5 rounded-full text-sm font-bold transition-all ${submitting ? 'bg-gray-100 text-gray-400' : 'bg-pink-500 text-white shadow-md shadow-pink-200 active:scale-95'}`}>
@@ -471,13 +471,13 @@ export default function Community() {
               />
 
               {/* Category Selection */}
-              <div className="mb-4 flex flex-wrap gap-2 border-b border-gray-100 pb-4">
+              <div className="mb-4 flex flex-wrap gap-2 border-b border-transparent pb-4">
                 <span className="text-[12px] font-bold text-gray-800 w-full mb-1">选择分类:</span>
                 {categories.map(c => (
                   <button
                     key={c.id}
                     onClick={() => setSelectedCategoryId(selectedCategoryId === c.id ? '' : c.id)}
-                    className={`px-3 py-1.5 rounded-full text-[11px] font-bold border transition-colors ${selectedCategoryId === c.id ? 'bg-pink-50 border-pink-200 text-pink-500' : 'bg-white border-gray-200 text-gray-500'}`}
+                    className={`px-3 py-1.5 rounded-full text-[11px] font-bold border transition-colors ${selectedCategoryId === c.id ? 'bg-pink-50 border-pink-200 text-pink-500' : 'love-card border-gray-200 text-gray-500'}`}
                   >
                     {c.name}
                   </button>
@@ -490,7 +490,7 @@ export default function Community() {
                   <button
                     key={tag}
                     onClick={() => setSelectedTag(selectedTag === tag ? '' : tag)}
-                    className={`px-3 py-1.5 rounded-full text-[11px] font-bold border transition-colors flex items-center ${selectedTag === tag ? 'bg-blue-50 border-blue-200 text-blue-500' : 'bg-white border-gray-200 text-gray-500'}`}
+                    className={`px-3 py-1.5 rounded-full text-[11px] font-bold border transition-colors flex items-center ${selectedTag === tag ? 'bg-blue-50 border-blue-200 text-blue-500' : 'love-card border-gray-200 text-gray-500'}`}
                   >
                     <Tag size={12} className="mr-1" /> {tag}
                   </button>
@@ -508,7 +508,7 @@ export default function Community() {
                   </div>
                 ))}
                 {newImages.length < 9 && (
-                  <label className="aspect-square bg-gray-50 rounded-xl border border-dashed border-gray-300 flex flex-col items-center justify-center text-gray-400 cursor-pointer hover:bg-gray-100 transition-colors relative overflow-hidden">
+                  <label className="aspect-square bg-transparent rounded-xl border border-dashed border-gray-300 flex flex-col items-center justify-center text-gray-400 cursor-pointer hover:bg-gray-100 transition-colors relative overflow-hidden">
                     {uploadingImage ? (
                       <div className="w-5 h-5 border-2 border-pink-500 border-t-transparent rounded-full animate-spin mb-1"></div>
                     ) : (
@@ -551,11 +551,11 @@ export default function Community() {
       {/* Report Modal */}
       {showReportModal && (
         <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-black/40 animate-in fade-in duration-200" onClick={() => setShowReportModal(false)}>
-          <div className="bg-white w-full sm:w-[350px] sm:rounded-3xl rounded-t-3xl p-5 shadow-xl animate-in slide-in-from-bottom-full duration-300" onClick={e => e.stopPropagation()}>
+          <div className="love-card w-full sm:w-[350px] sm:rounded-3xl rounded-t-3xl p-5 shadow-xl animate-in slide-in-from-bottom-full duration-300" onClick={e => e.stopPropagation()}>
             <h3 className="font-bold text-gray-800 text-lg mb-4 text-center">举报不良内容</h3>
             <div className="space-y-3 mb-6">
               {reportReasonsList.map(reason => (
-                <label key={reason} className="flex items-center space-x-3 p-3 rounded-xl border border-gray-100 active:bg-gray-50 transition-colors">
+                <label key={reason} className="flex items-center space-x-3 p-3 rounded-xl border border-transparent active:bg-transparent transition-colors">
                   <input
                     type="radio"
                     name="reportReason"
