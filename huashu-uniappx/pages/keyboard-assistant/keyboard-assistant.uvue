@@ -1,0 +1,242 @@
+<template>
+  <view class="container">
+    <!-- 顶部渐变背景 -->
+    <view class="header-bg">
+      <view class="header-content">
+        <text class="header-title">悬浮窗 & 键盘助手</text>
+        <text class="header-desc">在微信/QQ等聊天软件中，无需切换 App 即可快速查话术、一键发送。</text>
+      </view>
+    </view>
+
+    <scroll-view class="content-scroll" scroll-y>
+
+      <!-- 主开关卡片 -->
+      <view class="setting-card main-toggle-card">
+        <view class="card-left">
+          <view class="icon-wrap bg-gradient-pink">
+            <text class="icon-text">✨</text>
+          </view>
+          <view class="card-info">
+            <text class="card-title">启用聊天悬浮助手</text>
+            <text class="card-desc">开启后，屏幕边缘将显示悬浮图标</text>
+          </view>
+        </view>
+        <switch :checked="isFloatWindowEnabled" color="#ec4899" style="transform: scale(0.8);" @change="toggleFloatWindow" />
+      </view>
+
+      <!-- 权限检测提示 -->
+      <view class="permission-banner" v-if="isFloatWindowEnabled && !hasPermission">
+        <view class="permission-icon-wrap">
+          <text class="permission-icon">⚠️</text>
+        </view>
+        <view class="permission-info">
+          <text class="permission-title">缺少悬浮窗权限</text>
+          <text class="permission-desc">请前往系统设置允许“显示在其他应用上层”</text>
+        </view>
+        <view class="permission-btn" @click="goToSystemSettings">
+          <text class="permission-btn-text">去授权</text>
+        </view>
+      </view>
+
+      <!-- 同步内容设置 -->
+      <view class="section-title-row mt-4">
+        <text class="section-title">显示内容设置</text>
+      </view>
+      <view class="setting-group">
+        <view class="setting-item" @click="appStore.showToast('选择展示的分类')">
+          <view class="setting-item-left">
+            <text class="setting-item-icon">📂</text>
+            <text class="setting-item-label">同步的话术库</text>
+          </view>
+          <view class="setting-item-right">
+            <text class="setting-item-value">全部精选</text>
+            <text class="setting-item-arrow">></text>
+          </view>
+        </view>
+        <view class="divider"></view>
+        <view class="setting-item" @click="appStore.showToast('选择收藏夹')">
+          <view class="setting-item-left">
+            <text class="setting-item-icon">❤️</text>
+            <text class="setting-item-label">优先展示收藏夹</text>
+          </view>
+          <view class="setting-item-right">
+            <text class="setting-item-value">约会话术</text>
+            <text class="setting-item-arrow">></text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 个性化设置 -->
+      <view class="section-title-row mt-4">
+        <text class="section-title">个性化</text>
+      </view>
+      <view class="setting-group">
+        <view class="setting-item">
+          <view class="setting-item-left">
+            <text class="setting-item-icon">🎨</text>
+            <text class="setting-item-label">悬浮窗主题</text>
+          </view>
+          <view class="setting-item-right">
+            <text class="setting-item-value">粉粉甜心</text>
+            <text class="setting-item-arrow">></text>
+          </view>
+        </view>
+        <view class="divider"></view>
+        <view class="setting-item">
+          <view class="setting-item-left">
+            <text class="setting-item-icon">📏</text>
+            <text class="setting-item-label">悬浮窗大小</text>
+          </view>
+          <view class="setting-item-right">
+            <text class="setting-item-value">标准</text>
+            <text class="setting-item-arrow">></text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 使用教程 -->
+      <view class="tutorial-section">
+        <view class="tutorial-header">
+          <text class="tutorial-icon">💡</text>
+          <text class="tutorial-title">使用教程</text>
+        </view>
+        <view class="tutorial-steps">
+          <view class="step-item">
+            <view class="step-number">1</view>
+            <text class="step-text">打开本页面的开关，并授予悬浮窗权限。</text>
+          </view>
+          <view class="step-line"></view>
+          <view class="step-item">
+            <view class="step-number">2</view>
+            <text class="step-text">打开微信或QQ等聊天界面，点击屏幕边缘出现的 ✨ 悬浮球。</text>
+          </view>
+          <view class="step-line"></view>
+          <view class="step-item">
+            <view class="step-number">3</view>
+            <text class="step-text">在弹出的微型话术面板中搜索或选择高分回复，点击“发送”。</text>
+          </view>
+        </view>
+        <!-- 模拟预览图 -->
+        <view class="preview-box">
+          <view class="preview-chat-mock">
+            <view class="mock-bubble-left">在干嘛呢？</view>
+            <view class="mock-fab-demo">
+              <text class="mock-fab-icon">✨</text>
+            </view>
+            <view class="mock-bubble-right">刚忙完，正准备想你呢~</view>
+          </view>
+        </view>
+      </view>
+
+      <view class="bottom-spacer"></view>
+    </scroll-view>
+  </view>
+</template>
+
+<script setup lang="uts">
+import { ref } from 'vue'
+import { useAppStore } from '../../store/app.uts'
+
+const appStore = useAppStore
+
+const isFloatWindowEnabled = ref(false)
+const hasPermission = ref(false)
+
+const toggleFloatWindow = (e: any) => {
+  const value = e.detail.value
+  isFloatWindowEnabled.value = value
+
+  if (value) {
+    // 模拟检测原生系统权限
+    setTimeout(() => {
+      hasPermission.value = false // 模拟未授权，提示用户
+      if(!hasPermission.value) {
+        appStore.showToast('为了正常使用，请允许显示在其他应用上层')
+      }
+    }, 500)
+  } else {
+    appStore.showToast('已关闭悬浮助手')
+  }
+}
+
+const goToSystemSettings = () => {
+  appStore.showToast('正在跳转系统设置...')
+  // 在实际的原生插件开发中，这里会调用：
+  // plus.android.importClass("android.provider.Settings");
+  // 引导用户去开启 ACTION_MANAGE_OVERLAY_PERMISSION
+  setTimeout(() => {
+    hasPermission.value = true // 模拟用户已授权归来
+    appStore.showToast('授权成功，悬浮球已激活')
+  }, 1500)
+}
+</script>
+
+<style>
+page { display: flex; flex-direction: column; height: 100%; background-color: #f5f7fa; }
+.container { flex: 1; display: flex; flex-direction: column; height: 100%; overflow: hidden; }
+
+/* Header */
+.header-bg { background-image: linear-gradient(to bottom right, #fce7f3, #fbcfe8); padding: 40px 20px 30px; }
+.header-content { align-items: flex-start; }
+.header-title { font-size: 24px; font-weight: 800; color: #db2777; margin-bottom: 8px; }
+.header-desc { font-size: 12px; color: #be185d; line-height: 1.5; opacity: 0.9; }
+
+/* Content */
+.content-scroll { flex: 1; padding: 0 16px; margin-top: -16px; }
+
+/* Cards */
+.setting-card { background-color: #ffffff; border-radius: 20px; padding: 16px; flex-direction: row; justify-content: space-between; align-items: center; box-shadow: 0 4px 12px -4px rgba(0,0,0,0.05); margin-bottom: 16px; }
+.main-toggle-card { border-width: 2px; border-style: solid; border-color: #fdf2f8; }
+.card-left { flex-direction: row; align-items: center; flex: 1; }
+.icon-wrap { width: 44px; height: 44px; border-radius: 22px; align-items: center; justify-content: center; margin-right: 12px; }
+.bg-gradient-pink { background-image: linear-gradient(to bottom right, #f43f5e, #ec4899); }
+.icon-text { font-size: 20px; color: #ffffff; }
+.card-info { flex: 1; }
+.card-title { font-size: 15px; font-weight: bold; color: #1f2937; margin-bottom: 4px; }
+.card-desc { font-size: 11px; color: #9ca3af; }
+
+/* Permission Banner */
+.permission-banner { background-color: #fffbeb; border-width: 1px; border-style: solid; border-color: #fde68a; border-radius: 16px; padding: 12px 16px; flex-direction: row; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.permission-icon-wrap { margin-right: 12px; }
+.permission-icon { font-size: 24px; }
+.permission-info { flex: 1; }
+.permission-title { font-size: 14px; font-weight: bold; color: #d97706; margin-bottom: 2px; }
+.permission-desc { font-size: 11px; color: #b45309; }
+.permission-btn { background-color: #f59e0b; padding: 6px 12px; border-radius: 14px; margin-left: 12px; }
+.permission-btn-text { font-size: 11px; color: #ffffff; font-weight: bold; }
+
+/* Settings Group */
+.section-title-row { margin-bottom: 10px; padding: 0 4px; }
+.section-title { font-size: 13px; font-weight: bold; color: #6b7280; }
+.setting-group { background-color: #ffffff; border-radius: 20px; box-shadow: 0 2px 8px -4px rgba(0,0,0,0.05); margin-bottom: 16px; }
+.setting-item { flex-direction: row; justify-content: space-between; align-items: center; padding: 16px; }
+.setting-item-left { flex-direction: row; align-items: center; }
+.setting-item-icon { font-size: 16px; margin-right: 10px; }
+.setting-item-label { font-size: 14px; color: #374151; font-weight: 500; }
+.setting-item-right { flex-direction: row; align-items: center; }
+.setting-item-value { font-size: 12px; color: #9ca3af; margin-right: 8px; }
+.setting-item-arrow { font-size: 14px; color: #d1d5db; }
+.divider { height: 1px; background-color: #f3f4f6; margin: 0 16px; }
+
+/* Tutorial */
+.tutorial-section { background-color: #ffffff; border-radius: 20px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 8px -4px rgba(0,0,0,0.05); }
+.tutorial-header { flex-direction: row; align-items: center; margin-bottom: 16px; }
+.tutorial-icon { font-size: 18px; margin-right: 8px; }
+.tutorial-title { font-size: 15px; font-weight: bold; color: #1f2937; }
+
+.tutorial-steps { padding-left: 8px; margin-bottom: 20px; }
+.step-item { flex-direction: row; align-items: flex-start; }
+.step-number { width: 20px; height: 20px; border-radius: 10px; background-color: #fce7f3; color: #ec4899; font-size: 11px; font-weight: bold; display: flex; align-items: center; justify-content: center; margin-right: 12px; margin-top: 2px; flex-shrink: 0; }
+.step-text { font-size: 13px; color: #4b5563; line-height: 1.5; flex: 1; }
+.step-line { width: 2px; height: 16px; background-color: #f3f4f6; margin-left: 9px; margin-top: 4px; margin-bottom: 4px; }
+
+.preview-box { background-color: #f3f4f6; border-radius: 16px; padding: 16px; align-items: center; border-width: 1px; border-style: dashed; border-color: #d1d5db; }
+.preview-chat-mock { width: 100%; position: relative; padding-bottom: 20px; }
+.mock-bubble-left { background-color: #ffffff; padding: 10px 14px; border-radius: 16px; align-self: flex-start; font-size: 12px; color: #1f2937; margin-bottom: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+.mock-bubble-right { background-color: #ec4899; padding: 10px 14px; border-radius: 16px; align-self: flex-end; font-size: 12px; color: #ffffff; box-shadow: 0 2px 4px rgba(236,72,153,0.3); }
+.mock-fab-demo { position: absolute; right: -8px; top: 20px; width: 40px; height: 40px; border-radius: 20px; background-image: linear-gradient(to bottom right, #f43f5e, #ec4899); align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(236,72,153,0.4); border-width: 2px; border-style: solid; border-color: #ffffff; z-index: 10; }
+.mock-fab-icon { font-size: 16px; color: #ffffff; }
+
+.mt-4 { margin-top: 16px; }
+.bottom-spacer { height: 40px; }
+</style>

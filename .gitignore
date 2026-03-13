@@ -1,0 +1,38 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Database
+data/postgres/
+
+# Logs
+*.log
+*.pid
+
+# Environment variables
+.env
+.env.local
+
+# Build outputs
+dist/
+build/
+unpackage/
+
+# Tokens and secrets
+token.txt
+admin_token.txt
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker volumes
+postgres_data/
+
+# Temporary files
+*.tmp
+*.temp

@@ -1,0 +1,78 @@
+<template>
+  <view class="container">
+    <view v-if="sessions.length === 0" class="empty-state">
+      <text class="empty-icon">🤖</text>
+      <text class="empty-text">还没有和 AI 导师聊过天哦</text>
+      <view class="go-btn" @click="goToAI">
+        <text class="go-btn-text">现在去聊</text>
+      </view>
+    </view>
+
+    <scroll-view v-else class="scroll-area" scroll-y>
+      <view class="session-card" v-for="session in sessions" :key="session.id" @click="resumeChat(session)">
+        <view class="session-header">
+          <view class="session-title-wrap">
+            <text class="session-icon">💬</text>
+            <text class="session-title" :lines="1">{{ session.title }}</text>
+          </view>
+          <text class="session-time">{{ session.time }}</text>
+        </view>
+        <view class="session-preview">
+          <text class="preview-text" :lines="2">{{ session.lastMessage }}</text>
+        </view>
+        <view class="session-footer">
+          <text class="msg-count">共 {{ session.msgCount }} 条对话</text>
+          <text class="resume-text">继续对话 ›</text>
+        </view>
+      </view>
+      <view class="bottom-spacer"></view>
+    </scroll-view>
+  </view>
+</template>
+
+<script setup lang="uts">
+import { ref } from 'vue'
+
+const sessions = ref([
+  { id: 1, title: '关于怎么邀约周末看电影', time: '昨天 21:00', lastMessage: 'AI: 建议你可以这样说：“最近新上映的那部电影听说口碑不错，周末要一起去‘扫雷’吗？”', msgCount: 8 },
+  { id: 2, title: '惹女朋友生气了怎么办', time: '周二 14:30', lastMessage: 'AI: 首先要真诚道歉，不要试图讲道理。可以说：“对不起宝贝，我刚才态度不好，看到你不开心我心里比你还难受...”', msgCount: 15 },
+  { id: 3, title: '相亲开场白', time: '11-15 10:00', lastMessage: '用户: 刚加相亲对象微信，第一句话说什么好？', msgCount: 2 }
+])
+
+const goToAI = () => {
+  uni.switchTab({ url: '/pages/ai/ai' })
+}
+
+const resumeChat = (session: any) => {
+  // 实际项目中应该把 session id 传给 AI 页面恢复上下文
+  uni.switchTab({ url: '/pages/ai/ai' })
+}
+</script>
+
+<style>
+page { background-color: #f9fafb; height: 100%; }
+.container { flex: 1; display: flex; flex-direction: column; height: 100%; }
+
+.empty-state { flex: 1; align-items: center; justify-content: center; padding-bottom: 100px; }
+.empty-icon { font-size: 50px; margin-bottom: 16px; opacity: 0.5; }
+.empty-text { font-size: 14px; color: #9ca3af; margin-bottom: 24px; }
+.go-btn { background-color: #ec4899; padding: 10px 32px; border-radius: 20px; }
+.go-btn-text { color: #ffffff; font-size: 14px; font-weight: bold; }
+
+.scroll-area { flex: 1; padding: 16px; }
+.session-card { background-color: #ffffff; border-radius: 16px; padding: 16px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.03); border-width: 1px; border-style: solid; border-color: #f3f4f6; }
+.session-header { flex-direction: row; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.session-title-wrap { flex-direction: row; align-items: center; flex: 1; padding-right: 12px; }
+.session-icon { font-size: 14px; margin-right: 6px; }
+.session-title { font-size: 14px; font-weight: bold; color: #1f2937; flex: 1; }
+.session-time { font-size: 11px; color: #9ca3af; }
+
+.session-preview { background-color: #f9fafb; padding: 10px 12px; border-radius: 12px; margin-bottom: 12px; }
+.preview-text { font-size: 13px; color: #4b5563; line-height: 1.5; }
+
+.session-footer { flex-direction: row; justify-content: space-between; align-items: center; }
+.msg-count { font-size: 11px; color: #9ca3af; }
+.resume-text { font-size: 12px; color: #db2777; font-weight: bold; }
+
+.bottom-spacer { height: 40px; }
+</style>

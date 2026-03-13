@@ -1,0 +1,422 @@
+<template>
+  <view class="container flex-col bg-slate-50 h-full relative fade-in">
+    <!-- Header -->
+    <view class="header-bar bg-white/90 px-4 py-3 border-b border-gray-100 flex-row justify-between items-center z-50 sticky top-0 shadow-sm">
+      <view class="back-btn p-2 -ml-2" @click="goBack">
+        <text class="text-xl text-gray-800">‹</text>
+      </view>
+      <text class="text-lg font-bold text-gray-800">课程详情</text>
+      <view class="w-10"></view>
+    </view>
+
+    <scroll-view class="flex-1 p-4 pb-24" scroll-y>
+      <!-- 顶部视频/预览区 -->
+      <view class="video-container relative w-full h-56 bg-black rounded-3xl overflow-hidden shadow-xl mb-4">
+        <view v-if="activeLesson !== -1" class="flex-1 flex-col justify-between h-full">
+          <view class="absolute inset-0 flex-row items-center justify-center z-20 pointer-events-none">
+            <view v-if="isPlaying" class="flex-col items-center bg-black-40 px-4 py-3 rounded-2xl">
+              <text class="text-pink-500 text-3xl animate-spin mb-2">🌀</text>
+              <text class="text-white text-xs font-bold tracking-widest">正在缓冲视频...</text>
+            </view>
+            <view v-else class="play-btn-wrap w-16 h-16 bg-white-20 rounded-full flex-row items-center justify-center pointer-events-auto border border-white-30" @click="isPlaying = true">
+              <text class="text-white text-4xl ml-1">▶</text>
+            </view>
+          </view>
+          <!-- 顶部标题栏 -->
+          <view class="video-top bg-gradient-to-b p-5 pb-10 z-10 flex-row justify-between items-start">
+            <text class="text-white text-sm font-bold flex-1 pr-4" style="lines: 1; text-overflow: ellipsis; overflow: hidden;">{{ courseData.lessons[activeLesson].title }}</text>
+            <view class="hd-badge bg-black-40 px-2 py-0_5 rounded border border-white-20">
+              <text class="text-white-80 text-xs">高清</text>
+            </view>
+          </view>
+          <!-- 底部控制栏 -->
+          <view class="video-bottom bg-gradient-to-t p-5 pt-12 z-10 flex-col">
+            <view class="progress-bar w-full h-1_5 bg-white-30 rounded-full mb-4 relative overflow-hidden">
+              <view class="progress-fill absolute top-0 left-0 h-full bg-gradient-pink rounded-full transition-all" :style="{ width: isPlaying ? '33%' : '0%' }"></view>
+              <view class="progress-thumb absolute top-1_2 -translate-y-1_2 w-4 h-4 bg-white rounded-full shadow-md border-2 border-pink-500 transition-all" :style="{ left: isPlaying ? '33%' : '0' }"></view>
+            </view>
+            <view class="flex-row justify-between items-center text-white">
+              <view class="flex-row items-center space-x-5">
+                <text class="text-2xl cursor-pointer text-white" @click="isPlaying = !isPlaying">{{ isPlaying ? '⏸' : '▶' }}</text>
+                <text class="text-xs font-bold opacity-90 font-mono ml-4 text-white">
+                  {{ isPlaying ? '04:12' : '00:00' }} / {{ courseData.lessons[activeLesson].duration }}
+                </text>
+              </view>
+              <text class="text-lg cursor-pointer text-white opacity-90" @click="appStore.showToast('全屏模式开发中')">🔲</text>
+            </view>
+          </view>
+        </view>
+        <view v-else class="preview-wrap w-full h-full relative" @click="handlePlayLesson(0)">
+          <image src="https://images.unsplash.com/photo-1518621736915-f3b1c41bfd00?q=80&w=800&auto=format&fit=crop" class="w-full h-full opacity-70" mode="aspectFill"></image>
+          <view class="absolute inset-0 bg-black-40 flex-col items-center justify-center">
+            <view class="badge-top-left absolute top-4 left-4 bg-pink-500 px-2_5 py-1 rounded border border-pink-400">
+              <text class="text-white text-xs font-bold">精品课程</text>
+            </view>
+            <view class="play-btn-wrap w-16 h-16 bg-white-20 rounded-full flex-row items-center justify-center border border-white-30 mb-3">
+              <text class="text-white text-4xl ml-1">▶</text>
+            </view>
+            <text class="text-white text-sm font-black tracking-widest">立即试看</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 课程基本信息 -->
+      <view class="course-info bg-white rounded-3xl p-5 shadow-sm border border-gray-100 -mt-2 z-10 relative mb-4">
+        <view class="flex-row justify-between items-center mb-3">
+          <view class="flex-row">
+            <view v-for="tag in courseData.tags" :key="tag" class="tag-badge bg-pink-50 px-2_5 py-1 rounded-md border border-pink-100 mr-2">
+              <text class="text-pink-600 text-xs font-bold">{{ tag }}</text>
+            </view>
+          </view>
+          <view class="flex-row items-center">
+            <text class="text-yellow-400 text-sm mr-1">⭐</text>
+            <text class="text-xs text-gray-500 font-medium">{{ courseData.rating }} ({{ courseData.students }}人)</text>
+          </view>
+        </view>
+        <text class="text-xl font-extrabold text-gray-800 mb-2">{{ courseData.title }}</text>
+        <text class="text-sm text-gray-500 leading-relaxed">{{ courseData.desc }}</text>
+      </view>
+
+      <!-- Tabs -->
+      <view class="course-tabs flex-row border-b border-gray-200 mb-4 px-2">
+        <view class="tab-item flex-1 flex-row items-center justify-center py-3 relative" @click="courseTab = 'outline'">
+          <text class="text-sm font-bold transition-colors" :class="[courseTab === 'outline' ? 'text-gray-800' : 'text-gray-400']">课程目录</text>
+          <view v-if="courseTab === 'outline'" class="active-line absolute bottom-0 w-8 h-1 bg-pink-500 rounded-t-full"></view>
+        </view>
+        <view class="tab-item flex-1 flex-row items-center justify-center py-3 relative" @click="courseTab = 'intro'">
+          <text class="text-sm font-bold transition-colors" :class="[courseTab === 'intro' ? 'text-gray-800' : 'text-gray-400']">课程简介</text>
+          <view v-if="courseTab === 'intro'" class="active-line absolute bottom-0 w-8 h-1 bg-pink-500 rounded-t-full"></view>
+        </view>
+      </view>
+
+      <!-- Tab Content -->
+      <view class="tab-content min-h-[300px]">
+        <!-- Outline Tab -->
+        <view v-if="courseTab === 'outline'" class="outline-list flex-col space-y-3">
+          <view class="flex-row justify-between items-center px-1 mb-2">
+            <text class="text-sm font-bold text-gray-700">🕒 更新至第 {{ courseData.lessons.length }} 节</text>
+            <text class="text-xs text-gray-400">完整版共 12 节</text>
+          </view>
+
+          <view
+            v-for="(lesson, idx) in courseData.lessons"
+            :key="idx"
+            class="lesson-item flex-row justify-between items-center p-4 rounded-2xl border transition-all mb-3"
+            :class="[activeLesson === idx ? 'bg-pink-50 border-pink-200 shadow-sm' : 'bg-white border-gray-100']"
+            @click="handlePlayLesson(idx)"
+          >
+            <view class="flex-row items-center flex-1 pr-4">
+              <view v-if="activeLesson === idx" class="w-8 h-8 rounded-full bg-pink-500 flex-row items-center justify-center mr-3 shadow-sm shadow-pink-200">
+                <text class="text-white text-xs animate-spin">🌀</text>
+              </view>
+              <view v-else class="w-8 h-8 rounded-full flex-row items-center justify-center mr-3" :class="[lesson.free ? 'bg-pink-100' : 'bg-gray-100']">
+                <text class="text-xs font-bold" :class="[lesson.free ? 'text-pink-500' : 'text-gray-400']">{{ idx + 1 }}</text>
+              </view>
+
+              <view class="flex-col">
+                <text class="text-sm font-bold leading-tight" :class="[activeLesson === idx ? 'text-pink-600' : (lesson.free ? 'text-gray-800' : 'text-gray-500')]">{{ lesson.title }}</text>
+                <view class="flex-row items-center mt-1_5">
+                  <text class="text-xs mr-2" :class="[activeLesson === idx ? 'text-pink-400' : 'text-gray-400']">{{ lesson.duration }}</text>
+                  <view v-if="lesson.free && activeLesson !== idx" class="bg-green-50 border border-green-200 px-1_5 py-0_5 rounded">
+                    <text class="text-green-500 font-medium" style="font-size: 10px;">试看</text>
+                  </view>
+                  <view v-if="activeLesson === idx" class="bg-pink-100 px-1_5 py-0_5 rounded">
+                    <text class="text-pink-500 font-bold" style="font-size: 10px;">正在播放</text>
+                  </view>
+                </view>
+              </view>
+            </view>
+
+            <view class="right-icon shrink-0">
+              <text v-if="lesson.free" :class="['text-xl', activeLesson === idx ? 'text-pink-500' : 'text-pink-400 opacity-60']">
+                {{ activeLesson === idx ? '⏸' : '▶' }}
+              </text>
+              <view v-else class="bg-gray-50 p-1_5 rounded-full border border-gray-100">
+                <text class="text-gray-400 text-sm">🔒</text>
+              </view>
+            </view>
+          </view>
+        </view>
+
+        <!-- Intro Tab -->
+        <view v-if="courseTab === 'intro'" class="intro-content flex-col space-y-4">
+          <view class="bg-white rounded-3xl p-5 shadow-sm border border-gray-100 mb-4">
+            <text class="font-bold text-gray-800 text-sm mb-4">👤 导师介绍</text>
+            <view class="flex-row items-center mb-3">
+              <image :src="courseData.instructor.avatar" class="w-12 h-12 rounded-full border border-gray-100 mr-3" mode="aspectFill" />
+              <view class="flex-col">
+                <text class="font-bold text-gray-800 text-sm">{{ courseData.instructor.name }}</text>
+                <text class="text-xs text-gray-500 mt-0_5">{{ courseData.instructor.title }}</text>
+              </view>
+            </view>
+            <view class="bg-gray-50 p-3 rounded-xl border border-gray-100">
+              <text class="text-xs text-gray-600 leading-relaxed">苏苏导师专注于情感关系升温与脱单实战指导，曾帮助上万名学员成功脱单、挽回前任。擅长利用心理学原理打破聊天僵局。</text>
+            </view>
+          </view>
+
+          <view class="bg-white rounded-3xl p-5 shadow-sm border border-gray-100 mb-4">
+            <text class="font-bold text-gray-800 text-sm mb-3">✨ 你将获得</text>
+            <view class="flex-col space-y-3">
+              <view class="flex-row items-start mb-2">
+                <text class="text-green-500 mr-2">✓</text>
+                <text class="text-sm text-gray-600 leading-relaxed flex-1">掌握 10+ 种高频聊天场景的推拉技巧，告别冷场。</text>
+              </view>
+              <view class="flex-row items-start mb-2">
+                <text class="text-green-500 mr-2">✓</text>
+                <text class="text-sm text-gray-600 leading-relaxed flex-1">学会通过情绪价值吸引对方，建立强大的个人框架。</text>
+              </view>
+              <view class="flex-row items-start">
+                <text class="text-green-500 mr-2">✓</text>
+                <text class="text-sm text-gray-600 leading-relaxed flex-1">突破友谊区，实现从普通朋友到暧昧对象的快速跃迁。</text>
+              </view>
+            </view>
+          </view>
+        </view>
+      </view>
+    </scroll-view>
+
+    <!-- Bottom Action Bar -->
+    <view v-if="activeLesson === -1" class="absolute bottom-0 w-full bg-white-90 border-t border-gray-100 p-3 px-5 z-40 pb-safe shadow-top flex-row items-center justify-between">
+      <view class="consult-btn w-12 h-12 bg-gray-50 rounded-2xl flex-col items-center justify-center border border-gray-200 mr-3" @click="goToAI">
+        <text class="text-gray-600 text-lg mb-0_5">💬</text>
+        <text class="text-gray-500 font-medium" style="font-size: 9px;">咨询</text>
+      </view>
+      <button class="flex-1 bg-gradient-black text-white font-bold py-3_5 rounded-2xl shadow-lg flex-row items-center justify-center active:scale-95" @click="openVipModal">
+        <text class="text-yellow-400 text-lg mr-2">👑</text>
+        <text class="text-white text-sm font-bold">解锁全部课程</text>
+      </button>
+    </view>
+
+  </view>
+</template>
+
+<script setup lang="uts">
+import { ref, reactive, onMounted } from 'vue'
+import { useAppStore } from '../../store/app.uts'
+import { getFeaturedCourse } from '../../services/api.uts'
+
+const appStore = useAppStore
+
+const activeLesson = ref(-1)
+const isPlaying = ref(false)
+const courseTab = ref('outline')
+
+const courseData = reactive({
+  title: '加载中...',
+  desc: '',
+  tags: ['高情商', '实战解析', '脱单必备'],
+  rating: 4.9,
+  students: '1.2w',
+  instructor: {
+    name: '苏苏导师',
+    title: '平台首席情感分析师',
+    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Susu&backgroundColor=fce7f3'
+  },
+  lessons: [
+    { title: '先导课：为什么你的聊天总是会死机？', duration: '12:45', free: true }
+  ] as any[]
+})
+
+onMounted(async () => {
+  try {
+    const data = await getFeaturedCourse()
+    if (data) {
+      courseData.title = data.title || courseData.title
+      courseData.desc = data.desc || courseData.desc
+      if (data.tags) courseData.tags = data.tags
+      if (data.rating) courseData.rating = data.rating
+      if (data.students) courseData.students = data.students
+      if (data.instructor) courseData.instructor = data.instructor
+      if (data.lessons) courseData.lessons = data.lessons
+    }
+  } catch (e) {
+    console.error('获取课程详情失败', e)
+    courseData.title = '加载失败'
+    courseData.desc = '请检查网络连接后重试'
+    courseData.lessons = []
+  }
+})
+
+const handlePlayLesson = (idx: number) => {
+  if (courseData.lessons[idx].free) {
+    activeLesson.value = idx
+    isPlaying.value = true
+    courseTab.value = 'outline'
+  } else {
+    appStore.showVipModal = true
+  }
+}
+
+const goBack = () => {
+  uni.navigateBack({ delta: 1 })
+}
+
+const goToAI = () => {
+  uni.navigateTo({ url: '/pages/ai/ai' })
+}
+
+const openVipModal = () => {
+  appStore.showVipModal = true
+}
+
+</script>
+
+<style>
+.container { flex: 1; }
+.bg-slate-50 { background-color: #f8fafc; }
+.bg-gray-50 { background-color: #f9fafb; }
+.bg-gray-100 { background-color: #f3f4f6; }
+.bg-white { background-color: #ffffff; }
+.bg-white-90 { background-color: rgba(255,255,255,0.9); }
+.bg-black { background-color: #000000; }
+.bg-black-40 { background-color: rgba(0,0,0,0.4); }
+.bg-white-20 { background-color: rgba(255,255,255,0.2); }
+.bg-white-30 { background-color: rgba(255,255,255,0.3); }
+
+.header-bar { height: 50px; }
+.border-b { border-bottom-width: 1px; border-style: solid; }
+.border-gray-100 { border-color: #f3f4f6; }
+.border-gray-200 { border-color: #e5e7eb; }
+.border-white-20 { border-color: rgba(255,255,255,0.2); }
+.border-white-30 { border-color: rgba(255,255,255,0.3); }
+
+.px-4 { padding-left: 16px; padding-right: 16px; }
+.py-3 { padding-top: 12px; padding-bottom: 12px; }
+.p-2 { padding: 8px; }
+.p-4 { padding: 16px; }
+.p-5 { padding: 20px; }
+.px-5 { padding-left: 20px; padding-right: 20px; }
+.px-1 { padding-left: 4px; padding-right: 4px; }
+.px-2 { padding-left: 8px; padding-right: 8px; }
+.px-2_5 { padding-left: 10px; padding-right: 10px; }
+.py-1 { padding-top: 4px; padding-bottom: 4px; }
+.py-0_5 { padding-top: 2px; padding-bottom: 2px; }
+.py-1_5 { padding-top: 6px; padding-bottom: 6px; }
+.py-3_5 { padding-top: 14px; padding-bottom: 14px; }
+
+.pt-12 { padding-top: 48px; }
+.pb-10 { padding-bottom: 40px; }
+.pb-24 { padding-bottom: 96px; }
+.pb-safe { padding-bottom: env(safe-area-inset-bottom); }
+
+.-ml-2 { margin-left: -8px; }
+.mr-1 { margin-right: 4px; }
+.mr-2 { margin-right: 8px; }
+.mr-3 { margin-right: 12px; }
+.mr-4 { margin-right: 16px; }
+.ml-1 { margin-left: 4px; }
+.ml-4 { margin-left: 16px; }
+.mt-0_5 { margin-top: 2px; }
+.mt-1_5 { margin-top: 6px; }
+.-mt-2 { margin-top: -8px; }
+.mb-2 { margin-bottom: 8px; }
+.mb-3 { margin-bottom: 12px; }
+.mb-4 { margin-bottom: 16px; }
+
+.w-10 { width: 40px; }
+.w-8 { width: 32px; }
+.h-8 { height: 32px; }
+.w-12 { width: 48px; }
+.h-12 { height: 48px; }
+.w-16 { width: 64px; }
+.h-16 { height: 64px; }
+.w-full { width: 100%; }
+.h-full { height: 100%; }
+.h-56 { height: 224px; }
+.h-1_5 { height: 6px; }
+.w-4 { width: 16px; }
+.h-4 { height: 16px; }
+
+.text-xs { font-size: 12px; }
+.text-sm { font-size: 14px; }
+.text-base { font-size: 16px; }
+.text-lg { font-size: 18px; }
+.text-xl { font-size: 20px; }
+.text-2xl { font-size: 24px; }
+.text-3xl { font-size: 30px; }
+.text-4xl { font-size: 36px; }
+
+.font-bold { font-weight: bold; }
+.font-medium { font-weight: 500; }
+.font-extrabold { font-weight: 800; }
+.font-black { font-weight: 900; }
+
+.text-gray-800 { color: #1f2937; }
+.text-gray-700 { color: #374151; }
+.text-gray-600 { color: #4b5563; }
+.text-gray-500 { color: #6b7280; }
+.text-gray-400 { color: #9ca3af; }
+.text-white { color: #ffffff; }
+.text-white-80 { color: rgba(255,255,255,0.8); }
+.text-pink-600 { color: #db2777; }
+.text-pink-500 { color: #ec4899; }
+.text-pink-400 { color: #f472b6; }
+.text-yellow-400 { color: #facc15; }
+.text-green-500 { color: #22c55e; }
+
+.bg-pink-500 { background-color: #ec4899; }
+.bg-pink-100 { background-color: #fce7f3; }
+.bg-pink-50 { background-color: #fdf2f8; }
+.bg-green-50 { background-color: #f0fdf4; }
+
+.border-pink-500 { border-color: #ec4899; border-width: 2px; }
+.border-pink-200 { border-color: #fbcfe8; border-width: 1px; }
+.border-pink-100 { border-color: #fce7f3; border-width: 1px; }
+.border-green-200 { border-color: #bbf7d0; border-width: 1px; }
+
+.rounded-full { border-radius: 9999px; }
+.rounded-3xl { border-radius: 24px; }
+.rounded-2xl { border-radius: 16px; }
+.rounded-xl { border-radius: 12px; }
+.rounded-md { border-radius: 6px; }
+.rounded-t-full { border-top-left-radius: 9999px; border-top-right-radius: 9999px; }
+
+.shadow-sm { box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); }
+.shadow-md { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+.shadow-lg { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+.shadow-xl { box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); }
+.shadow-pink-200 { box-shadow: 0 4px 6px -1px rgba(24bc, 72, 153, 0.2); }
+.shadow-top { box-shadow: 0 -10px 20px -10px rgba(0,0,0,0.05); }
+
+.bg-gradient-to-b { background-image: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent); }
+.bg-gradient-to-t { background-image: linear-gradient(to top, rgba(0,0,0,0.9), transparent); }
+.bg-gradient-pink { background-image: linear-gradient(to right, #f472b6, #f43f5e); }
+.bg-gradient-black { background-image: linear-gradient(to right, #111827, #000000); }
+
+.leading-relaxed { line-height: 1.625; }
+.leading-tight { line-height: 1.25; }
+.tracking-widest { letter-spacing: 0.1em; }
+
+.absolute { position: absolute; }
+.relative { position: relative; }
+.fixed { position: fixed; }
+.sticky { position: sticky; }
+.inset-0 { top: 0; right: 0; bottom: 0; left: 0; }
+.top-0 { top: 0; }
+.top-4 { top: 16px; }
+.left-0 { left: 0; }
+.left-4 { left: 16px; }
+.bottom-0 { bottom: 0; }
+.top-1_2 { top: 50%; }
+.-translate-y-1_2 { transform: translateY(-50%); }
+
+.z-10 { z-index: 10; }
+.z-20 { z-index: 20; }
+.z-40 { z-index: 40; }
+.z-50 { z-index: 50; }
+
+.opacity-70 { opacity: 0.7; }
+.opacity-90 { opacity: 0.9; }
+.pointer-events-none { pointer-events: none; }
+.pointer-events-auto { pointer-events: auto; }
+.overflow-hidden { overflow: hidden; }
+
+.flex-1 { flex: 1; }
+.flex-row { flex-direction: row; }
+.flex-col { flex-direction: column; }
+.items-center { align-items: center; }
+.items-start { align-items: flex-start; }
+.justify-center { justify-content: center; }
+.justify-between { justify-content: space-between; }
+.shrink-0 { flex-shrink: 0; }
+</style>

@@ -1,0 +1,102 @@
+<template>
+  <view class="container">
+    <view class="feedback-header">
+      <text class="feedback-title">问题反馈与建议</text>
+      <text class="feedback-desc">如果您在使用过程中遇到任何问题或有好的建议，请告诉我们，我们将不断改进！</text>
+    </view>
+
+    <view class="form-section">
+      <text class="section-label">反馈类型</text>
+      <view class="type-tags">
+        <view
+          class="type-tag"
+          v-for="t in types"
+          :key="t"
+          :class="[type === t ? 'type-tag-active' : '']"
+          @click="type = t"
+        >
+          <text class="type-tag-text" :class="[type === t ? 'type-tag-text-active' : '']">{{ t }}</text>
+        </view>
+      </view>
+
+      <text class="section-label mt-4">问题描述</text>
+      <textarea
+        class="feedback-textarea"
+        v-model="content"
+        placeholder="请详细描述您遇到的问题或建议，不少于10个字..."
+        :maxlength="500"
+      />
+      <text class="char-count">{{ content.length }}/500</text>
+
+      <text class="section-label mt-4">联系方式 (选填)</text>
+      <input
+        class="contact-input"
+        v-model="contact"
+        placeholder="请留下您的微信号或手机号，方便我们联系您"
+      />
+    </view>
+
+    <view class="submit-wrap">
+      <view class="submit-btn" @click="handleSubmit">
+        <text class="submit-btn-text">提交反馈</text>
+      </view>
+    </view>
+  </view>
+</template>
+
+<script setup lang="uts">
+import { ref } from 'vue'
+import { useAppStore } from '../../store/app.uts'
+
+const appStore = useAppStore
+
+const types = ['功能故障', '体验建议', '内容报错', '其他']
+const type = ref('体验建议')
+const content = ref('')
+const contact = ref('')
+
+const handleSubmit = () => {
+  if (content.value.length < 10) {
+    appStore.showToast('描述太短啦，多写几个字吧~')
+    return
+  }
+  uni.showLoading({ title: '提交中...' })
+  setTimeout(() => {
+    uni.hideLoading()
+    appStore.showToast('感谢您的反馈！')
+    setTimeout(() => {
+      uni.navigateBack({ delta: 1 })
+    }, 1000)
+  }, 1000)
+}
+</script>
+
+<style>
+page { background-color: #f9fafb; height: 100%; }
+.container { flex: 1; padding: 20px; display: flex; flex-direction: column; }
+
+.feedback-header { margin-bottom: 24px; }
+.feedback-title { font-size: 22px; font-weight: 900; color: #1f2937; margin-bottom: 8px; }
+.feedback-desc { font-size: 13px; color: #6b7280; line-height: 1.5; }
+
+.form-section { background-color: #ffffff; border-radius: 20px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); flex: 1; }
+
+.section-label { font-size: 14px; font-weight: bold; color: #374151; margin-bottom: 12px; }
+
+.type-tags { flex-direction: row; flex-wrap: wrap; }
+.type-tag { background-color: #f3f4f6; padding: 8px 16px; border-radius: 16px; margin-right: 12px; margin-bottom: 12px; border-width: 1px; border-style: solid; border-color: transparent; }
+.type-tag-active { background-color: #fdf2f8; border-color: #fbcfe8; }
+.type-tag-text { font-size: 13px; color: #4b5563; }
+.type-tag-text-active { color: #ec4899; font-weight: bold; }
+
+.feedback-textarea { background-color: #f9fafb; border-radius: 12px; padding: 12px; font-size: 14px; color: #1f2937; height: 160px; width: 100%; border-width: 1px; border-style: solid; border-color: #e5e7eb; }
+.char-count { font-size: 11px; color: #9ca3af; align-self: flex-end; margin-top: 8px; }
+
+.contact-input { background-color: #f9fafb; border-radius: 12px; padding: 12px 16px; font-size: 14px; color: #1f2937; border-width: 1px; border-style: solid; border-color: #e5e7eb; margin-bottom: 20px; }
+
+.submit-wrap { padding: 20px 0 40px; }
+.submit-btn { background-image: linear-gradient(to right, #ec4899, #f43f5e); padding: 14px 0; border-radius: 24px; align-items: center; justify-content: center; box-shadow: 0 8px 20px rgba(236,72,153,0.3); }
+.submit-btn-text { color: #ffffff; font-size: 16px; font-weight: bold; letter-spacing: 1px; }
+
+.mt-4 { margin-top: 16px; }
+</style>

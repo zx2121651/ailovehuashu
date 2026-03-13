@@ -1,0 +1,60 @@
+<template>
+  <view class="page-container">
+    <view class="support-header">
+      <view class="avatar-wrap">
+        <text class="avatar-emoji">👩‍💼</text>
+      </view>
+      <text class="support-title">专属情感客服</text>
+      <text class="support-desc">服务时间: 每天 09:00 - 22:00</text>
+    </view>
+
+    <view class="contact-card">
+      <text class="card-title">添加企业微信咨询</text>
+      <text class="card-desc">如果您在产品使用、课程学习、或情感方面有任何疑问，都可以添加我的企微进行 1v1 免费咨询。</text>
+
+      <view class="qr-placeholder">
+        <text class="qr-text">二维码占位图</text>
+      </view>
+
+      <text class="wechat-id">微信号: huashu_helper</text>
+
+      <button class="copy-btn" @click="copyWechat">复制微信号</button>
+    </view>
+  </view>
+</template>
+
+<script setup lang="uts">
+import { useAppStore } from '../../store/app.uts'
+const appStore = useAppStore
+
+const copyWechat = () => {
+  uni.setClipboardData({
+    data: 'huashu_helper',
+    success: () => {
+      appStore.showToast('微信号已复制，请前往微信添加')
+    }
+  })
+}
+</script>
+
+<style>
+page { display: flex; flex-direction: column; height: 100%; background-color: #f5f7fa; }
+.page-container { flex: 1; background-color: #f5f7fa; padding: 20px; align-items: center; }
+
+.support-header { align-items: center; margin-top: 40px; margin-bottom: 30px; }
+.avatar-wrap { width: 80px; height: 80px; border-radius: 40px; background-color: #fdf2f8; align-items: center; justify-content: center; margin-bottom: 16px; border-width: 2px; border-style: solid; border-color: #fbcfe8; }
+.avatar-emoji { font-size: 40px; }
+.support-title { font-size: 20px; font-weight: bold; color: #1f2937; margin-bottom: 8px; }
+.support-desc { font-size: 13px; color: #9ca3af; }
+
+.contact-card { width: 100%; background-color: #ffffff; border-radius: 24px; padding: 32px 24px; align-items: center; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
+.card-title { font-size: 16px; font-weight: bold; color: #374151; margin-bottom: 12px; }
+.card-desc { font-size: 13px; color: #6b7280; text-align: center; line-height: 1.6; margin-bottom: 24px; }
+
+.qr-placeholder { width: 180px; height: 180px; background-color: #f3f4f6; border-radius: 12px; align-items: center; justify-content: center; margin-bottom: 16px; border-width: 1px; border-style: dashed; border-color: #d1d5db; }
+.qr-text { color: #9ca3af; font-size: 14px; }
+
+.wechat-id { font-size: 14px; font-weight: bold; color: #1f2937; margin-bottom: 24px; background-color: #f9fafb; padding: 8px 16px; border-radius: 8px; }
+
+.copy-btn { background-color: #ec4899; color: #ffffff; font-size: 15px; font-weight: bold; border-radius: 24px; padding: 0 40px; height: 44px; line-height: 44px; width: 80%; }
+</style>

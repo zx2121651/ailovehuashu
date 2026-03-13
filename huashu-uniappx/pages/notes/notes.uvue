@@ -1,0 +1,128 @@
+<template>
+  <view class="container">
+    <view class="notes-header bg-gradient-rose">
+      <view class="header-inner">
+        <text class="notes-title">情商错题本</text>
+        <text class="notes-desc">记录那些让你“冷场”的送命题，AI 导师会定期帮你复盘，提升你的恋爱段位。</text>
+      </view>
+    </view>
+
+    <view v-if="notes.length === 0" class="empty-state">
+      <text class="empty-icon">📝</text>
+      <text class="empty-text">你的错题本空空如也，情商很高嘛！</text>
+    </view>
+
+    <scroll-view v-else class="scroll-area" scroll-y>
+      <view class="note-card" v-for="(note, idx) in notes" :key="idx">
+        <view class="note-time-row">
+          <text class="note-time">{{ note.date }}</text>
+          <text class="note-status" :class="note.isReviewed ? 'status-reviewed' : 'status-pending'">{{ note.isReviewed ? '已复盘' : '待复盘' }}</text>
+        </view>
+        <view class="note-q-box">
+          <text class="note-label-q">送命题：</text>
+          <text class="note-q-text">{{ note.question }}</text>
+        </view>
+        <view class="note-a-box">
+          <text class="note-label-a">我的回答：</text>
+          <text class="note-a-text">{{ note.myAnswer }}</text>
+        </view>
+        <view v-if="note.isReviewed" class="ai-review-box">
+          <view class="ai-review-header">
+            <text class="ai-icon">🤖</text>
+            <text class="ai-title">AI 导师点评</text>
+          </view>
+          <text class="ai-comment">{{ note.aiComment }}</text>
+          <view class="ai-better-a">
+            <text class="ai-better-label">高分示范：</text>
+            <text class="ai-better-text">{{ note.aiBetterAnswer }}</text>
+          </view>
+        </view>
+        <view v-else class="review-btn" @click="doReview(note)">
+          <text class="review-btn-text">让 AI 帮我复盘</text>
+        </view>
+      </view>
+      <view class="bottom-spacer"></view>
+    </scroll-view>
+  </view>
+</template>
+
+<script setup lang="uts">
+import { ref } from 'vue'
+import { useAppStore } from '../../store/app.uts'
+
+const appStore = useAppStore
+
+const notes = ref([
+  {
+    date: '2023-11-20 20:30',
+    question: '你觉得我闺蜜好看还是我好看？',
+    myAnswer: '都挺好看的呀，各有千秋。',
+    isReviewed: true,
+    aiComment: '兄弟，这是经典的送命题！回答“都好看”等于在女生雷区蹦迪。这种时候必须毫不犹豫、坚定且带有唯一性地偏向她。',
+    aiBetterAnswer: '你闺蜜长啥样我都没看清，我眼里只有你。'
+  },
+  {
+    date: '2023-11-22 14:15',
+    question: '我好像感冒了，好难受。',
+    myAnswer: '多喝点热水，吃点感冒药，好好休息。',
+    isReviewed: false,
+    aiComment: '',
+    aiBetterAnswer: ''
+  }
+])
+
+const doReview = (note: any) => {
+  uni.showLoading({ title: 'AI 导师分析中...' })
+  setTimeout(() => {
+    uni.hideLoading()
+    note.isReviewed = true
+    note.aiComment = '经典的“多喝热水”直男发言。女生生病时需要的是情绪价值和实际行动，而不是做医嘱指导。'
+    note.aiBetterAnswer = '怎么这么不小心，严重吗？开门，我带了粥和药在楼下。'
+    appStore.showToast('复盘完成')
+  }, 1500)
+}
+</script>
+
+<style>
+page { background-color: #f9fafb; height: 100%; }
+.container { flex: 1; display: flex; flex-direction: column; height: 100%; }
+
+.bg-gradient-rose { background-image: linear-gradient(to bottom right, #f43f5e, #e11d48); }
+.notes-header { padding: 32px 20px 24px; border-bottom-left-radius: 24px; border-bottom-right-radius: 24px; box-shadow: 0 4px 12px rgba(225,29,72,0.2); z-index: 10; }
+.notes-title { font-size: 22px; font-weight: 900; color: #ffffff; margin-bottom: 8px; }
+.notes-desc { font-size: 12px; color: rgba(255,255,255,0.8); line-height: 1.5; }
+
+.empty-state { flex: 1; align-items: center; justify-content: center; padding-bottom: 100px; }
+.empty-icon { font-size: 48px; margin-bottom: 16px; opacity: 0.5; }
+.empty-text { font-size: 14px; color: #9ca3af; }
+
+.scroll-area { flex: 1; padding: 16px; }
+.note-card { background-color: #ffffff; border-radius: 20px; padding: 16px; margin-bottom: 16px; box-shadow: 0 4px 12px -4px rgba(0,0,0,0.05); }
+.note-time-row { flex-direction: row; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 8px; border-bottom-width: 1px; border-bottom-style: dashed; border-bottom-color: #f3f4f6; }
+.note-time { font-size: 11px; color: #9ca3af; }
+.note-status { font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 6px; }
+.status-reviewed { color: #059669; background-color: #ecfdf5; }
+.status-pending { color: #ea580c; background-color: #fff7ed; }
+
+.note-q-box { background-color: #fef2f2; padding: 10px; border-radius: 12px; margin-bottom: 8px; flex-direction: row; }
+.note-label-q { font-size: 12px; font-weight: bold; color: #b91c1c; width: 60px; flex-shrink: 0; }
+.note-q-text { font-size: 13px; color: #7f1d1d; flex: 1; line-height: 1.4; }
+
+.note-a-box { background-color: #f3f4f6; padding: 10px; border-radius: 12px; margin-bottom: 12px; flex-direction: row; }
+.note-label-a { font-size: 12px; font-weight: bold; color: #4b5563; width: 66px; flex-shrink: 0; }
+.note-a-text { font-size: 13px; color: #374151; flex: 1; line-height: 1.4; }
+
+.ai-review-box { background-image: linear-gradient(to right, #fdf2f8, #fce7f3); padding: 12px; border-radius: 16px; border-width: 1px; border-style: solid; border-color: #fbcfe8; }
+.ai-review-header { flex-direction: row; align-items: center; margin-bottom: 8px; }
+.ai-icon { font-size: 14px; margin-right: 6px; }
+.ai-title { font-size: 13px; font-weight: bold; color: #be185d; }
+.ai-comment { font-size: 12px; color: #9d174d; line-height: 1.5; margin-bottom: 12px; }
+.ai-better-a { background-color: #ffffff; padding: 10px; border-radius: 10px; border-left-width: 3px; border-left-style: solid; border-left-color: #ec4899; }
+.ai-better-label { font-size: 11px; font-weight: bold; color: #db2777; margin-bottom: 4px; }
+.ai-better-text { font-size: 13px; color: #1f2937; font-weight: bold; }
+
+.review-btn { background-color: #1f2937; padding: 10px 0; border-radius: 16px; align-items: center; }
+.review-btn-text { color: #ffffff; font-size: 13px; font-weight: bold; }
+
+.bottom-spacer { height: 40px; }
+</style>

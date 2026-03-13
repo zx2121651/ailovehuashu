@@ -1,0 +1,252 @@
+<template>
+	<view class="play-container">
+		<!-- 导航栏 -->
+		<view class="play-nav">
+			<view class="nav-left" @click="goBack">
+				<text class="back-icon">❮</text>
+			</view>
+			<view class="nav-right">
+				<view class="score-badge">
+					<text class="heart-icon" :style="{ color: affectionScore > 0 ? '#FB7185' : '#9CA3AF' }">❤️</text>
+					<text class="score-text">{{ affectionScore > 0 ? '+' : '' }}{{ affectionScore }}</text>
+				</view>
+				<view class="reset-btn" @click="handleReset">
+					<text class="reset-icon">↺</text>
+				</view>
+			</view>
+		</view>
+
+		<!-- 背景图或深色遮罩 -->
+		<image v-if="currentNode && currentNode.imageUrl" :src="currentNode.imageUrl" class="bg-image" mode="aspectFill"></image>
+		<view class="bg-overlay"></view>
+
+		<!-- 内容区域 -->
+		<view class="content-wrapper">
+			<view v-if="loading" class="loading-state">
+				<text class="text-white">加载剧情中...</text>
+			</view>
+
+			<view v-else-if="error" class="error-state">
+				<text class="error-text">{{ error }}</text>
+				<button class="retry-btn" @click="goBack">返回</button>
+			</view>
+
+			<!-- 正常剧情节点 -->
+			<view v-else-if="!isCompleted && currentNode" class="node-content">
+				<view v-if="currentNode.speakerName" class="speaker-tag">
+					<text class="speaker-text">👤 {{ currentNode.speakerName }}</text>
+				</view>
+
+				<text class="dialogue-text">{{ currentNode.content }}</text>
+
+				<!-- 选项列表 -->
+				<view class="choices-container">
+					<view v-if="!currentNode.isEnd && currentNode.choices && currentNode.choices.length > 0">
+						<view
+							class="choice-btn"
+							v-for="(choice, index) in currentNode.choices"
+							:key="choice.id"
+							@click="makeChoice(choice.id)"
+						>
+							<text class="choice-index">{{ getChoiceIndex(index) }}.</text>
+							<text class="choice-text">{{ choice.content }}</text>
+						</view>
+					</view>
+
+					<view v-else-if="currentNode.isEnd" class="end-tips">
+						<text class="tips-text">剧情发展到这里似乎结束了...</text>
+					</view>
+				</view>
+			</view>
+
+			<!-- 结算界面 -->
+			<view v-else-if="isCompleted" class="completed-panel">
+				<view class="panel-header"></view>
+				<view class="success-icon-wrap">
+					<text class="success-icon">✓</text>
+				</view>
+				<text class="panel-title">剧本达成</text>
+				<text class="panel-desc">本次互动的最终好感度结算</text>
+
+				<view class="score-display">
+					<text class="final-score">{{ affectionScore > 0 ? '+' : '' }}{{ affectionScore }}</text>
+					<text class="score-label">AFFECTION SCORE</text>
+				</view>
+
+				<button class="primary-btn" @click="handleReset">再次挑战</button>
+				<button class="secondary-btn" @click="goBack">返回列表</button>
+			</view>
+		</view>
+	</view>
+</template>
+
+<script>
+	export default {
+		data() {
+			return {
+				storyId: '',
+				dataObj: null as any,
+				loading: true,
+				error: '',
+				isSubmitting: false
+			}
+		},
+		onLoad(options) {
+			if (options.id) {
+				this.storyId = options.id
+				this.fetchProgress()
+			} else {
+				this.error = '参数错误'
+				this.loading = false
+			}
+		},
+		computed: {
+			progress() {
+				return this.dataObj ? this.dataObj.progress : null
+			},
+			currentNode() {
+				return this.dataObj ? this.dataObj.currentNode : null
+			},
+			isCompleted() {
+				return this.progress ? this.progress.status === 'COMPLETED' : false
+			},
+			affectionScore() {
+				return this.progress ? this.progress.affectionScore : 0
+			}
+		},
+		methods: {
+			goBack() {
+				uni.navigateBack()
+			},
+			getChoiceIndex(index: number): string {
+				const chars = ['A', 'B', 'C', 'D', 'E', 'F']
+				return chars[index] || ''
+			},
+			fetchProgress() {
+				this.loading = true
+				const token = uni.getStorageSync('token') as string || ''
+				uni.request({
+					url: `/api/v1/stories/${this.storyId}/progress`,
+					header: {
+						'Authorization': token ? `Bearer ${token}` : ''
+					},
+					success: (res: any) => {
+						if(res.data && res.data.success) {
+							this.dataObj = res.data.data
+						} else {
+							this.error = res.data.message || '加载失败'
+						}
+					},
+					fail: () => {
+						this.error = '网络请求失败'
+					},
+					complete: () => {
+						this.loading = false
+					}
+				})
+			},
+			makeChoice(choiceId: number) {
+				if (this.isSubmitting) return
+				this.isSubmitting = true
+
+				const token = uni.getStorageSync('token') as string || ''
+				uni.request({
+					url: `/api/v1/stories/${this.storyId}/choice`,
+					method: 'POST',
+					header: {
+						'Authorization': token ? `Bearer ${token}` : '',
+						'Content-Type': 'application/json'
+					},
+					data: {
+						choiceId: choiceId
+					},
+					success: (res: any) => {
+						if(res.data && res.data.success) {
+							this.dataObj.progress = res.data.data.progress
+							this.dataObj.currentNode = res.data.data.currentNode
+						} else {
+							uni.showToast({ title: res.data.message || '提交失败', icon: 'none' })
+						}
+					},
+					complete: () => {
+						this.isSubmitting = false
+					}
+				})
+			},
+			handleReset() {
+				uni.showModal({
+					title: '提示',
+					content: '重新开始会清空当前好感度进度，确定吗？',
+					success: (res) => {
+						if (res.confirm) {
+							const token = uni.getStorageSync('token') as string || ''
+							uni.request({
+								url: `/api/v1/stories/${this.storyId}/reset`,
+								method: 'POST',
+								header: {
+									'Authorization': token ? `Bearer ${token}` : ''
+								},
+								success: (res2: any) => {
+									if(res2.data && res2.data.success) {
+										this.fetchProgress()
+									} else {
+										uni.showToast({ title: '重置失败', icon: 'none' })
+									}
+								}
+							})
+						}
+					}
+				})
+			}
+		}
+	}
+</script>
+
+<style>
+	.play-container { flex: 1; background-color: #111827; position: relative; }
+	.bg-image { position: absolute; top: 0; left: 0; right: 0; bottom: 0; width: 100%; height: 100%; opacity: 0.6; }
+	.bg-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(17, 24, 39, 0.8); }
+
+	.play-nav { position: absolute; top: 44px; left: 16px; right: 16px; z-index: 20; flex-direction: row; justify-content: space-between; align-items: center; }
+	.nav-left { padding: 8px 12px; background-color: rgba(0,0,0,0.3); border-radius: 20px; }
+	.back-icon { color: #FFFFFF; font-size: 16px; font-weight: bold;}
+	.nav-right { flex-direction: row; gap: 8px; }
+	.score-badge { flex-direction: row; align-items: center; background-color: rgba(0,0,0,0.3); padding: 6px 12px; border-radius: 20px; }
+	.heart-icon { font-size: 14px; margin-right: 4px; }
+	.score-text { color: #FFFFFF; font-size: 14px; font-weight: bold; }
+	.reset-btn { padding: 8px 12px; background-color: rgba(0,0,0,0.3); border-radius: 20px; }
+	.reset-icon { color: #E5E7EB; font-size: 16px; font-weight: bold;}
+
+	.content-wrapper { flex: 1; justify-content: flex-end; z-index: 10; padding: 24px; padding-bottom: 40px; }
+	.loading-state, .error-state { align-items: center; justify-content: center; height: 300px; }
+	.text-white { color: #FFFFFF; }
+	.error-text { color: #EF4444; margin-bottom: 16px; font-size: 16px;}
+	.retry-btn { background-color: #F43F5E; color: white; border-radius: 20px; font-size: 14px; }
+
+	.node-content { width: 100%; align-items: center;}
+	.speaker-tag { background-color: rgba(255,255,255,0.1); padding: 4px 12px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.2); margin-bottom: 12px; align-self: flex-start; }
+	.speaker-text { color: #FFFFFF; font-size: 14px; font-weight: bold; }
+	.dialogue-text { color: #FFFFFF; font-size: 18px; line-height: 1.5; margin-bottom: 32px; width: 100%; text-shadow: 0px 1px 2px rgba(0,0,0,0.8); }
+
+	.choices-container { width: 100%; gap: 12px; }
+	.choice-btn { flex-direction: row; background-color: rgba(255,255,255,0.1); padding: 16px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.2); align-items: center;}
+	.choice-btn:active { background-color: rgba(255,255,255,0.2); }
+	.choice-index { color: #FB7185; font-weight: bold; margin-right: 12px; font-size: 16px;}
+	.choice-text { color: #FFFFFF; font-size: 16px; flex: 1; }
+
+	.end-tips { align-items: center; margin-top: 24px; }
+	.tips-text { color: #9CA3AF; font-size: 14px; font-style: italic; }
+
+	.completed-panel { background-color: #FFFFFF; border-radius: 24px; padding: 32px 24px; align-items: center; width: 100%; position: relative; overflow: hidden; margin-bottom: 20px;}
+	.panel-header { position: absolute; top: 0; left: 0; right: 0; height: 8px; background-color: #F43F5E; }
+	.success-icon-wrap { width: 64px; height: 64px; background-color: #FFF1F2; border-radius: 32px; align-items: center; justify-content: center; margin-bottom: 16px; }
+	.success-icon { color: #F43F5E; font-size: 32px; font-weight: bold; }
+	.panel-title { font-size: 24px; font-weight: bold; color: #111827; margin-bottom: 8px; }
+	.panel-desc { color: #6B7280; font-size: 14px; margin-bottom: 24px; }
+	.score-display { background-color: #F9FAFB; border-radius: 16px; padding: 24px; align-items: center; width: 100%; margin-bottom: 32px; border: 1px solid #F3F4F6; }
+	.final-score { font-size: 36px; font-weight: 900; color: #F43F5E; margin-bottom: 4px; }
+	.score-label { font-size: 12px; color: #9CA3AF; font-weight: bold; letter-spacing: 1px; }
+
+	.primary-btn { background-color: #F43F5E; color: #FFFFFF; font-size: 16px; font-weight: bold; padding: 14px; border-radius: 12px; width: 100%; border: none; margin-bottom: 12px; text-align: center;}
+	.secondary-btn { background-color: #FFFFFF; color: #374151; font-size: 16px; font-weight: bold; padding: 14px; border-radius: 12px; width: 100%; border: 1px solid #E5E7EB; text-align: center;}
+</style>

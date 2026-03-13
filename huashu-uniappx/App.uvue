@@ -1,0 +1,24 @@
+<script lang="uts">
+export default {
+	onLaunch: function () {
+		console.log('App Launch')
+	},
+	onShow: function () {
+		console.log('App Show')
+	},
+	onHide: function () {
+		console.log('App Hide')
+	}
+}
+</script>
+
+<style>
+/* 引入全局公共样式和跨端支持的动画定义 */
+@import "./common/global.css";
+
+/* 每个页面公共css */
+/* uni-app x 目前支持 UTS 约定的部分 CSS，优先推荐通过 flexbox 布局 */
+page {
+	background-color: #f9fafb; /* bg-gray-50 */
+}
+</style>

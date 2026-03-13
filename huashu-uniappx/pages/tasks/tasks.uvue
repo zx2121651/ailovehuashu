@@ -1,0 +1,132 @@
+<template>
+  <view class="container">
+    <view class="points-card bg-gradient-pink">
+      <view class="points-header">
+        <text class="points-label">我的积分</text>
+        <view class="points-rule" @click="appStore.showToast('积分可用于悬赏和兑换周边')">
+          <text class="points-rule-icon">❓</text>
+          <text class="points-rule-text">规则</text>
+        </view>
+      </view>
+      <text class="points-num">{{ appStore.userInfo?.points || 1250 }}</text>
+    </view>
+
+    <view class="task-section">
+      <text class="section-title">每日任务</text>
+      <view class="task-list">
+        <view class="task-item" v-for="task in dailyTasks" :key="task.id">
+          <view class="task-icon-wrap" :class="task.bgClass">
+            <text class="task-icon">{{ task.icon }}</text>
+          </view>
+          <view class="task-info">
+            <text class="task-name">{{ task.name }}</text>
+            <view class="task-reward">
+              <text class="reward-icon">⚡</text>
+              <text class="reward-text">+{{ task.points }} 积分</text>
+            </view>
+          </view>
+          <view class="task-btn" :class="[task.isDone ? 'btn-done' : 'btn-todo']" @click="handleTask(task)">
+            <text class="task-btn-text" :class="[task.isDone ? 'btn-done-text' : 'btn-todo-text']">{{ task.isDone ? '已完成' : '去完成' }}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <view class="task-section">
+      <text class="section-title">新手任务</text>
+      <view class="task-list">
+        <view class="task-item" v-for="task in noviceTasks" :key="task.id">
+          <view class="task-icon-wrap" :class="task.bgClass">
+            <text class="task-icon">{{ task.icon }}</text>
+          </view>
+          <view class="task-info">
+            <text class="task-name">{{ task.name }}</text>
+            <view class="task-reward">
+              <text class="reward-icon">⚡</text>
+              <text class="reward-text">+{{ task.points }} 积分</text>
+            </view>
+          </view>
+          <view class="task-btn" :class="[task.isDone ? 'btn-done' : 'btn-todo']" @click="handleTask(task)">
+            <text class="task-btn-text" :class="[task.isDone ? 'btn-done-text' : 'btn-todo-text']">{{ task.isDone ? '已完成' : '去完成' }}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+  </view>
+</template>
+
+<script setup lang="uts">
+import { ref } from 'vue'
+import { useAppStore } from '../../store/app.uts'
+
+const appStore = useAppStore
+
+const dailyTasks = ref([
+  { id: 1, name: '每日签到', icon: '📅', points: 10, isDone: true, bgClass: 'bg-blue-50', route: '' },
+  { id: 2, name: '分享话术给好友', icon: '📤', points: 20, isDone: false, bgClass: 'bg-green-50', route: '/pages/discover/discover' },
+  { id: 3, name: '在圈子发布一条动态', icon: '✏️', points: 30, isDone: false, bgClass: 'bg-pink-50', route: '/pages/community/community' }
+])
+
+const noviceTasks = ref([
+  { id: 4, name: '完善个人资料', icon: '👤', points: 50, isDone: false, bgClass: 'bg-purple-50', route: '/pages/profile-edit/profile-edit' },
+  { id: 5, name: '首次使用 AI 导师', icon: '🤖', points: 50, isDone: false, bgClass: 'bg-yellow-50', route: '/pages/ai/ai' }
+])
+
+const handleTask = (task: any) => {
+  if (task.isDone) {
+    appStore.showToast('任务已完成啦')
+    return
+  }
+  if (task.route) {
+    if (['/pages/discover/discover', '/pages/community/community', '/pages/ai/ai'].includes(task.route)) {
+      uni.switchTab({ url: task.route })
+    } else {
+      uni.navigateTo({ url: task.route })
+    }
+  } else {
+    // 比如签到
+    task.isDone = true
+    appStore.showToast(`获得 ${task.points} 积分！`)
+  }
+}
+</script>
+
+<style>
+page { background-color: #f9fafb; }
+.container { padding: 20px; }
+
+.points-card { border-radius: 20px; padding: 24px; margin-bottom: 24px; box-shadow: 0 10px 25px -5px rgba(236,72,153,0.4); position: relative; overflow: hidden; }
+.bg-gradient-pink { background-image: linear-gradient(to bottom right, #f43f5e, #ec4899); }
+.points-header { flex-direction: row; justify-content: space-between; align-items: center; margin-bottom: 12px; z-index: 10; }
+.points-label { font-size: 14px; color: rgba(255,255,255,0.9); }
+.points-rule { flex-direction: row; align-items: center; background-color: rgba(255,255,255,0.2); padding: 4px 10px; border-radius: 12px; }
+.points-rule-icon { font-size: 12px; color: #ffffff; margin-right: 4px; }
+.points-rule-text { font-size: 11px; color: #ffffff; }
+.points-num { font-size: 40px; font-weight: 900; color: #ffffff; z-index: 10; letter-spacing: 2px; }
+
+.task-section { margin-bottom: 24px; }
+.section-title { font-size: 16px; font-weight: bold; color: #1f2937; margin-bottom: 16px; margin-left: 4px; }
+
+.task-list { background-color: #ffffff; border-radius: 20px; padding: 0 16px; box-shadow: 0 2px 10px rgba(0,0,0,0.02); }
+.task-item { flex-direction: row; align-items: center; padding: 16px 0; border-bottom-width: 1px; border-bottom-style: solid; border-bottom-color: #f3f4f6; }
+.task-item:last-child { border-bottom-width: 0; }
+.task-icon-wrap { width: 44px; height: 44px; border-radius: 22px; align-items: center; justify-content: center; margin-right: 12px; }
+.bg-blue-50 { background-color: #eff6ff; }
+.bg-green-50 { background-color: #f0fdf4; }
+.bg-pink-50 { background-color: #fdf2f8; }
+.bg-purple-50 { background-color: #faf5ff; }
+.bg-yellow-50 { background-color: #fefce8; }
+.task-icon { font-size: 20px; }
+.task-info { flex: 1; }
+.task-name { font-size: 14px; font-weight: bold; color: #374151; margin-bottom: 6px; }
+.task-reward { flex-direction: row; align-items: center; }
+.reward-icon { font-size: 12px; color: #eab308; margin-right: 4px; }
+.reward-text { font-size: 12px; color: #eab308; font-weight: bold; }
+
+.task-btn { padding: 6px 16px; border-radius: 16px; margin-left: 12px; }
+.btn-todo { background-color: #fdf2f8; border-width: 1px; border-style: solid; border-color: #fbcfe8; }
+.btn-todo-text { color: #ec4899; font-size: 12px; font-weight: bold; }
+.btn-done { background-color: #f3f4f6; }
+.btn-done-text { color: #9ca3af; font-size: 12px; font-weight: 500; }
+</style>

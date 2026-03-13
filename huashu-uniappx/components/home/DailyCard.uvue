@@ -1,0 +1,45 @@
+<template>
+  <view class="daily-card animate-fade-in-up delay-150">
+    <view class="daily-card-inner bg-gradient-purple">
+      <view class="daily-blur-circle"></view>
+      <view class="daily-left">
+        <view class="daily-badge">
+          <text class="daily-badge-icon">📅</text>
+          <text class="daily-badge-text">每日灵感 · 今日</text>
+        </view>
+        <text class="daily-quote">"真正的吸引不是刻意讨好，而是展示你独特的生活态度。"</text>
+      </view>
+      <view class="daily-right">
+        <view class="sign-btn" @click="$emit('sign-in')">
+          <text class="sign-btn-icon">✅</text>
+          <text class="sign-btn-text">签到领积分</text>
+        </view>
+        <text class="sign-streak">已连续签到 3 天</text>
+      </view>
+    </view>
+  </view>
+</template>
+
+<script setup lang="uts">
+const emit = defineEmits<{
+  (e: 'sign-in'): void
+}>()
+</script>
+
+<style>
+/* Daily Card */
+.daily-card { padding: 0 16px; margin-top: 20px; }
+.daily-card-inner { border-radius: 24px; padding: 16px; flex-direction: row; justify-content: space-between; align-items: center; overflow: hidden; position: relative; }
+.bg-gradient-purple { background-image: linear-gradient(to right, #6366f1, #a855f7); }
+.daily-blur-circle { position: absolute; right: -16px; bottom: -16px; width: 96px; height: 96px; background-color: rgba(255,255,255,0.1); border-radius: 48px; }
+.daily-left { flex: 1; padding-right: 16px; }
+.daily-badge { flex-direction: row; align-items: center; background-color: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 6px; margin-bottom: 8px; align-self: flex-start; }
+.daily-badge-icon { font-size: 12px; color: #ffffff; margin-right: 4px; }
+.daily-badge-text { font-size: 10px; color: #ffffff; font-weight: 500; }
+.daily-quote { font-size: 13px; color: #ffffff; font-weight: 500; font-style: italic; line-height: 1.625; }
+.daily-right { align-items: center; flex-shrink: 0; }
+.sign-btn { background-color: #ffffff; padding: 6px 12px; border-radius: 20px; flex-direction: row; align-items: center; }
+.sign-btn-icon { font-size: 12px; margin-right: 4px; }
+.sign-btn-text { font-size: 11px; color: #7c3aed; font-weight: bold; }
+.sign-streak { font-size: 9px; color: rgba(233,213,255,0.8); margin-top: 6px; }
+</style>

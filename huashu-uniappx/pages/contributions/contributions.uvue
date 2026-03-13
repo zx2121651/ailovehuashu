@@ -1,0 +1,148 @@
+<template>
+  <view class="container">
+    <view class="tabs-header">
+      <view class="tab" :class="[activeTab === 'pending' ? 'tab-active' : '']" @click="activeTab = 'pending'">
+        <text class="tab-text" :class="[activeTab === 'pending' ? 'tab-text-active' : '']">审核中</text>
+      </view>
+      <view class="tab" :class="[activeTab === 'approved' ? 'tab-active' : '']" @click="activeTab = 'approved'">
+        <text class="tab-text" :class="[activeTab === 'approved' ? 'tab-text-active' : '']">已发布</text>
+      </view>
+      <view class="tab" :class="[activeTab === 'rejected' ? 'tab-active' : '']" @click="activeTab = 'rejected'">
+        <text class="tab-text" :class="[activeTab === 'rejected' ? 'tab-text-active' : '']">未通过</text>
+      </view>
+    </view>
+
+    <scroll-view class="scroll-area" scroll-y>
+      <view v-if="filteredList.length === 0" class="empty-state">
+        <text class="empty-icon">📝</text>
+        <text class="empty-text">暂无相关投稿记录</text>
+      </view>
+
+      <view class="contrib-card" v-for="item in filteredList" :key="item.id">
+        <view class="card-header">
+          <text class="card-time">{{ item.date }}</text>
+          <view class="status-badge" :class="statusClass(item.status)">
+            <text class="status-text" :class="statusTextClass(item.status)">{{ statusLabel(item.status) }}</text>
+          </view>
+        </view>
+        <view class="card-body">
+          <text class="item-q" :lines="2"><text class="badge-q">问</text> {{ item.question }}</text>
+          <text class="item-a" :lines="2"><text class="badge-a">答</text> {{ item.answer }}</text>
+        </view>
+        <view v-if="item.status === 'rejected'" class="reject-reason">
+          <text class="reason-text">驳回原因：{{ item.reason }}</text>
+        </view>
+      </view>
+
+      <view class="bottom-spacer"></view>
+    </scroll-view>
+
+    <!-- Floating Create Button -->
+    <view class="fab-contribute" @click="goToContribute">
+      <text class="fab-icon">✏️</text>
+      <text class="fab-text">去投稿</text>
+    </view>
+  </view>
+</template>
+
+<script setup lang="uts">
+import { ref, computed } from 'vue'
+
+const activeTab = ref('approved')
+
+const allContributions = ref([
+  { id: 1, date: '2023-11-20 10:00', status: 'approved', question: '在干嘛呢？', answer: '在思考怎么回复一个漂亮女孩的消息。', reason: '' },
+  { id: 2, date: '2023-11-21 14:30', status: 'pending', question: '你多大了？', answer: '怎么，想帮我算算八字合不合？', reason: '' },
+  { id: 3, date: '2023-11-19 09:15', status: 'rejected', question: '周末有什么安排？', answer: '没有安排。', reason: '回复过于简短平淡，缺乏情绪价值。' }
+])
+
+const filteredList = computed(() => {
+  return allContributions.value.filter(item => item.status === activeTab.value)
+})
+
+const statusLabel = (status: string) => {
+  switch (status) {
+    case 'approved': return '已通过'
+    case 'pending': return '审核中'
+    case 'rejected': return '未通过'
+    default: return '未知'
+  }
+}
+
+const statusClass = (status: string) => {
+  switch (status) {
+    case 'approved': return 'bg-green-100 border-green-200'
+    case 'pending': return 'bg-blue-100 border-blue-200'
+    case 'rejected': return 'bg-red-100 border-red-200'
+    default: return 'bg-gray-100 border-gray-200'
+  }
+}
+
+const statusTextClass = (status: string) => {
+  switch (status) {
+    case 'approved': return 'text-green-700'
+    case 'pending': return 'text-blue-700'
+    case 'rejected': return 'text-red-700'
+    default: return 'text-gray-700'
+  }
+}
+
+const goToContribute = () => {
+  uni.navigateTo({ url: '/pages/contribute/contribute' })
+}
+</script>
+
+<style>
+page { background-color: #f9fafb; height: 100%; }
+.container { flex: 1; display: flex; flex-direction: column; height: 100%; position: relative; }
+
+.tabs-header { flex-direction: row; background-color: #ffffff; border-bottom-width: 1px; border-bottom-style: solid; border-bottom-color: #f3f4f6; }
+.tab { flex: 1; padding: 14px 0; align-items: center; justify-content: center; border-bottom-width: 2px; border-bottom-style: solid; border-bottom-color: transparent; }
+.tab-active { border-bottom-color: #ec4899; }
+.tab-text { font-size: 14px; color: #6b7280; font-weight: 500; }
+.tab-text-active { color: #ec4899; font-weight: bold; }
+
+.empty-state { flex: 1; align-items: center; justify-content: center; padding-top: 100px; }
+.empty-icon { font-size: 40px; margin-bottom: 12px; opacity: 0.5; }
+.empty-text { font-size: 13px; color: #9ca3af; }
+
+.scroll-area { flex: 1; padding: 16px; }
+.contrib-card { background-color: #ffffff; border-radius: 16px; padding: 16px; margin-bottom: 12px; border-width: 1px; border-style: solid; border-color: #f3f4f6; box-shadow: 0 2px 8px rgba(0,0,0,0.02); }
+.card-header { flex-direction: row; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.card-time { font-size: 12px; color: #9ca3af; }
+.status-badge { padding: 2px 8px; border-radius: 10px; border-width: 1px; border-style: solid; }
+.status-text { font-size: 10px; font-weight: bold; }
+
+/* Status Colors */
+.bg-green-100 { background-color: #dcfce7; }
+.border-green-200 { border-color: #bbf7d0; }
+.text-green-700 { color: #15803d; }
+
+.bg-blue-100 { background-color: #dbeafe; }
+.border-blue-200 { border-color: #bfdbfe; }
+.text-blue-700 { color: #1d4ed8; }
+
+.bg-red-100 { background-color: #fee2e2; }
+.border-red-200 { border-color: #fecaca; }
+.text-red-700 { color: #b91c1c; }
+
+.bg-gray-100 { background-color: #f3f4f6; }
+.border-gray-200 { border-color: #e5e7eb; }
+.text-gray-700 { color: #374151; }
+
+.card-body { background-color: #f9fafb; padding: 12px; border-radius: 12px; }
+.item-q { font-size: 14px; font-weight: bold; color: #1f2937; margin-bottom: 8px; line-height: 1.4; }
+.item-a { font-size: 13px; color: #4b5563; line-height: 1.4; }
+.badge-q { color: #ffffff; background-color: #3b82f6; font-size: 10px; padding: 1px 4px; border-radius: 4px; margin-right: 4px; }
+.badge-a { color: #ffffff; background-color: #ec4899; font-size: 10px; padding: 1px 4px; border-radius: 4px; margin-right: 4px; }
+
+.reject-reason { margin-top: 10px; padding-top: 10px; border-top-width: 1px; border-top-style: dashed; border-top-color: #fecaca; }
+.reason-text { font-size: 11px; color: #ef4444; }
+
+/* FAB */
+.fab-contribute { position: fixed; right: 20px; bottom: 40px; background-image: linear-gradient(to bottom right, #f43f5e, #ec4899); padding: 12px 20px; border-radius: 24px; flex-direction: row; align-items: center; box-shadow: 0 8px 20px rgba(236,72,153,0.4); z-index: 10; }
+.fab-icon { font-size: 16px; color: #ffffff; margin-right: 6px; }
+.fab-text { font-size: 13px; font-weight: bold; color: #ffffff; }
+
+.bottom-spacer { height: 100px; }
+</style>

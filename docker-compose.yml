@@ -1,0 +1,68 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: huashu-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: huashu_user
+      POSTGRES_PASSWORD: huashu_password
+      POSTGRES_DB: huashu_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+    networks:
+      - huashu-network
+
+  backend:
+    build:
+      context: ./huashu-backend
+      dockerfile: Dockerfile
+    container_name: huashu-backend
+    restart: unless-stopped
+    depends_on:
+      - db
+    environment:
+      - DATABASE_URL=postgresql://huashu_user:huashu_password@db:5432/huashu_db?schema=public
+      - JWT_SECRET=your_super_secret_jwt_key_here
+      - PORT=3000
+    # Command runs db push before starting to ensure db schema is up to date
+    command: sh -c "npx prisma db push && node src/index.js"
+    ports:
+      - "3000:3000"
+    networks:
+      - huashu-network
+
+  app:
+    build:
+      context: ./huashu-app
+      dockerfile: Dockerfile
+    container_name: huashu-app
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      # Exposes App (User Frontend) on port 80 (HTTP default)
+      - "80:80"
+    networks:
+      - huashu-network
+
+  admin:
+    build:
+      context: ./huashu-admin
+      dockerfile: Dockerfile
+    container_name: huashu-admin
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      # Exposes Admin Panel on port 8080
+      - "8080:80"
+    networks:
+      - huashu-network
+
+networks:
+  huashu-network:
+    driver: bridge

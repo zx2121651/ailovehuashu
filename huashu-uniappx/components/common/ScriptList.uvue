@@ -1,0 +1,119 @@
+<template>
+  <view class="section animate-fade-in-up delay-500">
+    <view class="section-header" v-if="showHeader">
+      <text class="section-title">高分回复榜</text>
+      <view class="hot-rank-badge">
+        <text class="hot-rank-icon">🔥</text>
+        <text class="hot-rank-text">全网热搜</text>
+      </view>
+    </view>
+    <view class="scripts-list">
+      <view
+        v-for="script in scripts"
+        :key="script.id"
+        class="script-card-wrapper"
+      >
+        <view class="script-card" :class="[isEditMode ? 'script-card-dim' : '']">
+          <view v-if="isEditMode" class="script-checkbox" @click="$emit('toggle-check', script.id)">
+            <text class="checkbox-icon">{{ checkedIds.includes(script.id) ? '☑️' : '⬜' }}</text>
+          </view>
+          <view class="script-card-content">
+            <view class="script-question-row">
+              <view class="script-badge">
+                <text class="script-badge-text">对方说</text>
+              </view>
+              <text class="script-question" :lines="2">{{ script.question }}</text>
+            </view>
+            <view class="script-answer-box">
+              <text class="script-answer" :lines="2">{{ script.answers[0] || '暂无回复' }}</text>
+              <view class="script-answer-bottom">
+                <view class="script-type-tag" v-if="script.type || (script.tags && script.tags.length > 0)">
+                  <text class="script-type-text">{{ script.type || script.tags[0] }}</text>
+                </view>
+              </view>
+            </view>
+            <view class="script-actions">
+              <view class="script-action-left">
+                <view class="script-action-btn" @click="$emit('copy-script', script)">
+                  <text class="script-action-icon">{{ copiedId === script.id ? '✅' : '📋' }}</text>
+                  <text class="script-action-text">{{ copiedId === script.id ? '已复制' : '复制' }}</text>
+                </view>
+                <view class="script-action-btn-fav" @click="$emit('toggle-fav', script.id)">
+                  <text class="script-action-icon-fav" :class="{'fav-active': favoriteIds.includes(script.id)}">{{ favoriteIds.includes(script.id) ? '❤️' : '🤍' }}</text>
+                  <text class="script-action-text-fav" :class="{'fav-active-text': favoriteIds.includes(script.id)}">{{ favoriteIds.includes(script.id) ? '已收藏' : '收藏' }}</text>
+                </view>
+              </view>
+              <view class="script-action-right" @click="$emit('show-more', script)">
+                <text class="script-stat-text">查看更多(10+) ›</text>
+              </view>
+            </view>
+            <!-- Bottom Extra Slot inside card content -->
+            <slot name="extra" :script="script"></slot>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+</template>
+
+<script setup lang="uts">
+const props = defineProps<{
+  scripts: any[]
+  copiedId: string
+  favoriteIds: string[]
+  showHeader?: boolean
+  isEditMode?: boolean
+  checkedIds?: string[]
+}>()
+
+const emit = defineEmits<{
+  (e: 'copy-script', script: any): void
+  (e: 'toggle-fav', id: string): void
+  (e: 'show-more', script: any): void
+  (e: 'toggle-check', id: string): void
+}>()
+</script>
+
+<style>
+/* Section Common */
+.section { margin-top: 24px; }
+.section-header { flex-direction: row; justify-content: space-between; align-items: center; padding: 0 20px; margin-bottom: 12px; }
+.section-title { font-size: 17px; font-weight: bold; color: #1f2937; }
+
+/* Hot Rank Badge */
+.hot-rank-badge { background-color: #fef2f2; border-width: 1px; border-style: solid; border-color: #fecaca; padding: 4px 8px; border-radius: 6px; flex-direction: row; align-items: center; }
+.hot-rank-icon { font-size: 12px; margin-right: 4px; }
+.hot-rank-text { font-size: 10px; color: #ef4444; font-weight: bold; }
+
+/* Script Cards */
+.scripts-list { padding: 0 16px; }
+.script-card-wrapper { margin-bottom: 14px; position: relative; }
+.script-card-wrapper:last-child { margin-bottom: 0; }
+.script-card { flex-direction: row; background-color: #ffffff; border-radius: 20px; padding: 16px; border-width: 1px; border-style: solid; border-color: #f3f4f6; box-shadow: 0 4px 12px -4px rgba(0,0,0,0.05); }
+.script-card-dim { opacity: 0.8; }
+.script-checkbox { margin-right: 12px; margin-top: 16px; }
+.checkbox-icon { font-size: 24px; }
+.script-card-content { flex: 1; }
+.script-question-row { flex-direction: row; align-items: flex-start; margin-bottom: 12px; }
+.script-badge { background-color: #3b82f6; padding: 2px 8px; border-radius: 12px; margin-right: 8px; flex-shrink: 0; margin-top: 2px; }
+.script-badge-text { font-size: 10px; color: #ffffff; font-weight: bold; }
+.script-question { font-size: 15px; font-weight: bold; color: #1f2937; flex: 1; line-height: 1.375; }
+.script-answer-box { background-color: #f9fafb; padding: 12px; border-radius: 14px; border-width: 1px; border-style: solid; border-color: #f3f4f6; margin-bottom: 12px; position: relative; }
+.script-answer { font-size: 13px; color: #4b5563; line-height: 1.625; margin-bottom: 6px; }
+.script-answer-bottom { flex-direction: row; justify-content: flex-start; }
+.script-type-tag { background-color: #f3f4f6; padding: 2px 8px; border-radius: 6px; align-self: flex-start; }
+.script-type-text { font-size: 10px; color: #6b7280; font-weight: 500; }
+
+.script-actions { flex-direction: row; justify-content: space-between; align-items: center; }
+.script-action-left { flex-direction: row; align-items: center; }
+.script-action-btn { flex-direction: row; align-items: center; background-color: #fdf2f8; padding: 6px 14px; border-radius: 12px; margin-right: 8px; }
+.script-action-icon { font-size: 12px; margin-right: 4px; }
+.script-action-text { font-size: 12px; color: #db2777; font-weight: bold; }
+.script-action-btn-fav { flex-direction: row; align-items: center; background-color: #f9fafb; padding: 6px 14px; border-radius: 12px; border-width: 1px; border-style: solid; border-color: #f3f4f6; }
+.script-action-icon-fav { font-size: 12px; margin-right: 4px; color: #9ca3af; }
+.script-action-text-fav { font-size: 12px; color: #6b7280; font-weight: 500; }
+.fav-active { color: #ef4444; }
+.fav-active-text { color: #ef4444; font-weight: bold; }
+.script-action-right { padding: 4px; }
+.script-stat-text { font-size: 12px; color: #db2777; font-weight: 500; }
+</style>

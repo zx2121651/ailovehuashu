@@ -1,0 +1,574 @@
+<template>
+  <view class="page-container">
+    <!-- Header -->
+    <view class="fav-header">
+      <view class="fav-header-spacer"></view>
+      <text class="fav-title">我的收藏</text>
+      <view class="fav-header-actions">
+        <view class="fav-action-btn" @click="isFavSearchVisible = !isFavSearchVisible">
+          <text class="fav-action-icon">🔍</text>
+        </view>
+        <view class="fav-action-btn" @click="appStore.showToast('已将收藏导出至本地')">
+          <text class="fav-action-icon">📥</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- Content Type Tabs -->
+    <view class="content-tabs slide-up">
+      <view class="content-tab" :class="[contentType === 'script' ? 'content-tab-active' : '']" @click="contentType = 'script'">
+        <text class="content-tab-text" :class="[contentType === 'script' ? 'content-tab-text-active' : '']">话术</text>
+        <view v-if="contentType === 'script'" class="content-tab-indicator"></view>
+      </view>
+      <view class="content-tab" :class="[contentType === 'article' ? 'content-tab-active' : '']" @click="contentType = 'article'">
+        <text class="content-tab-text" :class="[contentType === 'article' ? 'content-tab-text-active' : '']">文章</text>
+        <view v-if="contentType === 'article'" class="content-tab-indicator"></view>
+      </view>
+      <view class="content-tab" :class="[contentType === 'course' ? 'content-tab-active' : '']" @click="contentType = 'course'">
+        <text class="content-tab-text" :class="[contentType === 'course' ? 'content-tab-text-active' : '']">课程</text>
+        <view v-if="contentType === 'course'" class="content-tab-indicator"></view>
+      </view>
+    </view>
+
+    <!-- Search Bar -->
+    <view v-if="isFavSearchVisible" class="fav-search-bar slide-up">
+      <view class="fav-search-inner">
+        <text class="fav-search-icon">🔍</text>
+        <input
+          type="text"
+          v-model="favSearchQuery"
+          placeholder="在收藏中搜索..."
+          class="fav-search-input"
+        />
+        <view v-if="favSearchQuery" class="fav-clear" @click="favSearchQuery = ''">
+          <text class="fav-clear-icon">✕</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- Content -->
+    <scroll-view class="fav-content" scroll-y>
+      <!-- Folder Tabs -->
+      <scroll-view class="folder-tabs" scroll-x>
+        <view class="folder-row">
+          <view
+            class="folder-tab"
+            :class="[favFilter === '全部' ? 'folder-tab-all-active' : '']"
+            @click="favFilter = '全部'"
+          >
+            <text class="folder-tab-text" :class="[favFilter === '全部' ? 'folder-tab-text-active' : '']">全部</text>
+          </view>
+          <view
+            v-for="folder in customFolders"
+            :key="folder"
+            class="folder-tab"
+            :class="[favFilter === folder ? 'folder-tab-active' : '']"
+            @click="favFilter = folder"
+          >
+            <text class="folder-tab-emoji">📂</text>
+            <text class="folder-tab-text" :class="[favFilter === folder ? 'folder-tab-text-pink' : '']">{{ folder }}</text>
+          </view>
+          <view class="folder-tab-new" @click="isCreateFolderModalOpen = true">
+            <text class="folder-tab-new-icon">＋</text>
+            <text class="folder-tab-new-text">新建</text>
+          </view>
+        </view>
+      </scroll-view>
+
+      <!-- Stats & Actions Row -->
+      <view class="fav-stats-row">
+        <text class="fav-count-text">共找到 <text class="fav-count-num">{{ myFavs.length }}</text> 条内容</text>
+        <view class="fav-right-actions">
+          <!-- Sort Dropdown -->
+          <view class="sort-wrap" @click="isSortDropdownOpen = !isSortDropdownOpen">
+            <text class="sort-btn-icon">↕️</text>
+            <text class="sort-btn-text">{{ sortLabel }}</text>
+          </view>
+          <!-- Batch Manage -->
+          <view v-if="myFavs.length > 0" class="manage-btn" :class="[isEditFav ? 'manage-btn-active' : '']" @click="toggleEditMode">
+            <text class="manage-btn-text" :class="[isEditFav ? 'manage-btn-text-active' : '']">{{ isEditFav ? '取消管理' : '批量管理' }}</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- Sort Dropdown Menu -->
+      <view v-if="isSortDropdownOpen" class="sort-dropdown zoom-in">
+        <view class="sort-option" @click="selectSort('newest')">
+          <text class="sort-option-text" :class="[favSortOrder === 'newest' ? 'sort-option-active' : '']">最新添加</text>
+        </view>
+        <view class="sort-option" @click="selectSort('oldest')">
+          <text class="sort-option-text" :class="[favSortOrder === 'oldest' ? 'sort-option-active' : '']">最早添加</text>
+        </view>
+        <view class="sort-option" @click="selectSort('category')">
+          <text class="sort-option-text" :class="[favSortOrder === 'category' ? 'sort-option-active' : '']">按分类排序</text>
+        </view>
+      </view>
+
+      <!-- Favorites List -->
+      <view v-if="myFavs.length > 0" class="fav-list animate-fade-in-up">
+        <ScriptList
+          :scripts="myFavs"
+          :copiedId="copiedId"
+          :favoriteIds="favoriteIds"
+          :showHeader="false"
+          :isEditMode="isEditFav"
+          :checkedIds="checkedFavs"
+          @copy-script="handleCopy"
+          @toggle-check="toggleFavCheck"
+          @toggle-fav="handleToggleFav"
+          @show-more="appStore.showToast('查看更多回复')"
+        >
+          <template #extra="{ script }">
+            <view class="fav-extra-bar">
+              <view class="fav-note-btn" @click="openNoteEditor(script.id)">
+                <text class="fav-note-icon">✏️</text>
+                <text class="fav-note-text">{{ favNotes[script.id] || '添加备注' }}</text>
+              </view>
+              <view class="fav-move-btn" @click="movingScriptId = script.id">
+                <text class="fav-move-icon">📁</text>
+                <text class="fav-move-text">{{ scriptFolders[script.id] || '移动' }}</text>
+              </view>
+            </view>
+          </template>
+        </ScriptList>
+      </view>
+
+      <!-- Empty State -->
+      <view v-else class="fav-empty">
+        <text class="fav-empty-icon">❤️</text>
+        <text class="fav-empty-title">没找到相关的收藏内容呢</text>
+        <view class="fav-empty-btn" @click="favSearchQuery = ''; favFilter = '全部'">
+          <text class="fav-empty-btn-text">清除条件</text>
+        </view>
+      </view>
+
+    <view class="tabbar-spacer"></view>
+    </scroll-view>
+
+    <!-- Edit Mode Bottom Bar -->
+    <view v-if="isEditFav" class="edit-bar slide-up">
+      <view class="edit-select-all" @click="toggleSelectAll">
+        <text class="edit-select-icon">{{ checkedFavs.length === myFavs.length ? '☑️' : '⬜' }}</text>
+        <text class="edit-select-text">全选</text>
+      </view>
+      <view class="edit-delete-btn" :class="[checkedFavs.length > 0 ? 'edit-delete-active' : '']" @click="handleBatchDelete">
+        <text class="edit-delete-icon">🗑️</text>
+        <text class="edit-delete-text">删除{{ checkedFavs.length > 0 ? ' (' + checkedFavs.length + ')' : '' }}</text>
+      </view>
+    </view>
+
+    <!-- Create Folder Modal -->
+    <view v-if="isCreateFolderModalOpen" class="modal-overlay">
+      <view class="modal-mask fade-in" @click="isCreateFolderModalOpen = false"></view>
+      <view class="modal-dialog zoom-in">
+        <text class="modal-title">新建收藏夹</text>
+        <input
+          v-model="newFolderName"
+          placeholder="例如：约会必杀技"
+          class="modal-input"
+          :focus="isCreateFolderModalOpen"
+        />
+        <view class="modal-actions">
+          <view class="modal-btn-cancel" @click="isCreateFolderModalOpen = false">
+            <text class="modal-btn-cancel-text">取消</text>
+          </view>
+          <view class="modal-btn-confirm" @click="handleCreateFolder">
+            <text class="modal-btn-confirm-text">确定</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- Edit Note Modal -->
+    <view v-if="editingNoteId !== ''" class="modal-overlay">
+      <view class="modal-mask fade-in" @click="editingNoteId = ''"></view>
+      <view class="modal-dialog-wide zoom-in">
+        <view class="modal-note-header">
+          <text class="modal-note-icon">✏️</text>
+          <text class="modal-note-title">编辑话术备注</text>
+        </view>
+        <textarea
+          v-model="tempNoteContent"
+          placeholder="例如：准备在跨年夜用这句表白..."
+          class="modal-textarea"
+          :maxlength="200"
+        />
+        <view class="modal-actions">
+          <view class="modal-btn-cancel" @click="editingNoteId = ''">
+            <text class="modal-btn-cancel-text">取消</text>
+          </view>
+          <view class="modal-btn-confirm" @click="handleSaveNote">
+            <text class="modal-btn-confirm-text">保存备注</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- Move to Folder Drawer -->
+    <view v-if="movingScriptId !== ''" class="drawer-overlay">
+      <view class="drawer-mask fade-in" @click="movingScriptId = ''"></view>
+      <view class="drawer-panel slide-up">
+        <view class="drawer-header">
+          <text class="drawer-title">移动至收藏夹</text>
+          <view class="drawer-close" @click="movingScriptId = ''">
+            <text class="drawer-close-icon">✕</text>
+          </view>
+        </view>
+        <scroll-view class="drawer-list" scroll-y>
+          <view class="drawer-option"
+            :class="[!scriptFolders[movingScriptId] ? 'drawer-option-active' : '']"
+            @click="handleMoveScript('默认收藏')"
+          >
+            <view class="drawer-option-left">
+              <text class="drawer-option-icon">📂</text>
+              <text class="drawer-option-text">默认收藏</text>
+            </view>
+            <text v-if="!scriptFolders[movingScriptId]" class="drawer-check">☑️</text>
+          </view>
+          <view
+            v-for="folder in customFolders"
+            :key="folder"
+            class="drawer-option"
+            :class="[scriptFolders[movingScriptId] === folder ? 'drawer-option-active' : '']"
+            @click="handleMoveScript(folder)"
+          >
+            <view class="drawer-option-left">
+              <text class="drawer-option-icon">📂</text>
+              <text class="drawer-option-text">{{ folder }}</text>
+            </view>
+            <text v-if="scriptFolders[movingScriptId] === folder" class="drawer-check">☑️</text>
+          </view>
+          <view class="drawer-new-folder" @click="movingScriptId = ''; isCreateFolderModalOpen = true">
+            <text class="drawer-new-icon">＋</text>
+            <text class="drawer-new-text">新建收藏夹</text>
+          </view>
+        </scroll-view>
+      </view>
+    </view>
+
+    <CustomTabBar :current="3"></CustomTabBar>
+  </view>
+</template>
+
+<script setup lang="uts">
+import { ref, computed } from 'vue'
+import { onShow } from '@dcloudio/uni-app'
+import { useAppStore } from '../../store/app.uts'
+import ScriptList from '../../components/common/ScriptList.uvue'
+import CustomTabBar from '../../components/common/CustomTabBar.uvue'
+
+const appStore = useAppStore
+
+onShow(() => {
+  uni.hideTabBar()
+})
+
+const contentType = ref('script')
+const favFilter = ref('全部')
+const isEditFav = ref(false)
+const checkedFavs = ref<string[]>([])
+const isFavSearchVisible = ref(false)
+const favSearchQuery = ref('')
+const favSortOrder = ref('newest')
+const isSortDropdownOpen = ref(false)
+const copiedId = ref('')
+
+const editingNoteId = ref('')
+const tempNoteContent = ref('')
+
+const isCreateFolderModalOpen = ref(false)
+const newFolderName = ref('')
+const movingScriptId = ref('')
+
+const customFolders = ref<string[]>(['约会话术', '表白必杀'])
+const scriptFolders = ref<any>({})
+const favNotes = ref<any>({})
+
+// 收藏数据
+const allFavorites = ref<any[]>([])
+
+const myFavs = computed(() => {
+  let result = [...allFavorites.value]
+
+  if (contentType.value === 'article' || contentType.value === 'course') {
+    return [] // Placeholder for articles and courses
+  }
+
+  if (favFilter.value !== '全部') {
+    result = result.filter(s => scriptFolders.value[s.id] === favFilter.value)
+  }
+  if (favSearchQuery.value) {
+    result = result.filter(s =>
+      s.question.includes(favSearchQuery.value) ||
+      (s.answers && s.answers.some((a: string) => a.includes(favSearchQuery.value)))
+    )
+  }
+  return result
+})
+
+const sortLabel = computed(() => {
+  if (favSortOrder.value === 'newest') return '最新添加'
+  if (favSortOrder.value === 'oldest') return '最早添加'
+  return '按分类'
+})
+
+const favoriteIds = computed(() => {
+  return myFavs.value.map(f => f.id)
+})
+
+const selectSort = (order: string) => {
+  favSortOrder.value = order
+  isSortDropdownOpen.value = false
+}
+
+const toggleEditMode = () => {
+  isEditFav.value = !isEditFav.value
+  checkedFavs.value = []
+  isSortDropdownOpen.value = false
+}
+
+const toggleFavCheck = (id: string) => {
+  const idx = checkedFavs.value.indexOf(id)
+  if (idx !== -1) {
+    checkedFavs.value.splice(idx, 1)
+  } else {
+    checkedFavs.value.push(id)
+  }
+}
+
+const toggleSelectAll = () => {
+  if (checkedFavs.value.length === myFavs.value.length) {
+    checkedFavs.value = []
+  } else {
+    checkedFavs.value = myFavs.value.map(m => m.id)
+  }
+}
+
+const handleBatchDelete = () => {
+  if (checkedFavs.value.length === 0) {
+    isEditFav.value = false
+    return
+  }
+  allFavorites.value = allFavorites.value.filter(s => !checkedFavs.value.includes(s.id))
+  appStore.showToast('已删除 ' + checkedFavs.value.length + ' 条收藏')
+  checkedFavs.value = []
+  isEditFav.value = false
+}
+
+const handleToggleFav = (id: string) => {
+  // 取消收藏操作
+  allFavorites.value = allFavorites.value.filter(s => s.id !== id)
+  appStore.showToast('已取消收藏')
+}
+
+const handleCopy = (script: any) => {
+  const text = (script.answers && script.answers[0]) ? script.answers[0] : ''
+  uni.setClipboardData({
+    data: text,
+    success: () => {
+      copiedId.value = script.id
+      appStore.showToast('已复制到剪贴板')
+      setTimeout(() => { copiedId.value = '' }, 2000)
+    }
+  })
+}
+
+const openNoteEditor = (id: string) => {
+  editingNoteId.value = id
+  tempNoteContent.value = favNotes.value[id] || ''
+}
+
+const handleSaveNote = () => {
+  if (editingNoteId.value) {
+    favNotes.value[editingNoteId.value] = tempNoteContent.value
+    appStore.showToast('备注已保存')
+    editingNoteId.value = ''
+  }
+}
+
+const handleCreateFolder = () => {
+  if (!newFolderName.value.trim()) {
+    return appStore.showToast('文件夹名称不能为空')
+  }
+  if (customFolders.value.includes(newFolderName.value)) {
+    return appStore.showToast('该文件夹名称已存在')
+  }
+  customFolders.value.push(newFolderName.value)
+  isCreateFolderModalOpen.value = false
+  newFolderName.value = ''
+  appStore.showToast('文件夹创建成功')
+}
+
+const handleMoveScript = (folder: string) => {
+  if (movingScriptId.value) {
+    if (folder === '默认收藏') {
+      delete scriptFolders.value[movingScriptId.value]
+    } else {
+      scriptFolders.value[movingScriptId.value] = folder
+    }
+    movingScriptId.value = ''
+    appStore.showToast('移动成功')
+  }
+}
+</script>
+
+<style>
+page { display: flex; flex-direction: column; height: 100%; }
+.page-container { flex: 1; display: flex; flex-direction: column; height: 100%; background-color: #f5f7fa; position: relative; }
+
+/* 防止自定义 Fixed TabBar 遮挡底部内容的垫片 */
+.tabbar-spacer { height: calc(55px + env(safe-area-inset-bottom)); width: 100%; }
+
+/* Header */
+.fav-header { background-color: #ffffff; padding: 32px 20px 12px; flex-direction: row; justify-content: space-between; align-items: center; border-bottom-width: 1px; border-bottom-style: solid; border-bottom-color: #f3f4f6; }
+.fav-header-spacer { width: 32px; }
+.fav-title { font-size: 18px; font-weight: bold; color: #1f2937; }
+.fav-header-actions { flex-direction: row; }
+.fav-action-btn { padding: 4px 8px; }
+.fav-action-icon { font-size: 20px; }
+
+/* Content Tabs */
+.content-tabs { flex-direction: row; justify-content: space-around; background-color: #ffffff; padding: 0 20px; border-bottom-width: 1px; border-bottom-style: solid; border-bottom-color: #f3f4f6; }
+.content-tab { padding: 12px 0; position: relative; align-items: center; }
+.content-tab-text { font-size: 15px; color: #6b7280; }
+.content-tab-text-active { color: #1f2937; font-weight: bold; }
+.content-tab-indicator { position: absolute; bottom: 0; left: 10px; right: 10px; height: 3px; background-color: #ec4899; border-top-left-radius: 3px; border-top-right-radius: 3px; }
+
+/* Search */
+.fav-search-bar { background-color: #ffffff; padding: 0 20px 12px; border-bottom-width: 1px; border-bottom-style: solid; border-bottom-color: #f3f4f6; }
+.fav-search-inner { flex-direction: row; align-items: center; background-color: rgba(243,244,246,0.8); border-radius: 12px; padding: 0 12px; height: 36px; }
+.fav-search-icon { font-size: 12px; color: #9ca3af; margin-right: 8px; }
+.fav-search-input { flex: 1; font-size: 12px; color: #374151; background-color: transparent; }
+.fav-clear { padding: 4px; }
+.fav-clear-icon { font-size: 12px; color: #9ca3af; }
+
+/* Content */
+.fav-content { flex: 1; padding: 16px; }
+
+/* Folder Tabs */
+.folder-tabs { height: 42px; margin-bottom: 8px; }
+.folder-row { flex-direction: row; align-items: center; }
+.folder-tab { padding: 6px 16px; border-radius: 20px; margin-right: 8px; background-color: #ffffff; border-width: 1px; border-style: solid; border-color: #f3f4f6; flex-shrink: 0; flex-direction: row; align-items: center; }
+.folder-tab-all-active { background-color: #1f2937; border-color: #1f2937; }
+.folder-tab-active { background-color: #ec4899; border-color: #ec4899; }
+.folder-tab-emoji { font-size: 12px; margin-right: 4px; }
+.folder-tab-text { font-size: 11px; color: #4b5563; }
+.folder-tab-text-active { color: #ffffff; font-weight: bold; }
+.folder-tab-text-pink { color: #ffffff; font-weight: bold; }
+.folder-tab-new { padding: 6px 12px; border-radius: 20px; border-width: 1px; border-style: dashed; border-color: #d1d5db; flex-direction: row; align-items: center; flex-shrink: 0; }
+.folder-tab-new-icon { font-size: 12px; color: #6b7280; margin-right: 4px; }
+.folder-tab-new-text { font-size: 11px; color: #6b7280; }
+
+/* Stats Row */
+.fav-stats-row { flex-direction: row; justify-content: space-between; align-items: center; margin-bottom: 12px; padding: 0 4px; }
+.fav-count-text { font-size: 12px; color: #6b7280; font-weight: 500; }
+.fav-count-num { color: #ec4899; font-weight: bold; }
+.fav-right-actions { flex-direction: row; align-items: center; }
+.sort-wrap { flex-direction: row; align-items: center; background-color: #ffffff; border-width: 1px; border-style: solid; border-color: #f3f4f6; padding: 4px 12px; border-radius: 20px; margin-right: 8px; }
+.sort-btn-icon { font-size: 10px; margin-right: 4px; }
+.sort-btn-text { font-size: 11px; color: #4b5563; }
+.manage-btn { background-color: #ffffff; border-width: 1px; border-style: solid; border-color: #f3f4f6; padding: 4px 12px; border-radius: 20px; }
+.manage-btn-active { border-color: #ec4899; background-color: #fdf2f8; }
+.manage-btn-text { font-size: 11px; color: #4b5563; }
+.manage-btn-text-active { color: #ec4899; }
+
+/* Sort Dropdown */
+.sort-dropdown { position: absolute; right: 80px; top: 210px; background-color: #ffffff; border-radius: 12px; padding: 4px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.15); border-width: 1px; border-style: solid; border-color: #f3f4f6; z-index: 20; width: 100px; }
+.sort-option { padding: 8px 12px; border-radius: 8px; }
+.sort-option-text { font-size: 11px; color: #4b5563; }
+.sort-option-active { color: #ec4899; font-weight: bold; }
+
+/* Fav List */
+.fav-list { }
+.fav-item-wrap { flex-direction: row; align-items: flex-start; margin-bottom: 4px; }
+.fav-checkbox { margin-right: 12px; margin-top: 16px; }
+.checkbox-icon { font-size: 24px; }
+
+/* Fav Card */
+.fav-a-bottom { flex-direction: row; justify-content: flex-start; margin-top: 6px; }
+.script-type-tag { background-color: #f3f4f6; padding: 2px 8px; border-radius: 6px; align-self: flex-start; }
+.script-type-text { font-size: 10px; color: #6b7280; font-weight: 500; }
+.fav-action-left { flex-direction: row; align-items: center; }
+.fav-action-right { padding: 4px; }
+.script-stat-text { font-size: 12px; color: #db2777; font-weight: 500; }
+
+.fav-card { flex: 1; background-color: #ffffff; border-radius: 20px; padding: 16px; margin-bottom: 12px; border-width: 1px; border-style: solid; border-color: #f3f4f6; box-shadow: 0 4px 12px -4px rgba(0,0,0,0.05); }
+.fav-card-dim { opacity: 0.8; }
+.fav-q-row { flex-direction: row; align-items: flex-start; margin-bottom: 10px; }
+.fav-q-badge { background-color: #3b82f6; padding: 2px 8px; border-radius: 10px; margin-right: 8px; flex-shrink: 0; margin-top: 2px; }
+.fav-q-badge-text { font-size: 10px; color: #ffffff; font-weight: bold; }
+.fav-q-text { font-size: 14px; font-weight: bold; color: #1f2937; flex: 1; line-height: 1.375; }
+.fav-a-box { background-color: #f9fafb; padding: 10px 12px; border-radius: 12px; border-width: 1px; border-style: solid; border-color: #f3f4f6; margin-bottom: 10px; }
+.fav-a-text { font-size: 13px; color: #4b5563; line-height: 1.625; }
+.fav-actions-row { flex-direction: row; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.fav-copy-btn { flex-direction: row; align-items: center; background-color: #fdf2f8; padding: 6px 14px; border-radius: 12px; }
+.fav-copy-icon { font-size: 12px; margin-right: 4px; }
+.fav-copy-text { font-size: 12px; color: #db2777; font-weight: bold; }
+.fav-likes { font-size: 12px; color: #9ca3af; }
+
+/* Extra bar */
+.fav-extra-bar { flex-direction: row; justify-content: space-between; align-items: center; padding-top: 12px; margin-top: 12px; border-top-width: 1px; border-top-style: solid; border-top-color: #f3f4f6; }
+.fav-note-btn { flex: 1; flex-direction: row; align-items: center; }
+.fav-note-icon { font-size: 10px; margin-right: 4px; }
+.fav-note-text { font-size: 11px; color: #9ca3af; }
+.fav-move-btn { flex-direction: row; align-items: center; background-color: #f9fafb; padding: 4px 8px; border-radius: 6px; }
+.fav-move-icon { font-size: 10px; margin-right: 4px; }
+.fav-move-text { font-size: 10px; color: #6b7280; }
+
+/* Empty */
+.fav-empty { align-items: center; justify-content: center; padding: 80px 0; }
+.fav-empty-icon { font-size: 48px; color: #d1d5db; margin-bottom: 12px; }
+.fav-empty-title { font-size: 14px; color: #6b7280; }
+.fav-empty-btn { margin-top: 16px; background-color: #ffffff; border-width: 1px; border-style: solid; border-color: #e5e7eb; padding: 8px 16px; border-radius: 20px; }
+.fav-empty-btn-text { font-size: 12px; color: #4b5563; }
+
+/* Edit Bar */
+.edit-bar { position: fixed; bottom: 80px; left: 0; right: 0; background-color: #ffffff; border-top-width: 1px; border-top-style: solid; border-top-color: #f3f4f6; padding: 12px 20px; z-index: 40; flex-direction: row; justify-content: space-between; align-items: center; }
+.edit-select-all { flex-direction: row; align-items: center; }
+.edit-select-icon { font-size: 20px; margin-right: 8px; }
+.edit-select-text { font-size: 14px; color: #4b5563; }
+.edit-delete-btn { flex-direction: row; align-items: center; background-color: #e5e7eb; padding: 8px 20px; border-radius: 20px; }
+.edit-delete-active { background-color: #ef4444; }
+.edit-delete-icon { font-size: 14px; margin-right: 4px; }
+.edit-delete-text { font-size: 14px; color: #9ca3af; font-weight: bold; }
+
+/* Modal Overlay */
+.modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 50; align-items: center; justify-content: center; }
+.modal-mask { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0,0,0,0.4); }
+.modal-dialog { background-color: #ffffff; width: 80%; border-radius: 16px; padding: 20px; z-index: 10; align-items: center; }
+.modal-dialog-wide { background-color: #ffffff; width: 85%; border-radius: 24px; padding: 20px; z-index: 10; }
+.modal-title { font-size: 15px; font-weight: bold; color: #1f2937; margin-bottom: 12px; text-align: center; }
+.modal-input { width: 100%; background-color: #f9fafb; border-width: 1px; border-style: solid; border-color: #e5e7eb; border-radius: 12px; padding: 12px; font-size: 13px; color: #374151; text-align: center; }
+.modal-actions { flex-direction: row; margin-top: 16px; width: 100%; }
+.modal-btn-cancel { flex: 1; background-color: #f3f4f6; padding: 10px 0; border-radius: 12px; align-items: center; margin-right: 12px; }
+.modal-btn-cancel-text { font-size: 14px; color: #4b5563; font-weight: bold; }
+.modal-btn-confirm { flex: 1; background-color: #ec4899; padding: 10px 0; border-radius: 12px; align-items: center; }
+.modal-btn-confirm-text { font-size: 14px; color: #ffffff; font-weight: bold; }
+
+/* Note Modal */
+.modal-note-header { flex-direction: row; align-items: center; margin-bottom: 12px; }
+.modal-note-icon { font-size: 16px; margin-right: 6px; color: #ec4899; }
+.modal-note-title { font-size: 15px; font-weight: bold; color: #1f2937; }
+.modal-textarea { width: 100%; height: 100px; background-color: #f9fafb; border-width: 1px; border-style: solid; border-color: #e5e7eb; border-radius: 12px; padding: 12px; font-size: 13px; color: #374151; }
+
+/* Drawer */
+.drawer-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 50; justify-content: flex-end; }
+.drawer-mask { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0,0,0,0.4); }
+.drawer-panel { background-color: #ffffff; border-top-left-radius: 16px; border-top-right-radius: 16px; padding: 16px; padding-bottom: 32px; width: 100%; }
+.drawer-header { flex-direction: row; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.drawer-title { font-size: 15px; font-weight: bold; color: #1f2937; }
+.drawer-close { padding: 4px; }
+.drawer-close-icon { font-size: 16px; color: #9ca3af; }
+.drawer-list { max-height: 300px; }
+.drawer-option { flex-direction: row; justify-content: space-between; align-items: center; padding: 12px 16px; border-radius: 12px; margin-bottom: 8px; background-color: #f9fafb; }
+.drawer-option-active { background-color: #fdf2f8; }
+.drawer-option-left { flex-direction: row; align-items: center; }
+.drawer-option-icon { font-size: 16px; margin-right: 8px; opacity: 0.7; }
+.drawer-option-text { font-size: 14px; color: #374151; }
+.drawer-check { font-size: 16px; }
+.drawer-new-folder { flex-direction: row; align-items: center; justify-content: center; padding: 12px; border-radius: 12px; border-width: 1px; border-style: dashed; border-color: #93c5fd; background-color: rgba(239,246,255,0.5); margin-top: 8px; }
+.drawer-new-icon { font-size: 14px; color: #3b82f6; margin-right: 4px; }
+.drawer-new-text { font-size: 14px; color: #3b82f6; font-weight: 500; }
+
+/* .bottom-spacer { height: 120px; } */
+</style>

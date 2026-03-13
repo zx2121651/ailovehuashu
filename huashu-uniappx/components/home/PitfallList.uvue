@@ -1,0 +1,67 @@
+<template>
+  <view class="section animate-fade-in-up delay-400">
+    <view class="section-header">
+      <view class="section-title-row">
+        <text class="section-title-icon">⚠️</text>
+        <text class="section-title">恋爱避坑指南</text>
+      </view>
+      <view class="section-more" @click="$emit('show-toast', '全部避坑指南')">
+        <text class="section-more-text">更多避坑 ›</text>
+      </view>
+    </view>
+    <scroll-view class="pitfall-scroll" scroll-x>
+      <view class="pitfall-row">
+        <view
+          v-for="(item, idx) in articles"
+          :key="idx"
+          class="pitfall-card"
+          @click="$emit('open-article', item)"
+        >
+          <view class="pitfall-icon-wrap">
+            <text class="pitfall-icon">⚠️</text>
+          </view>
+          <text class="pitfall-title">{{ item.title.substring(0, 10) }}...</text>
+          <text class="pitfall-desc" :lines="1">{{ item.desc }}</text>
+          <view class="pitfall-meta">
+            <text class="pitfall-meta-icon">🔥</text>
+            <text class="pitfall-meta-text">{{ item.views }} 浏览</text>
+          </view>
+        </view>
+      </view>
+    </scroll-view>
+  </view>
+</template>
+
+<script setup lang="uts">
+const props = defineProps<{
+  articles: any[]
+}>()
+
+const emit = defineEmits<{
+  (e: 'open-article', article: any): void
+  (e: 'show-toast', message: string): void
+}>()
+</script>
+
+<style>
+/* Section Common */
+.section { margin-top: 24px; }
+.section-header { flex-direction: row; justify-content: space-between; align-items: center; padding: 0 20px; margin-bottom: 12px; }
+.section-title-row { flex-direction: row; align-items: center; }
+.section-title-icon { font-size: 18px; margin-right: 6px; }
+.section-title { font-size: 17px; font-weight: bold; color: #1f2937; }
+.section-more { }
+.section-more-text { font-size: 11px; color: #9ca3af; }
+
+/* Pitfall */
+.pitfall-scroll { padding: 0 20px; height: 160px; }
+.pitfall-row { flex-direction: row; }
+.pitfall-card { background-color: #ffffff; border-width: 1px; border-style: solid; border-color: #f3f4f6; padding: 14px; border-radius: 16px; min-width: 150px; margin-right: 14px; flex-shrink: 0; }
+.pitfall-icon-wrap { width: 32px; height: 32px; border-radius: 16px; background-color: #fef2f2; align-items: center; justify-content: center; margin-bottom: 10px; }
+.pitfall-icon { font-size: 14px; }
+.pitfall-title { font-size: 13px; font-weight: bold; color: #1f2937; margin-bottom: 4px; }
+.pitfall-desc { font-size: 10px; color: #6b7280; overflow: hidden; margin-bottom: 10px; }
+.pitfall-meta { flex-direction: row; align-items: center; }
+.pitfall-meta-icon { font-size: 10px; margin-right: 4px; }
+.pitfall-meta-text { font-size: 9px; color: #9ca3af; }
+</style>

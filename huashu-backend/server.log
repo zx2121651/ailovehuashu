@@ -1,0 +1,9 @@
+
+> huashu-backend@1.0.0 start
+> node src/index.js
+
+[dotenv@17.3.1] injecting env (0) from .env -- tip: ⚙️  specify custom .env file path with { path: '/custom/path/.env' }
+=================================
+🚀 恋爱话术库后端服务已启动!
+📡 API Base URL: http://localhost:3000/api/v1
+=================================

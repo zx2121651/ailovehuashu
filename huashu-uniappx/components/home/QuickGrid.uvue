@@ -1,0 +1,38 @@
+<template>
+  <view class="quick-grid animate-fade-in-up delay-100">
+    <view
+      v-for="(item, idx) in categories"
+      :key="idx"
+      class="quick-item"
+      @click="handleClick(item.catId)"
+    >
+      <view class="quick-icon-wrap" :style="{ backgroundColor: item.bg }">
+        <text class="quick-icon-text">{{ item.icon }}</text>
+      </view>
+      <text class="quick-label">{{ item.label }}</text>
+    </view>
+  </view>
+</template>
+
+<script setup lang="uts">
+const props = defineProps<{
+  categories: any[]
+}>()
+
+const emit = defineEmits<{
+  (e: 'click-cat', catId: number): void
+}>()
+
+const handleClick = (catId: number) => {
+  emit('click-cat', catId)
+}
+</script>
+
+<style>
+/* Quick Grid */
+.quick-grid { padding: 0 20px; margin-top: 20px; flex-direction: row; justify-content: space-between; }
+.quick-item { flex: 1; align-items: center; justify-content: center; background-color: #ffffff; padding: 12px 4px; border-radius: 16px; margin: 0 4px; box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05); }
+.quick-icon-wrap { width: 40px; height: 40px; border-radius: 20px; align-items: center; justify-content: center; margin-bottom: 6px; }
+.quick-icon-text { font-size: 20px; }
+.quick-label { font-size: 11px; font-weight: bold; color: #374151; }
+</style>

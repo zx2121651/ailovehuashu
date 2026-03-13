@@ -1,0 +1,135 @@
+<template>
+	<view class="container">
+		<view class="nav-bar">
+			<text class="nav-title">互动情景模拟</text>
+		</view>
+
+		<scroll-view class="scroll-container" scroll-y="true">
+			<view class="notice-bar">
+				<text class="notice-icon">⚠️</text>
+				<text class="notice-text">体验沉浸式的恋爱抉择。你的每一个选项都会影响最终的情感走向，快来测测你的情商吧！</text>
+			</view>
+
+			<view v-if="isLoading" class="loading-state">
+				<text>加载剧本中...</text>
+			</view>
+
+			<view v-else class="story-list">
+				<view class="story-card" v-for="story in stories" :key="story.id" @click="goToPlay(story.id)">
+					<image v-if="story.coverImage" :src="story.coverImage" mode="aspectFill" class="story-cover"></image>
+					<view v-else class="story-cover-placeholder"></view>
+
+					<view class="story-content">
+						<view class="story-header">
+							<text class="story-title">{{story.title}}</text>
+							<text class="status-badge" :class="getStatusClass(story.progressStatus)">
+								{{ getStatusText(story.progressStatus) }}
+							</text>
+						</view>
+						<text class="story-desc">{{story.description}}</text>
+
+						<view class="story-footer">
+							<view class="points-info">
+								<text v-if="story.pointsRequired > 0" class="points-text">⭐ {{story.pointsRequired}} 积分/次</text>
+								<text v-else class="free-text">免费体验</text>
+							</view>
+							<view class="action-btn">
+								<text class="btn-text">{{ getActionText(story.progressStatus) }}</text>
+							</view>
+						</view>
+					</view>
+				</view>
+			</view>
+		</scroll-view>
+	</view>
+</template>
+
+<script>
+	export default {
+		data() {
+			return {
+				stories: [] as Array<any>,
+				isLoading: true
+			}
+		},
+		onShow() {
+			this.fetchStories()
+		},
+		methods: {
+			fetchStories() {
+				this.isLoading = true
+				const token = uni.getStorageSync('token') as string || ''
+				uni.request({
+					url: '/api/v1/stories',
+					header: {
+						'Authorization': token ? `Bearer ${token}` : ''
+					},
+					success: (res: any) => {
+						if(res.data && res.data.success) {
+							this.stories = res.data.data
+						}
+					},
+					complete: () => {
+						this.isLoading = false
+					}
+				})
+			},
+			getStatusText(status: string): string {
+				if (status === 'COMPLETED') return '已通关'
+				if (status === 'IN_PROGRESS') return '进行中'
+				return '未开始'
+			},
+			getStatusClass(status: string): string {
+				if (status === 'COMPLETED') return 'bg-green'
+				if (status === 'IN_PROGRESS') return 'bg-blue'
+				return 'bg-gray'
+			},
+			getActionText(status: string): string {
+				if (status === 'COMPLETED') return '重新体验'
+				if (status === 'IN_PROGRESS') return '继续体验'
+				return '开始模拟'
+			},
+			goToPlay(id: number) {
+				const token = uni.getStorageSync('token')
+				if(!token) {
+					uni.showToast({ title: '请先登录', icon: 'none' })
+					setTimeout(() => {
+						uni.navigateTo({ url: '/pages/login/login' })
+					}, 1000)
+					return
+				}
+				uni.navigateTo({
+					url: `/pages/story/play?id=${id}`
+				})
+			}
+		}
+	}
+</script>
+
+<style>
+	.container { flex: 1; background-color: #F8F9FA; }
+	.nav-bar { background-color: #F43F5E; padding: 44px 16px 12px; }
+	.nav-title { color: #FFFFFF; font-size: 18px; font-weight: bold; }
+	.scroll-container { flex: 1; padding: 16px; }
+	.notice-bar { background-color: #FFF1F2; border-radius: 8px; padding: 12px; flex-direction: row; margin-bottom: 16px; align-items: flex-start;}
+	.notice-icon { margin-right: 8px; font-size: 16px; margin-top: 2px; }
+	.notice-text { color: #9F1239; font-size: 14px; flex: 1; line-height: 1.4;}
+	.loading-state { align-items: center; justify-content: center; padding: 40px; }
+	.story-list { flex-direction: column; gap: 16px; padding-bottom: 40px;}
+	.story-card { background-color: #FFFFFF; border-radius: 12px; overflow: hidden; margin-bottom: 16px; }
+	.story-cover { width: 100%; height: 120px; }
+	.story-cover-placeholder { width: 100%; height: 120px; background-color: #E5E7EB; }
+	.story-content { padding: 16px; }
+	.story-header { flex-direction: row; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+	.story-title { font-size: 16px; font-weight: bold; color: #111827; }
+	.status-badge { font-size: 12px; padding: 2px 8px; border-radius: 12px; }
+	.bg-green { background-color: #D1FAE5; color: #047857; }
+	.bg-blue { background-color: #DBEAFE; color: #1D4ED8; }
+	.bg-gray { background-color: #F3F4F6; color: #6B7280; }
+	.story-desc { font-size: 14px; color: #6B7280; margin-bottom: 16px; lines: 2; text-overflow: ellipsis; }
+	.story-footer { flex-direction: row; justify-content: space-between; align-items: center; border-top: 1px solid #F3F4F6; padding-top: 12px; }
+	.points-text { font-size: 14px; color: #F59E0B; font-weight: 500; }
+	.free-text { font-size: 14px; color: #10B981; font-weight: 500; }
+	.action-btn { background-color: #FFF1F2; padding: 6px 16px; border-radius: 20px; }
+	.btn-text { color: #E11D48; font-size: 14px; font-weight: 500; }
+</style>

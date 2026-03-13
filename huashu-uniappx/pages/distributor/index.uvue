@@ -1,0 +1,262 @@
+<template>
+  <view class="container flex-col bg-slate-50 h-full relative fade-in">
+    <!-- Header -->
+    <view class="header-bar bg-white px-4 py-3 border-b border-slate-100 flex-row justify-between items-center z-50 sticky top-0">
+      <view class="back-btn p-2 -ml-2" @click="goBack">
+        <text class="text-xl text-slate-600">‹</text>
+      </view>
+      <text class="text-lg font-bold text-slate-800">分销中心</text>
+      <view class="w-10"></view>
+    </view>
+
+    <!-- VIP Restricted View -->
+    <view v-if="isRestricted" class="restricted-view flex-1 flex-col items-center justify-center p-6 text-center">
+      <view class="icon-box w-20 h-20 bg-rose-100 rounded-full flex-row items-center justify-center mb-6 shadow-sm">
+        <text class="text-4xl text-rose-500">🛡️</text>
+      </view>
+      <text class="text-xl font-bold text-slate-800 mb-2">专属权限提示</text>
+      <text class="text-sm text-slate-500 mb-8 leading-relaxed">
+        为了保障分销商的权益，系统目前已开启门槛控制。您需要先升级为 <text class="text-rose-500 font-bold inline">VIP 会员</text> 才能开启专属推广赚佣金功能。
+      </text>
+      <button class="upgrade-btn w-full bg-indigo-600 text-white rounded-xl font-bold py-3.5 shadow-md active:scale-95" @click="goBack">
+        <text class="text-white text-base">返回个人中心</text>
+      </button>
+    </view>
+
+    <!-- Main Content View -->
+    <scroll-view v-else class="flex-1 p-4" scroll-y>
+      <!-- Dashboard Card -->
+      <view class="dashboard-card bg-gradient-indigo rounded-2xl p-6 text-white shadow-lg mb-4">
+        <view class="flex-row justify-between items-center mb-6">
+          <view class="flex-col">
+            <text class="text-indigo-100 text-sm mb-1">可提现余额 (元)</text>
+            <text class="text-3xl font-bold">¥ {{ data.balance.toFixed(2) }}</text>
+          </view>
+          <view class="withdraw-btn bg-white-20 px-4 py-2 rounded-full" @click="goToWithdraw">
+            <text class="text-white text-sm font-medium">去提现</text>
+          </view>
+        </view>
+        <view class="grid-stats flex-row border-t border-white-20 pt-4">
+          <view class="flex-1 flex-col">
+            <text class="text-indigo-100 text-xs mb-1">累计收益</text>
+            <text class="text-lg font-semibold">¥ {{ data.totalEarned.toFixed(2) }}</text>
+          </view>
+          <view class="flex-1 flex-col">
+            <text class="text-indigo-100 text-xs mb-1">我的邀请码</text>
+            <text class="text-lg font-semibold tracking-wider">{{ data.inviteCode }}</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- Action Grid -->
+      <view class="action-grid flex-row justify-between">
+        <view class="action-btn flex-1 flex-col items-center justify-center bg-white p-5 rounded-2xl shadow-sm border border-slate-100 mr-2" @click="goToTeam">
+          <view class="icon-circle w-12 h-12 rounded-full bg-blue-50 flex-row items-center justify-center mb-3">
+            <text class="text-2xl text-blue-500">👥</text>
+          </view>
+          <text class="font-medium text-slate-800">我的团队</text>
+          <text class="text-xs text-slate-500 mt-1">{{ data.teamSize }} 人</text>
+        </view>
+
+        <view class="action-btn flex-1 flex-col items-center justify-center bg-white p-5 rounded-2xl shadow-sm border border-slate-100 ml-2" @click="showPoster = true">
+          <view class="icon-circle w-12 h-12 rounded-full bg-pink-50 flex-row items-center justify-center mb-3">
+            <text class="text-2xl text-pink-500">📱</text>
+          </view>
+          <text class="font-medium text-slate-800">推广海报</text>
+          <text class="text-xs text-slate-500 mt-1">专属二维码</text>
+        </view>
+      </view>
+    </scroll-view>
+
+    <!-- Poster Modal Overlay -->
+    <view v-if="showPoster" class="poster-overlay fixed inset-0 z-100 flex-col items-center justify-center bg-black-80 px-8" @click="showPoster = false">
+      <view class="poster-card bg-white w-full rounded-3xl overflow-hidden shadow-2xl flex-col" @click.stop="">
+        <view class="poster-header bg-gradient-rose p-8 flex-col items-center justify-center text-white">
+          <text class="text-2xl font-black tracking-wider mb-2 text-white">话术库精选</text>
+          <text class="text-sm opacity-90 text-white">高情商恋爱话术，助你轻松脱单</text>
+        </view>
+        <view class="poster-body p-8 flex-col items-center bg-rose-50-30">
+          <view class="qr-box bg-white p-3 rounded-2xl shadow-sm border border-rose-100 mb-4 w-40 h-40 flex-row items-center justify-center">
+            <text class="text-gray-400 text-xs">二维码占位</text>
+          </view>
+          <text class="text-sm text-slate-500 mb-2">扫描上方二维码注册</text>
+          <view class="invite-box bg-slate-100 px-4 py-2 rounded-full border border-slate-200">
+            <text class="text-xs font-mono font-medium text-slate-600 tracking-widest">邀请码: {{ data.inviteCode }}</text>
+          </view>
+        </view>
+        <view class="poster-footer py-4 bg-slate-900 flex-row justify-center active:bg-black" @click="savePoster">
+          <text class="text-white font-bold tracking-widest text-base">保存海报图片</text>
+        </view>
+      </view>
+    </view>
+
+  </view>
+</template>
+
+<script setup lang="uts">
+import { ref, reactive, onMounted, computed } from 'vue'
+import { useAppStore } from '../../store/app.uts'
+import { getDistributorInfo, getMyTeam } from '../../services/api.uts'
+
+const appStore = useAppStore
+
+const showPoster = ref(false)
+
+const data = reactive({
+  balance: 0,
+  totalEarned: 0,
+  teamSize: 0,
+  inviteCode: '',
+  isVip: false,
+  config: { requireVip: true } as any
+})
+
+// 计算是否受限
+const isRestricted = computed(() => {
+  return data.config?.requireVip && !data.isVip
+})
+
+onMounted(async () => {
+  try {
+    const infoData = await getDistributorInfo()
+    const teamData = await getMyTeam()
+
+    if (infoData) {
+      data.balance = infoData.balance || 0
+      data.totalEarned = infoData.totalEarned || 0
+      data.inviteCode = infoData.inviteCode || ''
+      data.isVip = infoData.isVip || false
+      data.config = infoData.config || { requireVip: true }
+    }
+
+    if (teamData && teamData.counts) {
+      data.teamSize = teamData.counts.total || 0
+    }
+  } catch (e) {
+    console.error('获取分销数据失败', e)
+    data.balance = 0
+    data.totalEarned = 0
+    data.teamSize = 0
+    data.inviteCode = ''
+    data.isVip = false
+  }
+})
+
+const goBack = () => {
+  uni.navigateBack({ delta: 1 })
+}
+
+const goToWithdraw = () => {
+  uni.navigateTo({ url: '/pages/distributor/withdraw' })
+}
+
+const goToTeam = () => {
+  uni.navigateTo({ url: '/pages/distributor/team' })
+}
+
+const savePoster = () => {
+  appStore.showToast('请使用手机截屏保存海报分享')
+  setTimeout(() => {
+    showPoster.value = false
+  }, 2000)
+}
+</script>
+
+<style>
+.container { flex: 1; }
+.bg-slate-50 { background-color: #f8fafc; }
+.bg-white { background-color: #ffffff; }
+
+.header-bar { height: 50px; }
+.border-b { border-bottom-width: 1px; border-style: solid; }
+.border-slate-100 { border-color: #f1f5f9; }
+
+.px-4 { padding-left: 16px; padding-right: 16px; }
+.py-3 { padding-top: 12px; padding-bottom: 12px; }
+.p-2 { padding: 8px; }
+.-ml-2 { margin-left: -8px; }
+.w-10 { width: 40px; }
+
+.text-lg { font-size: 18px; }
+.text-xl { font-size: 20px; }
+.text-2xl { font-size: 24px; }
+.text-3xl { font-size: 30px; }
+.text-4xl { font-size: 36px; }
+.font-bold { font-weight: bold; }
+.font-semibold { font-weight: 600; }
+.text-slate-800 { color: #1e293b; }
+.text-slate-600 { color: #475569; }
+
+.restricted-view { padding: 24px; }
+.icon-box { width: 80px; height: 80px; }
+.bg-rose-100 { background-color: #ffe4e6; }
+.text-rose-500 { color: #f43f5e; }
+.rounded-full { border-radius: 9999px; }
+.mb-6 { margin-bottom: 24px; }
+.mb-2 { margin-bottom: 8px; }
+.mb-8 { margin-bottom: 32px; }
+.text-slate-500 { color: #64748b; }
+.leading-relaxed { line-height: 1.625; }
+
+.upgrade-btn { background-color: #4f46e5; justify-content: center; align-items: center; }
+.text-white { color: #ffffff; }
+.rounded-xl { border-radius: 12px; }
+.py-3_5 { padding-top: 14px; padding-bottom: 14px; }
+.shadow-md { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+
+.p-4 { padding: 16px; }
+.bg-gradient-indigo { background-image: linear-gradient(to bottom right, #6366f1, #9333ea); }
+.rounded-2xl { border-radius: 16px; }
+.p-6 { padding: 24px; }
+.shadow-lg { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+.mb-4 { margin-bottom: 16px; }
+.mb-1 { margin-bottom: 4px; }
+
+.text-indigo-100 { color: #e0e7ff; }
+.text-sm { font-size: 14px; }
+.text-xs { font-size: 12px; }
+
+.bg-white-20 { background-color: rgba(255, 255, 255, 0.2); }
+.border-t { border-top-width: 1px; border-style: solid; }
+.border-white-20 { border-color: rgba(255, 255, 255, 0.2); }
+.pt-4 { padding-top: 16px; }
+
+.tracking-wider { letter-spacing: 2px; }
+.tracking-widest { letter-spacing: 4px; }
+
+.action-btn { padding: 20px; }
+.mr-2 { margin-right: 8px; }
+.ml-2 { margin-left: 8px; }
+.w-12 { width: 48px; }
+.h-12 { height: 48px; }
+.mb-3 { margin-bottom: 12px; }
+.mt-1 { margin-top: 4px; }
+.bg-blue-50 { background-color: #eff6ff; }
+.text-blue-500 { color: #3b82f6; }
+.bg-pink-50 { background-color: #fdf2f8; }
+.text-pink-500 { color: #ec4899; }
+.font-medium { font-weight: 500; }
+
+.poster-overlay { background-color: rgba(0, 0, 0, 0.8); }
+.px-8 { padding-left: 32px; padding-right: 32px; }
+.rounded-3xl { border-radius: 24px; }
+.shadow-2xl { box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); }
+
+.bg-gradient-rose { background-image: linear-gradient(to bottom right, #f43f5e, #db2777); }
+.p-8 { padding: 32px; }
+.bg-rose-50-30 { background-color: rgba(255, 241, 242, 0.3); }
+.w-40 { width: 160px; }
+.h-40 { height: 160px; }
+.bg-slate-100 { background-color: #f1f5f9; }
+.py-2 { padding-top: 8px; padding-bottom: 8px; }
+.border-slate-200 { border-color: #e2e8f0; }
+.bg-slate-900 { background-color: #0f172a; }
+.py-4 { padding-top: 16px; padding-bottom: 16px; }
+
+.fixed { position: fixed; }
+.inset-0 { top: 0; left: 0; right: 0; bottom: 0; }
+.z-100 { z-index: 100; }
+.bg-black-80 { background-color: rgba(0,0,0,0.8); }
+
+.inline { display: inline; }
+</style>

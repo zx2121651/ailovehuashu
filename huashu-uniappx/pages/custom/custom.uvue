@@ -1,0 +1,72 @@
+<template>
+  <view class="page-container">
+    <scroll-view class="scroll-area" scroll-y>
+      <view class="intro-box">
+        <text class="intro-title">专属话术定制</text>
+        <text class="intro-desc">遇到棘手的聊天情况？请将对方的原话以及你想要传达的核心意图告诉我们，金牌导师将为你量身定制高情商回复。</text>
+      </view>
+
+      <view class="form-container">
+        <text class="form-label">当前的聊天情境</text>
+        <textarea class="custom-input" placeholder="请描述你们的关系阶段，或者刚才聊了什么..." v-model="formData.context"></textarea>
+
+        <text class="form-label">对方的原话</text>
+        <textarea class="custom-input" placeholder="例如：我觉得我们还是做朋友比较好..." v-model="formData.message"></textarea>
+
+        <text class="form-label">你的目标</text>
+        <textarea class="custom-input" placeholder="例如：我想幽默地化解尴尬，并保持联系..." v-model="formData.goal"></textarea>
+      </view>
+    </scroll-view>
+
+    <view class="fixed-bottom">
+      <view class="price-row">
+        <text class="price-label">定制服务费：</text>
+        <text class="price-value">¥ 9.9</text>
+      </view>
+      <button class="primary-btn" @click="submitCustom">支付并提交</button>
+    </view>
+  </view>
+</template>
+
+<script setup lang="uts">
+import { reactive } from 'vue'
+import { useAppStore } from '../../store/app.uts'
+
+const appStore = useAppStore
+
+const formData = reactive({
+  context: '',
+  message: '',
+  goal: ''
+})
+
+const submitCustom = () => {
+  if (!formData.context || !formData.message || !formData.goal) {
+    appStore.showToast('请将定制信息填写完整')
+    return
+  }
+
+  appStore.showToast('支付接口开发中...')
+}
+</script>
+
+<style>
+page { display: flex; flex-direction: column; height: 100%; background-color: #f5f7fa; }
+.page-container { flex: 1; background-color: #f5f7fa; padding-bottom: 100px; }
+.scroll-area { flex: 1; }
+
+.intro-box { background-color: #ffffff; padding: 24px 20px; }
+.intro-title { font-size: 20px; font-weight: bold; color: #1f2937; margin-bottom: 8px; }
+.intro-desc { font-size: 13px; color: #6b7280; line-height: 1.6; }
+
+.form-container { padding: 20px; }
+.form-label { font-size: 14px; font-weight: bold; color: #374151; margin-bottom: 10px; margin-top: 16px; }
+.form-label:first-child { margin-top: 0; }
+.custom-input { background-color: #ffffff; width: 100%; height: 100px; border-radius: 12px; padding: 12px; font-size: 14px; color: #1f2937; border-width: 1px; border-style: solid; border-color: #e5e7eb; }
+
+.fixed-bottom { position: fixed; bottom: 0; left: 0; right: 0; padding: 12px 16px 24px; background-color: #ffffff; border-top-width: 1px; border-top-style: solid; border-top-color: #f3f4f6; flex-direction: row; align-items: center; justify-content: space-between; }
+.price-row { flex-direction: row; align-items: baseline; }
+.price-label { font-size: 12px; color: #6b7280; }
+.price-value { font-size: 20px; font-weight: bold; color: #ef4444; }
+.primary-btn { background-color: #111827; color: #ffffff; font-size: 15px; font-weight: bold; border-radius: 24px; padding: 0 32px; height: 44px; line-height: 44px; margin: 0; }
+</style>

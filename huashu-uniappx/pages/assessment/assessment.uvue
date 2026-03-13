@@ -1,0 +1,71 @@
+<template>
+  <view class="page-container">
+    <view class="header-banner">
+      <text class="banner-title">专业恋爱段位评测</text>
+      <text class="banner-desc">通过 20 道专业情境题，测出你的真实社交段位与短板</text>
+    </view>
+
+    <view class="content-area">
+      <view class="info-card">
+        <view class="info-row">
+          <text class="info-label">已测人数：</text>
+          <text class="info-value text-pink">12,458</text>
+        </view>
+        <view class="info-row">
+          <text class="info-label">题目数量：</text>
+          <text class="info-value">20 题</text>
+        </view>
+        <view class="info-row">
+          <text class="info-label">预计用时：</text>
+          <text class="info-value">5 分钟</text>
+        </view>
+      </view>
+
+      <view class="benefits-box">
+        <text class="benefit-title">完成评测您将获得：</text>
+        <text class="benefit-item">✅ 专属恋爱段位认证称号</text>
+        <text class="benefit-item">✅ 个性化聊天短板分析报告</text>
+        <text class="benefit-item">✅ 针对性的课程与话术推荐</text>
+      </view>
+    </view>
+
+    <view class="fixed-bottom">
+      <button class="primary-btn" @click="startAssessment">立即开始评测</button>
+    </view>
+  </view>
+</template>
+
+<script setup lang="uts">
+import { useAppStore } from '../../store/app.uts'
+const appStore = useAppStore
+
+const startAssessment = () => {
+  appStore.showToast('评测题目加载中...')
+  // 此处后续可跳转具体的答题页或者通过改变内部状态渲染题目组件
+}
+</script>
+
+<style>
+page { display: flex; flex-direction: column; height: 100%; background-color: #f5f7fa; }
+.page-container { flex: 1; background-color: #f5f7fa; padding-bottom: 80px; }
+
+.header-banner { background-image: linear-gradient(to bottom right, #f472b6, #db2777); padding: 40px 20px; align-items: center; justify-content: center; }
+.banner-title { color: #ffffff; font-size: 22px; font-weight: bold; margin-bottom: 12px; }
+.banner-desc { color: rgba(255,255,255,0.9); font-size: 13px; text-align: center; line-height: 1.5; }
+
+.content-area { padding: 20px; margin-top: -20px; }
+
+.info-card { background-color: #ffffff; border-radius: 16px; padding: 20px; margin-bottom: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+.info-row { flex-direction: row; justify-content: space-between; margin-bottom: 12px; }
+.info-row:last-child { margin-bottom: 0; }
+.info-label { font-size: 14px; color: #6b7280; }
+.info-value { font-size: 14px; font-weight: bold; color: #1f2937; }
+.text-pink { color: #ec4899; }
+
+.benefits-box { background-color: #fdf2f8; border-radius: 16px; padding: 20px; border-width: 1px; border-style: solid; border-color: #fce7f3; }
+.benefit-title { font-size: 14px; font-weight: bold; color: #db2777; margin-bottom: 12px; }
+.benefit-item { font-size: 13px; color: #4b5563; margin-bottom: 8px; line-height: 1.5; }
+
+.fixed-bottom { position: fixed; bottom: 0; left: 0; right: 0; padding: 16px; background-color: #ffffff; border-top-width: 1px; border-top-style: solid; border-top-color: #f3f4f6; }
+.primary-btn { background-color: #ec4899; color: #ffffff; font-size: 16px; font-weight: bold; border-radius: 24px; }
+</style>

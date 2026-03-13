@@ -1,0 +1,123 @@
+<template>
+  <view class="page-container">
+    <scroll-view class="scroll-content" scroll-y>
+      <!-- Title Area -->
+      <view class="detail-header">
+        <view class="q-badge">
+          <text class="q-badge-text">对方说</text>
+        </view>
+        <text class="q-text" :lines="4">{{ script.question || '加载中...' }}</text>
+      </view>
+
+      <!-- Answers List -->
+      <view class="answers-section">
+        <view class="answers-title-row">
+          <text class="answers-title">全部高分回复</text>
+          <text class="answers-count">{{ script.answers ? script.answers.length : 0 }}条</text>
+        </view>
+
+        <view class="answers-list" v-if="script.answers && script.answers.length > 0">
+          <view v-for="(answer, idx) in script.answers" :key="idx" class="answer-card">
+            <view class="answer-idx-badge">
+              <text class="idx-text">{{ idx + 1 }}</text>
+            </view>
+            <text class="answer-text">{{ answer }}</text>
+
+            <view class="copy-btn" :class="[copiedIndex === idx ? 'copy-btn-active' : '']" @click="handleCopy(idx, answer)">
+              <text class="copy-btn-icon">{{ copiedIndex === idx ? '✓' : '📋' }}</text>
+              <text class="copy-btn-text" :class="[copiedIndex === idx ? 'copy-btn-text-active' : '']">{{ copiedIndex === idx ? '已复制' : '一键复制' }}</text>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <!-- Mock Comment Section Placeholder -->
+      <view class="comments-section">
+        <text class="comments-title">评论区 (开发中)</text>
+        <view class="comments-empty">
+          <text class="comments-empty-text">暂无评论，快来抢沙发吧~</text>
+        </view>
+      </view>
+
+      <view class="bottom-spacer"></view>
+    </scroll-view>
+  </view>
+</template>
+
+<script setup lang="uts">
+import { ref, onMounted } from 'vue'
+import { useAppStore } from '../../store/app.uts'
+
+const appStore = useAppStore
+
+const script = ref<any>({})
+const copiedIndex = ref(-1)
+
+const copiedId = ref(-1)
+
+const question = ref('加载中...')
+const answers = ref<string[]>([])
+const comments = ref<any[]>([])
+const loading = ref(false)
+
+onMounted(() => {
+  // Mock fetching script detail based on ID from options
+  // Here we just set a mock object directly since it's a demonstration
+  script.value = {
+    id: 's1',
+    question: '你到底喜欢我什么？',
+    answers: [
+      '喜欢你这个问题问得好，让我有了一辈子时间来回答。',
+      '刚开始喜欢你的可爱，后来发现你浑身都是闪光点。',
+      '这就像问我为什么喜欢呼吸一样，是本能。'
+    ]
+  }
+})
+
+const handleCopy = (idx: number, text: string) => {
+  uni.setClipboardData({
+    data: text,
+    success: () => {
+      copiedIndex.value = idx
+      appStore.showToast('回复已复制')
+      setTimeout(() => { copiedIndex.value = -1 }, 2000)
+    }
+  })
+}
+</script>
+
+<style>
+.page-container { flex: 1; background-color: #f3f4f6; }
+.scroll-content { flex: 1; }
+
+.detail-header { background-color: #ffffff; padding: 24px 20px; flex-direction: row; align-items: flex-start; margin-bottom: 12px; }
+.q-badge { background-color: #3b82f6; padding: 4px 10px; border-radius: 12px; margin-right: 12px; margin-top: 2px; }
+.q-badge-text { font-size: 11px; font-weight: bold; color: #ffffff; }
+.q-text { font-size: 18px; font-weight: bold; color: #1f2937; flex: 1; line-height: 1.5; }
+
+.answers-section { background-color: #ffffff; padding: 20px; margin-bottom: 12px; }
+.answers-title-row { flex-direction: row; align-items: center; margin-bottom: 20px; }
+.answers-title { font-size: 16px; font-weight: bold; color: #1f2937; margin-right: 8px; }
+.answers-count { font-size: 12px; font-weight: bold; color: #9ca3af; background-color: #f3f4f6; padding: 2px 8px; border-radius: 10px; }
+
+.answers-list { flex-direction: column; }
+.answer-card { background-color: #ffffff; border-radius: 20px; padding: 20px; margin-bottom: 16px; border-width: 1px; border-style: solid; border-color: #e5e7eb; position: relative; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
+.answer-idx-badge { position: absolute; top: -10px; left: -10px; width: 24px; height: 24px; border-radius: 12px; background-color: #ec4899; align-items: center; justify-content: center; border-width: 2px; border-style: solid; border-color: #ffffff; box-shadow: 0 2px 4px 0 rgba(236, 72, 153, 0.3); }
+.idx-text { font-size: 12px; font-weight: bold; color: #ffffff; margin-top: -2px; }
+
+.answer-text { font-size: 15px; color: #374151; line-height: 1.6; margin-bottom: 16px; font-weight: bold; }
+
+.copy-btn { flex-direction: row; align-items: center; justify-content: center; background-color: #fdf2f8; padding: 10px; border-radius: 12px; border-width: 1px; border-style: solid; border-color: #fce7f3; }
+.copy-btn-active { background-color: #ec4899; border-color: #ec4899; }
+.copy-btn-icon { font-size: 14px; margin-right: 4px; color: #db2777; }
+.copy-btn-active .copy-btn-icon { color: #ffffff; }
+.copy-btn-text { font-size: 13px; font-weight: bold; color: #db2777; }
+.copy-btn-text-active { color: #ffffff; }
+
+.comments-section { background-color: #ffffff; padding: 20px; }
+.comments-title { font-size: 16px; font-weight: bold; color: #1f2937; margin-bottom: 16px; }
+.comments-empty { align-items: center; justify-content: center; padding: 40px 0; background-color: #f9fafb; border-radius: 16px; }
+.comments-empty-text { font-size: 13px; color: #9ca3af; }
+
+.bottom-spacer { height: 40px; }
+</style>

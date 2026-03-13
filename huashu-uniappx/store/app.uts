@@ -1,0 +1,111 @@
+import { reactive } from 'vue'
+
+export type UserInfo = {
+  id: string
+  name: string
+  avatar: string
+  isVip: boolean
+  points: number
+}
+
+// 辅助方法：安全解析本地 JSON
+const getLocalJson = (key: string): any | null => {
+  const data = uni.getStorageSync(key) as string | null
+  if (data && data !== '') {
+    try {
+      return JSON.parse(data)
+    } catch (e) {
+      return null
+    }
+  }
+  return null
+}
+
+export const useAppStore = reactive({
+  token: uni.getStorageSync('token') as string | null,
+  activeTab: 'home',
+  userInfo: getLocalJson('userInfo') as UserInfo | null,
+
+  // 全局状态
+  toastMsg: '',
+  showVipModal: false,
+  showSignModal: false,
+  showContributeDrawer: false,
+
+  // 缓存记录状态
+  searchHistory: (getLocalJson('searchHistory') as string[] | null) || [] as string[],
+  browsingFootprints: (getLocalJson('browsingFootprints') as any[] | null) || [] as any[],
+
+  setToken(newToken: string) {
+    this.token = newToken;
+    uni.setStorageSync('token', newToken);
+  },
+
+  setUserInfo(info: UserInfo) {
+    this.userInfo = info;
+    uni.setStorageSync('userInfo', JSON.stringify(info));
+  },
+
+  logout() {
+    this.token = null;
+    this.userInfo = null;
+    uni.removeStorageSync('token');
+    uni.removeStorageSync('userInfo');
+    // 可选：登出时是否清空搜索记录等，这里选择保留
+    uni.reLaunch({ url: '/pages/login/login' });
+  },
+
+  clearToken() {
+    this.token = null;
+    this.userInfo = null;
+    uni.removeStorageSync('token');
+    uni.removeStorageSync('userInfo');
+  },
+
+  showToast(msg: string) {
+    // 触发响应式数据的变更
+    this.toastMsg = msg;
+    // 保留原生的兼容调用方式
+    uni.showToast({
+      title: msg,
+      icon: 'none',
+      duration: 2000
+    });
+  },
+
+  // 搜索记录管理
+  addSearchHistory(keyword: string) {
+    const kw = keyword.trim();
+    if (!kw) return;
+    const idx = this.searchHistory.indexOf(kw);
+    if (idx !== -1) {
+      this.searchHistory.splice(idx, 1);
+    }
+    this.searchHistory.unshift(kw);
+    if (this.searchHistory.length > 10) {
+      this.searchHistory = this.searchHistory.slice(0, 10);
+    }
+    uni.setStorageSync('searchHistory', JSON.stringify(this.searchHistory));
+  },
+
+  clearSearchHistory() {
+    this.searchHistory = [];
+    uni.removeStorageSync('searchHistory');
+  },
+
+  // 浏览足迹管理 (文章/帖子等)
+  addBrowsingFootprint(item: any) {
+    const existingIdx = this.browsingFootprints.findIndex(f => f.id === item.id);
+    if (existingIdx !== -1) {
+      this.browsingFootprints.splice(existingIdx, 1);
+    }
+    this.browsingFootprints.unshift({
+      ...item,
+      viewedAt: Date.now()
+    });
+    if (this.browsingFootprints.length > 20) {
+      this.browsingFootprints = this.browsingFootprints.slice(0, 20);
+    }
+    uni.setStorageSync('browsingFootprints', JSON.stringify(this.browsingFootprints));
+  }
+});

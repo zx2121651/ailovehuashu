@@ -1,0 +1,52 @@
+<template>
+  <view class="section animate-fade-in-up delay-300">
+    <view class="section-header">
+      <text class="section-title">实战场景</text>
+      <view class="section-more" @click="$emit('open-discover', 1)">
+        <text class="section-more-text">全部 ›</text>
+      </view>
+    </view>
+    <scroll-view class="cats-scroll" scroll-x>
+      <view class="cats-row">
+        <view
+          v-for="cat in categories"
+          :key="cat.id"
+          class="cat-item"
+          @click="$emit('open-discover', cat.id)"
+        >
+          <view class="cat-icon-box" :style="{ backgroundColor: cat.bgColor || '#fdf2f8' }">
+            <text class="cat-icon-emoji">{{ cat.icon }}</text>
+          </view>
+          <text class="cat-name">{{ cat.name }}</text>
+        </view>
+      </view>
+    </scroll-view>
+  </view>
+</template>
+
+<script setup lang="uts">
+const props = defineProps<{
+  categories: any[]
+}>()
+
+const emit = defineEmits<{
+  (e: 'open-discover', catId: number): void
+}>()
+</script>
+
+<style>
+/* Section Common */
+.section { margin-top: 24px; }
+.section-header { flex-direction: row; justify-content: space-between; align-items: center; padding: 0 20px; margin-bottom: 12px; }
+.section-title { font-size: 17px; font-weight: bold; color: #1f2937; }
+.section-more { }
+.section-more-text { font-size: 11px; color: #9ca3af; }
+
+/* Categories */
+.cats-scroll { padding: 0 20px; height: 90px; }
+.cats-row { flex-direction: row; }
+.cat-item { align-items: center; margin-right: 14px; flex-shrink: 0; }
+.cat-icon-box { width: 56px; height: 56px; border-radius: 16px; align-items: center; justify-content: center; }
+.cat-icon-emoji { font-size: 24px; }
+.cat-name { font-size: 11px; font-weight: bold; color: #374151; margin-top: 8px; }
+</style>

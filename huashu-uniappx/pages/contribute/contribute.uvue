@@ -1,0 +1,122 @@
+<template>
+  <view class="page-container">
+    <scroll-view class="scroll-area" scroll-y>
+      <view class="header-intro">
+        <text class="header-title">贡献话术，赢取积分 🎁</text>
+        <text class="header-desc">分享你遇到过的神回复或高情商对话，审核通过后可获得最高 50 积分奖励！</text>
+      </view>
+
+      <view class="form-container">
+        <!-- 对方的话 -->
+        <view class="form-item">
+          <view class="label-row">
+            <text class="form-label">对方说</text>
+            <text class="form-required">*</text>
+          </view>
+          <textarea class="form-input" v-model="formData.question" placeholder="例如：你平时有什么爱好呀？"></textarea>
+        </view>
+
+        <!-- 我的回复 -->
+        <view class="form-item mt-4">
+          <view class="label-row">
+            <text class="form-label">我的回复</text>
+            <text class="form-required">*</text>
+          </view>
+          <textarea class="form-input" v-model="formData.answer" placeholder="例如：我的爱好是和你聊天，这算吗？"></textarea>
+        </view>
+
+        <!-- 选择场景分类 -->
+        <view class="form-item mt-4">
+          <view class="label-row">
+            <text class="form-label">场景分类</text>
+            <text class="form-required">*</text>
+          </view>
+          <view class="tags-grid">
+            <text
+              class="tag-item"
+              v-for="(cat, idx) in categories"
+              :key="idx"
+              :class="{'tag-active': formData.categoryId === cat.id}"
+              @click="formData.categoryId = cat.id"
+            >
+              {{ cat.name }}
+            </text>
+          </view>
+        </view>
+      </view>
+    </scroll-view>
+
+    <view class="fixed-bottom">
+      <button class="primary-btn" @click="handleSubmit">提交审核</button>
+    </view>
+  </view>
+</template>
+
+<script setup lang="uts">
+import { reactive, ref } from 'vue'
+import { useAppStore } from '../../store/app.uts'
+
+const appStore = useAppStore
+
+const formData = reactive({
+  question: '',
+  answer: '',
+  categoryId: 0
+})
+
+const categories = ref([
+  { id: 1, name: '初识破冰' },
+  { id: 2, name: '日常聊天' },
+  { id: 3, name: '情感升温' },
+  { id: 4, name: '化解尴尬' },
+  { id: 5, name: '晚安早安' }
+])
+
+const handleSubmit = () => {
+  if (!formData.question.trim()) {
+    appStore.showToast('请输入对方说的话')
+    return
+  }
+  if (!formData.answer.trim()) {
+    appStore.showToast('请输入你的神回复')
+    return
+  }
+  if (formData.categoryId === 0) {
+    appStore.showToast('请选择一个场景分类')
+    return
+  }
+
+  // 模拟提交
+  appStore.showToast('提交成功，请等待审核！')
+  setTimeout(() => {
+    uni.navigateBack()
+  }, 1500)
+}
+</script>
+
+<style>
+page { display: flex; flex-direction: column; height: 100%; background-color: #f5f7fa; }
+.page-container { flex: 1; background-color: #f5f7fa; padding-bottom: 80px; }
+.scroll-area { flex: 1; }
+
+.header-intro { padding: 24px 20px; background-color: #ffffff; }
+.header-title { font-size: 18px; font-weight: bold; color: #1f2937; margin-bottom: 8px; }
+.header-desc { font-size: 12px; color: #6b7280; line-height: 1.5; }
+
+.form-container { padding: 20px; }
+.form-item { margin-bottom: 20px; }
+.mt-4 { margin-top: 16px; }
+
+.label-row { flex-direction: row; align-items: center; margin-bottom: 12px; }
+.form-label { font-size: 14px; font-weight: bold; color: #374151; }
+.form-required { color: #ef4444; margin-left: 4px; font-size: 14px; }
+
+.form-input { background-color: #ffffff; width: 100%; height: 100px; border-radius: 16px; padding: 16px; font-size: 14px; color: #1f2937; border-width: 1px; border-style: solid; border-color: #e5e7eb; }
+
+.tags-grid { flex-direction: row; flex-wrap: wrap; }
+.tag-item { background-color: #ffffff; color: #4b5563; font-size: 13px; padding: 8px 16px; border-radius: 20px; margin-right: 12px; margin-bottom: 12px; border-width: 1px; border-style: solid; border-color: #e5e7eb; }
+.tag-active { background-color: #fdf2f8; color: #db2777; border-color: #fbcfe8; font-weight: bold; }
+
+.fixed-bottom { position: fixed; bottom: 0; left: 0; right: 0; padding: 16px; background-color: #ffffff; border-top-width: 1px; border-top-style: solid; border-top-color: #f3f4f6; }
+.primary-btn { background-color: #ec4899; color: #ffffff; font-size: 16px; font-weight: bold; border-radius: 24px; }
+</style>
