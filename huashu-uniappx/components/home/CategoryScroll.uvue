@@ -43,8 +43,8 @@ const emit = defineEmits<{
 .section-more-text { font-size: 11px; color: #9ca3af; }
 
 /* Categories */
-.cats-scroll { padding: 0 20px; height: 90px; }
-.cats-row { flex-direction: row; }
+.cats-scroll { padding: 0 20px; height: 90px; flex-direction: row; }
+.cats-row { flex-direction: row; align-items: flex-start; }
 .cat-item { align-items: center; margin-right: 14px; flex-shrink: 0; }
 .cat-icon-box { width: 56px; height: 56px; border-radius: 16px; align-items: center; justify-content: center; }
 .cat-icon-emoji { font-size: 24px; }
