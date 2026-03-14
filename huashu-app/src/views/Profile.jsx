@@ -3,7 +3,7 @@ import { AppContext } from '../context/AppContext';
 import ProfileListItem from '../components/common/ProfileListItem';
 import EditProfileModal from '../components/modals/EditProfileModal';
 import PointsDrawer from '../components/modals/PointsDrawer';
-import { Copy, Settings, Zap, Target, ChevronRight, Crown, BookOpen, History, Edit3, MessageSquareText, FileText, Sparkles, Heart, Gift, PenTool, Headset, Award, HelpCircle, ShieldCheck } from 'lucide-react';
+import { Copy, Settings, Zap, Target, ChevronRight, Crown, BookOpen, History, Edit3, MessageSquareText, FileText, Sparkles, Heart, Gift, PenTool, Headset, Award, HelpCircle, ShieldCheck, Smartphone, Download, Keyboard, UserPlus } from 'lucide-react';
 
 export default function Profile() {
   const {
@@ -151,6 +151,12 @@ export default function Profile() {
         <div className="love-card rounded-[1.25rem] shadow-sm p-1 border border-gray-50">
           <ProfileListItem icon={<Award size={18} className="text-yellow-500" />} title="我的特权" subtitle="去查看" onClick={() => setShowVipModal(true)} />
           <ProfileListItem icon={<HelpCircle size={18} className="text-gray-500" />} title="帮助与反馈" border={false} onClick={() => setActiveServicePage({ id: 'feedback' })} />
+        </div>
+
+        <div className="love-card rounded-[1.25rem] shadow-sm p-1 border border-gray-50 mb-5 mt-4">
+          <ProfileListItem icon={<UserPlus size={18} className="text-orange-500" />} title="邀请有礼赚收益" subtitle="去邀请" onClick={() => setActiveServicePage({ id: 'invite' })} />
+          <ProfileListItem icon={<Keyboard size={18} className="text-indigo-500" />} title="悬浮窗助手" subtitle="去开启" onClick={() => showToast('网页版暂不支持悬浮窗，请下载 App 体验全场景辅助')} />
+          <ProfileListItem icon={<Download size={18} className="text-blue-500" />} title="下载 App" border={false} onClick={() => showToast('请前往应用商店搜索“话术App”下载体验')} />
         </div>
       </div>
 
