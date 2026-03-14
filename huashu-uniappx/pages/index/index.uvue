@@ -34,6 +34,7 @@
       <AiToolsGrid
         :tools="aiTools"
         @open-ai="goToAI"
+        @open-ai-tool="goToAITool"
         @show-toast="appStore.showToast"
       />
 
@@ -211,11 +212,16 @@ const goToAllPitfalls = () => {
   uni.navigateTo({ url: '/pages/all-pitfalls/all-pitfalls' })
 }
 
+const goToAITool = (tool: any) => {
+  const url = `/pages/ai/tool?title=${encodeURIComponent(tool.title)}&desc=${encodeURIComponent(tool.desc)}&icon=${encodeURIComponent(tool.icon)}&query=${encodeURIComponent(tool.query)}&bg=${encodeURIComponent(tool.bg)}&text=${encodeURIComponent(tool.text || tool.titleColor)}&iconBg=${encodeURIComponent(tool.iconBg)}`
+  uni.navigateTo({ url })
+}
+
 const goToAI = (query: string) => {
   if (query) {
     uni.navigateTo({ url: '/pages/ai/ai?query=' + encodeURIComponent(query) })
   } else {
-    uni.switchTab({ url: '/pages/ai/ai' })
+    uni.navigateTo({ url: '/pages/ai/ai' })
   }
 }
 

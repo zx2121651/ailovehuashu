@@ -210,7 +210,7 @@ export default function Home() {
              { title: '土味情话', desc: '撩到她脸红', icon: <Heart size={16} className="text-pink-500" />, bg: 'bg-pink-50/50', border: 'border-pink-100', text: 'text-pink-700', iconBg: 'bg-pink-100', query: '给我来5句土味情话，越土越好' },
              { title: '冷场急救', desc: '破解尴尬', icon: <Zap size={16} className="text-yellow-500" />, bg: 'bg-yellow-50/50', border: 'border-yellow-100', text: 'text-yellow-700', iconBg: 'bg-yellow-100', query: '现在聊天冷场了，不知道说什么，给我提供几个有趣的话题破冰' }
            ].map((tool, idx) => (
-             <div key={idx} onClick={() => { setActiveTab('ai'); setAiState({ chatInput: tool.query }); }} className={`${tool.bg} border ${tool.border} p-3 rounded-2xl flex items-center cursor-pointer hover:scale-[1.02] active:scale-95 transition-all shadow-sm`}>
+             <div key={idx} onClick={() => { setActiveServicePage({ id: 'ai-tool', data: tool }); }} className={`${tool.bg} border ${tool.border} p-3 rounded-2xl flex items-center cursor-pointer hover:scale-[1.02] active:scale-95 transition-all shadow-sm`}>
                <div className={`w-8 h-8 rounded-full ${tool.iconBg} flex items-center justify-center mr-2.5 shrink-0 shadow-sm`}>
                  {tool.icon}
                </div>

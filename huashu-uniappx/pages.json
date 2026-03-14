@@ -50,6 +50,13 @@
       }
     },
     {
+      "path": "pages/ai/tool",
+      "style": {
+        "navigationBarTitleText": "AI 助手",
+        "navigationStyle": "custom"
+      }
+    },
+    {
       "path": "pages/distributor/index",
       "style": {
         "navigationBarTitleText": "分销中心",

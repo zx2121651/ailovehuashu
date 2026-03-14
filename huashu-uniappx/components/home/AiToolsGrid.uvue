@@ -17,7 +17,7 @@
           :key="idx"
           class="ai-tool-card"
           :style="{ backgroundColor: tool.bg, borderColor: tool.borderColor }"
-          @click="$emit('open-ai', tool.query)"
+          @click="$emit('open-ai-tool', tool)"
         >
           <view class="ai-tool-icon" :style="{ backgroundColor: tool.iconBg }">
             <text class="ai-tool-emoji">{{ tool.icon }}</text>
