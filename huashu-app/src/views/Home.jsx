@@ -138,14 +138,22 @@ export default function Home() {
       </div>
 
       {/* 快捷四宫格分类 */}
-      <div className="px-5 mt-5 grid grid-cols-4 gap-3 animate-fade-in-up delay-100">
+      <div className="px-5 mt-5 grid grid-cols-5 gap-2 animate-fade-in-up delay-100">
         {[
           { icon: <MessageCircle size={20} className="text-blue-500" />, label: '约会没话', catId: 1 },
           { icon: <Heart size={20} className="text-pink-500" />, label: '惹生气了', catId: 4 },
           { icon: <Zap size={20} className="text-orange-500" />, label: '神级破冰', catId: 1 },
-          { icon: <Crown size={20} className="text-purple-500" />, label: '睡前晚安', catId: 5 }
+          { icon: <Crown size={20} className="text-purple-500" />, label: '睡前晚安', catId: 5 },
+          { icon: <PlayCircle size={20} className="text-indigo-500" />, label: '剧本杀', catId: 'story' }
         ].map((item, idx) => (
-          <div key={idx} onClick={() => { setActiveTab('discover'); setDiscoverState(prev => ({ ...prev, activeCategory: item.catId, searchQuery: '' })); }} className="flex flex-col items-center justify-center love-card p-3 rounded-2xl shadow-sm cursor-pointer active:scale-95 transition-transform">
+          <div key={idx} onClick={() => {
+            if (item.catId === 'story') {
+              setActiveTab('story');
+            } else {
+              setActiveTab('discover');
+              setDiscoverState(prev => ({ ...prev, activeCategory: item.catId, searchQuery: '' }));
+            }
+          }} className="flex flex-col items-center justify-center love-card p-3 rounded-2xl shadow-sm cursor-pointer active:scale-95 transition-transform">
             <div className="bg-transparent p-2 rounded-full mb-1.5">{item.icon}</div>
             <span className="text-[11px] font-bold text-gray-700">{item.label}</span>
           </div>

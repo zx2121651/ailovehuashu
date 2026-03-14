@@ -30,7 +30,7 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  (e: 'open-discover', catId: number): void
+  (e: 'open-discover', catId: any): void
 }>()
 </script>
 

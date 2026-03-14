@@ -204,6 +204,20 @@
         "navigationBarTitleText": "下载 App",
         "navigationStyle": "custom"
       }
+    },
+    {
+      "path": "pages/story/list",
+      "style": {
+        "navigationBarTitleText": "剧本杀",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/story/play",
+      "style": {
+        "navigationBarTitleText": "剧本播放",
+        "navigationStyle": "custom"
+      }
     }
   ],
   "globalStyle": {
