@@ -53,9 +53,15 @@ const emit = defineEmits<{
 .section-more { }
 .section-more-text { font-size: 11px; color: #9ca3af; }
 
-/* Pitfall */
-.pitfall-scroll { padding: 0 20px; height: 160px; width: 100%; flex-direction: row; overflow-x: auto; overflow-y: hidden; white-space: nowrap; }
-.pitfall-row { flex-direction: row; align-items: flex-start; flex-wrap: nowrap; display: flex; min-width: min-content; }
+/* Pitfall - 默认样式（App/小程序端） */
+.pitfall-scroll { padding: 0 20px; height: 160px; flex-direction: row; }
+.pitfall-row { flex-direction: row; align-items: flex-start; }
+
+/* #ifdef H5 */
+/* Web端特殊处理 */
+.pitfall-scroll { width: 100%; overflow-x: auto; overflow-y: hidden; white-space: nowrap; }
+.pitfall-row { flex-wrap: nowrap; display: flex; min-width: min-content; }
+/* #endif */
 .pitfall-card { background-color: #ffffff; border-width: 1px; border-style: solid; border-color: #f3f4f6; padding: 14px; border-radius: 16px; min-width: 150px; margin-right: 14px; flex-shrink: 0; }
 .pitfall-icon-wrap { width: 32px; height: 32px; border-radius: 16px; background-color: #fef2f2; align-items: center; justify-content: center; margin-bottom: 10px; }
 .pitfall-icon { font-size: 14px; }

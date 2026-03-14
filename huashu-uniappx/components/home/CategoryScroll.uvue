@@ -42,9 +42,15 @@ const emit = defineEmits<{
 .section-more { }
 .section-more-text { font-size: 11px; color: #9ca3af; }
 
-/* Categories */
-.cats-scroll { padding: 0 20px; height: 90px; width: 100%; flex-direction: row; overflow-x: auto; overflow-y: hidden; white-space: nowrap; }
-.cats-row { flex-direction: row; align-items: flex-start; flex-wrap: nowrap; display: flex; min-width: min-content; }
+/* Categories - 默认样式（App/小程序端） */
+.cats-scroll { padding: 0 20px; height: 90px; flex-direction: row; }
+.cats-row { flex-direction: row; align-items: flex-start; }
+
+/* #ifdef H5 */
+/* Web端特殊处理 */
+.cats-scroll { width: 100%; overflow-x: auto; overflow-y: hidden; white-space: nowrap; }
+.cats-row { flex-wrap: nowrap; display: flex; min-width: min-content; }
+/* #endif */
 .cat-item { align-items: center; margin-right: 14px; flex-shrink: 0; }
 .cat-icon-box { width: 56px; height: 56px; border-radius: 16px; align-items: center; justify-content: center; }
 .cat-icon-emoji { font-size: 24px; }
