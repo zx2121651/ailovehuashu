@@ -130,7 +130,8 @@ const quickCategories = [
   { icon: '💬', label: '约会没话', catId: 1, bg: '#eff6ff' },
   { icon: '❤️', label: '惹生气了', catId: 4, bg: '#fdf2f8' },
   { icon: '⚡', label: '神级破冰', catId: 1, bg: '#fff7ed' },
-  { icon: '👑', label: '睡前晚安', catId: 5, bg: '#faf5ff' }
+  { icon: '👑', label: '睡前晚安', catId: 5, bg: '#faf5ff' },
+  { icon: '🎭', label: '剧本杀', catId: 'story', bg: '#f3e8ff' }
 ]
 
 const aiTools = [
@@ -198,7 +199,11 @@ const executeSearch = (query: string) => {
   uni.navigateTo({ url: '/pages/discover/discover?keyword=' + encodeURIComponent(query) })
 }
 
-const goToDiscover = (catId: number) => {
+const goToDiscover = (catId: string | number) => {
+  if (catId === 'story') {
+    uni.navigateTo({ url: '/pages/story/list' })
+    return
+  }
   uni.switchTab({ url: '/pages/discover/discover' })
 }
 

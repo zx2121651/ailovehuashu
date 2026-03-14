@@ -61,7 +61,6 @@ function MainApp() {
             <div className="absolute bottom-0 w-full nav-bottom-glass pb-safe pt-2.5 px-5 pb-6 z-30 shadow-[0_-10px_20px_-10px_rgba(0,0,0,0.05)]">
               <div className="flex justify-between items-center mt-1.5 relative">
                 <NavItem icon={<Home size={22} />} label="首页" isActive={activeTab === 'home'} onClick={() => setActiveTab('home')} />
-                <NavItem icon={<Star size={22} />} label="剧本杀" isActive={activeTab === 'story'} onClick={() => setActiveTab('story')} />
                 <NavItem icon={<MessageCircle size={22} />} label="话术库" isActive={activeTab === 'discover'} onClick={() => setActiveTab('discover')} />
                 <NavItem icon={<Rss size={22} />} label="圈子" isActive={activeTab === 'community'} onClick={() => setActiveTab('community')} />
                 <NavItem icon={<Star size={22} />} label="收藏" isActive={activeTab === 'favorites'} onClick={() => setActiveTab('favorites')} />

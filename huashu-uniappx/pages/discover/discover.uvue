@@ -139,7 +139,7 @@
             </view>
 
             <!-- Topic Banner -->
-            <view v-if="!searchQuery" class="topic-banner" @click="appStore.showToast('专题页面开发中')">
+            <view v-if="!searchQuery" class="topic-banner" @click="goToTopic">
               <view class="topic-banner-inner">
                 <view class="topic-blur-right"></view>
                 <view class="topic-blur-left"></view>
@@ -232,6 +232,10 @@ const categories = ref<any[]>([])
 const scripts = ref<any[]>([])
 const hotSearches = ref<string[]>([])
 const loading = ref(true)
+
+const goToTopic = () => {
+  uni.navigateTo({ url: '/pages/topic/topic' })
+}
 const sortTabs = ref<any[]>([])
 const categoryTags = ref<any[]>([])
 

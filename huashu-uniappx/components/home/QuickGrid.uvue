@@ -20,18 +20,18 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  (e: 'click-cat', catId: number): void
+  (e: 'click-cat', catId: string | number): void
 }>()
 
-const handleClick = (catId: number) => {
+const handleClick = (catId: string | number) => {
   emit('click-cat', catId)
 }
 </script>
 
 <style>
 /* Quick Grid */
-.quick-grid { padding: 0 20px; margin-top: 20px; flex-direction: row; justify-content: space-between; }
-.quick-item { flex: 1; align-items: center; justify-content: center; background-color: #ffffff; padding: 12px 4px; border-radius: 16px; margin: 0 4px; box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05); }
+.quick-grid { padding: 0 16px; margin-top: 20px; flex-direction: row; justify-content: space-between; }
+.quick-item { flex: 1; align-items: center; justify-content: center; background-color: #ffffff; padding: 10px 2px; border-radius: 14px; margin: 0 3px; box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05); }
 .quick-icon-wrap { width: 40px; height: 40px; border-radius: 20px; align-items: center; justify-content: center; margin-bottom: 6px; }
 .quick-icon-text { font-size: 20px; }
 .quick-label { font-size: 11px; font-weight: bold; color: #374151; }
