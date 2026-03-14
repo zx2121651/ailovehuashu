@@ -20,10 +20,10 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  (e: 'click-cat', catId: any): void
+  (e: 'click-cat', catId: string | number): void
 }>()
 
-const handleClick = (catId: any) => {
+const handleClick = (catId: string | number) => {
   emit('click-cat', catId)
 }
 </script>

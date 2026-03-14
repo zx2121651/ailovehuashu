@@ -218,6 +218,13 @@
         "navigationBarTitleText": "剧本播放",
         "navigationStyle": "custom"
       }
+    },
+    {
+      "path": "pages/topic/topic",
+      "style": {
+        "navigationBarTitleText": "必看专题",
+        "navigationStyle": "custom"
+      }
     }
   ],
   "globalStyle": {

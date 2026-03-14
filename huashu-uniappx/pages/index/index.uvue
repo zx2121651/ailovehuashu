@@ -199,7 +199,7 @@ const executeSearch = (query: string) => {
   uni.navigateTo({ url: '/pages/discover/discover?keyword=' + encodeURIComponent(query) })
 }
 
-const goToDiscover = (catId: any) => {
+const goToDiscover = (catId: string | number) => {
   if (catId === 'story') {
     uni.navigateTo({ url: '/pages/story/list' })
     return
