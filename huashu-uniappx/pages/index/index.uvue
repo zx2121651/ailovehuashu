@@ -1,0 +1,369 @@
+<template>
+  <view class="page-container">
+    <!-- Loading State -->
+    <view v-if="loading" class="loading-wrap">
+      <view class="spinner"></view>
+      <text class="loading-text">加载中...</text>
+    </view>
+
+    <scroll-view v-else class="scroll-area" scroll-y>
+      <!-- Header + Search Area -->
+      <HomeHeader
+        :hotTags="hotTags"
+        @search="executeSearch"
+        @open-vip="showVipModal = true"
+        @show-toast="appStore.showToast"
+      />
+
+      <!-- 脱单战报/通知广播 -->
+      <NoticeBanner></NoticeBanner>
+
+      <!-- 快捷四宫格分类 -->
+      <QuickGrid
+        :categories="quickCategories"
+        @click-cat="goToDiscover"
+      />
+
+      <!-- 每日灵感 & 签到 -->
+      <DailyCard @sign-in="appStore.showSignModal = true" ></DailyCard>
+
+      <!-- 新人限时特惠卡片 -->
+      <PromoCard @open-vip="showVipModal = true" ></PromoCard>
+
+      <!-- AI 恋爱神器 & 情商挑战 -->
+      <AiToolsGrid
+        :tools="aiTools"
+        @open-ai="goToAI"
+        @show-toast="appStore.showToast"
+      />
+
+      <!-- 课程推荐区域 -->
+      <CourseRecommend
+        :courses="recommendedCourses"
+        @open-course="openCourse"
+      />
+
+      <!-- 实战场景大分类 -->
+      <CategoryScroll
+        :categories="categories"
+        @open-discover="goToDiscover"
+      />
+
+      <!-- 金牌导师 1V1 -->
+      <TutorList
+        :tutors="tutors"
+        @show-toast="appStore.showToast"
+      />
+
+      <!-- 恋爱避坑指南 -->
+      <PitfallList
+        :articles="articles"
+        @open-article="openArticle"
+        @show-toast="goToAllPitfalls"
+      />
+
+      <!-- 高分回复榜 -->
+      <ScriptList
+        :scripts="topScripts"
+        :copiedId="copiedId"
+        :favoriteIds="favoriteIds"
+        :showHeader="true"
+        @copy-script="handleCopy"
+        @toggle-fav="toggleFavorite"
+        @show-more="showMoreReplies"
+      ></ScriptList>
+
+      <view class="tabbar-spacer"></view>
+
+    </scroll-view>
+
+    <!-- Floating AI Button -->
+    <view class="fab-ai" @click="goToAI('')">
+      <text class="fab-ai-icon">✨</text>
+      <text class="fab-ai-text">AI</text>
+    </view>
+
+    <!-- VIP Modal -->
+    <VipModal :isOpen="showVipModal" @close="showVipModal = false" @pay="handlePay" ></VipModal>
+
+    <!-- 全局弹窗 -->
+    <DailySignModal :isOpen="appStore.showSignModal" @close="appStore.showSignModal = false" ></DailySignModal>
+
+    <CustomTabBar :current="0"></CustomTabBar>
+  </view>
+</template>
+
+<script setup lang="uts">
+import { ref, onMounted, computed } from 'vue'
+import { onShow } from '@dcloudio/uni-app'
+import { useAppStore } from '../../store/app.uts'
+import { getCategories, getScripts, getArticles, getRecommendedCourses } from '../../services/api.uts'
+import VipModal from '../../components/Modal/VipModal.uvue'
+import DailySignModal from '../../components/Modal/DailySignModal.uvue'
+import HomeHeader from '../../components/home/HomeHeader.uvue'
+import AiToolsGrid from '../../components/home/AiToolsGrid.uvue'
+import CourseRecommend from '../../components/home/CourseRecommend.uvue'
+import ScriptList from '../../components/common/ScriptList.uvue'
+import NoticeBanner from '../../components/home/NoticeBanner.uvue'
+import QuickGrid from '../../components/home/QuickGrid.uvue'
+import DailyCard from '../../components/home/DailyCard.uvue'
+import PromoCard from '../../components/home/PromoCard.uvue'
+import CategoryScroll from '../../components/home/CategoryScroll.uvue'
+import TutorList from '../../components/home/TutorList.uvue'
+import PitfallList from '../../components/home/PitfallList.uvue'
+import CustomTabBar from '../../components/common/CustomTabBar.uvue'
+
+const appStore = useAppStore
+
+const categories = ref<any[]>([])
+const scripts = ref<any[]>([])
+const articles = ref<any[]>([])
+const recommendedCourses = ref<any[]>([])
+const loading = ref(true)
+const showVipModal = ref(false)
+const copiedId = ref('')
+const favoriteIds = ref<string[]>([])
+
+const hotTags = ['相亲怎么聊', '被拒绝', '生日祝福', '惹她生气']
+
+const quickCategories = [
+  { icon: '💬', label: '约会没话', catId: 1, bg: '#eff6ff' },
+  { icon: '❤️', label: '惹生气了', catId: 4, bg: '#fdf2f8' },
+  { icon: '⚡', label: '神级破冰', catId: 1, bg: '#fff7ed' },
+  { icon: '👑', label: '睡前晚安', catId: 5, bg: '#faf5ff' },
+  { icon: '🎭', label: '剧本杀', catId: 'story', bg: '#f3e8ff' }
+]
+
+const aiTools = [
+  { title: '朋友圈文案', desc: '高级感拉满', icon: '✏️', bg: '#eff6ff80', borderColor: '#dbeafe', titleColor: '#1d4ed8', iconBg: '#dbeafe', query: '帮我写一段发朋友圈的文案，展现我积极阳光的生活状态，带点幽默感' },
+  { title: '高情商道歉', desc: '秒变乖狗狗', icon: '😊', bg: '#fff7ed80', borderColor: '#ffedd5', titleColor: '#c2410c', iconBg: '#ffedd5', query: '我惹女朋友生气了，帮我写一段真诚又带点幽默的高情商道歉话术' },
+  { title: '土味情话', desc: '撩到她脸红', icon: '💕', bg: '#fdf2f880', borderColor: '#fce7f3', titleColor: '#be185d', iconBg: '#fce7f3', query: '给我来5句土味情话，越土越好' },
+  { title: '冷场急救', desc: '破解尴尬', icon: '⚡', bg: '#fefce880', borderColor: '#fef9c3', titleColor: '#a16207', iconBg: '#fef9c3', query: '现在聊天冷场了，不知道说什么，给我提供几个有趣的话题破冰' }
+]
+
+const tutors = [
+  { name: '苏苏导师', tag: '挽回前任', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Susu' },
+  { name: '陈先生', tag: '关系破冰', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Chen' },
+  { name: '林夕导师', tag: '长期关系', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Linxi' }
+]
+
+onShow(() => {
+  uni.hideTabBar()
+})
+
+const topScripts = computed(() => {
+  return [...scripts.value].sort((a, b) => (b.likes || 0) - (a.likes || 0)).slice(0, 3)
+})
+
+onMounted(async () => {
+  try {
+    loading.value = true
+    const [cats, scriptsData, articlesData, coursesData] = await Promise.all([
+      getCategories(),
+      getScripts({ pageSize: 10 }),
+      getArticles(),
+      getRecommendedCourses()
+    ])
+    categories.value = cats || []
+    scripts.value = (scriptsData && scriptsData.list) ? scriptsData.list : []
+    articles.value = articlesData || []
+    recommendedCourses.value = coursesData || []
+  } catch (error) {
+    console.error('获取数据失败:', error)
+    appStore.showToast('数据加载失败，请刷新重试')
+    // 清空数据，不显示 Mock 数据
+    categories.value = []
+    scripts.value = []
+    articles.value = []
+    recommendedCourses.value = []
+  } finally {
+    loading.value = false
+  }
+})
+
+const handleImgError = (e: any) => {
+  // 忽略图片加载错误
+}
+
+const openCourse = (course: any) => {
+  if (course.link) {
+    // 实际上可能需要使用 uni.navigateTo 跳转 web-view
+    appStore.showToast('跳转外链: ' + course.link)
+  } else {
+    uni.navigateTo({ url: '/pages/course/course?id=' + course.id })
+  }
+}
+
+const executeSearch = (query: string) => {
+  if (!query.trim()) return
+  uni.navigateTo({ url: '/pages/discover/discover?keyword=' + encodeURIComponent(query) })
+}
+
+const goToDiscover = (catId: string | number) => {
+  if (catId === 'story') {
+    uni.navigateTo({ url: '/pages/story/list' })
+    return
+  }
+  uni.switchTab({ url: '/pages/discover/discover' })
+}
+
+const goToAllPitfalls = () => {
+  uni.navigateTo({ url: '/pages/all-pitfalls/all-pitfalls' })
+}
+
+const goToAI = (query: string) => {
+  if (query) {
+    uni.navigateTo({ url: '/pages/ai/ai?query=' + encodeURIComponent(query) })
+  } else {
+    uni.switchTab({ url: '/pages/ai/ai' })
+  }
+}
+
+const openArticle = (article: any) => {
+  uni.navigateTo({ url: '/pages/article/article?id=' + article.id })
+}
+
+const handleCopy = (script: any) => {
+  const text = script.answers[0] || ''
+  uni.setClipboardData({
+    data: text,
+    success: () => {
+      copiedId.value = script.id
+      appStore.showToast('已复制到剪贴板')
+      setTimeout(() => {
+        copiedId.value = ''
+      }, 2000)
+    }
+  })
+}
+
+const handlePay = (plan: any) => {
+  appStore.showToast('支付功能暂未开放')
+}
+
+const toggleFavorite = (id: string) => {
+  const index = favoriteIds.value.indexOf(id)
+  if (index > -1) {
+    favoriteIds.value.splice(index, 1)
+    appStore.showToast('已取消收藏')
+  } else {
+    favoriteIds.value.push(id)
+    appStore.showToast('收藏成功')
+  }
+}
+
+const showMoreReplies = (script: any) => {
+  // 目前可使用 Toast 或后续跳转抽屉详情页
+  // 由于小程序没有像 Web 端的 Drawer 组件，这里使用 navigateTo 打开详情
+  uni.navigateTo({ url: '/pages/script-detail/script-detail?id=' + script.id })
+}
+</script>
+
+<style>
+page { display: flex; flex-direction: column; height: 100%; background-color: #f5f7fa; }
+.page-container { flex: 1; display: flex; flex-direction: column; height: 100%; background-color: #f5f7fa; overflow: hidden; }
+
+/* 防止自定义 Fixed TabBar 遮挡底部内容的垫片 */
+.tabbar-spacer { height: calc(55px + env(safe-area-inset-bottom)); width: 100%; }
+
+/* Loading */
+.loading-wrap { flex: 1; align-items: center; justify-content: center; }
+.spinner { width: 48px; height: 48px; border-radius: 24px; border-width: 2px; border-style: solid; border-color: #ec4899; border-top-color: transparent; animation: spin 1s linear infinite; }
+.loading-text { color: #6b7280; margin-top: 16px; font-size: 14px; }
+
+/* Scroll */
+.scroll-area { flex: 1; }
+
+/* Notice Banner */
+.notice-banner { padding: 0 20px; margin-top: 16px; }
+.notice-inner { background-color: #fff7ed; border-width: 1px; border-style: solid; border-color: #ffedd5; border-radius: 16px; padding: 10px 12px; flex-direction: row; align-items: center; overflow: hidden; }
+.notice-icon { font-size: 14px; margin-right: 8px; flex-shrink: 0; }
+.notice-scroll-wrap { flex: 1; overflow: hidden; height: 16px; }
+.notice-scroll-content { flex-direction: row; align-items: center; height: 16px; }
+.notice-item { font-size: 11px; color: #ea580c; margin-right: 32px; flex-shrink: 0; }
+
+/* Quick Grid */
+.quick-grid { padding: 0 20px; margin-top: 20px; flex-direction: row; justify-content: space-between; }
+.quick-item { flex: 1; align-items: center; justify-content: center; background-color: #ffffff; padding: 12px 4px; border-radius: 16px; margin: 0 4px; box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05); }
+.quick-icon-wrap { width: 40px; height: 40px; border-radius: 20px; align-items: center; justify-content: center; margin-bottom: 6px; }
+.quick-icon-text { font-size: 20px; }
+.quick-label { font-size: 11px; font-weight: bold; color: #374151; }
+
+/* Daily Card */
+.daily-card { padding: 0 16px; margin-top: 20px; }
+.daily-card-inner { border-radius: 24px; padding: 16px; flex-direction: row; justify-content: space-between; align-items: center; overflow: hidden; position: relative; }
+.daily-blur-circle { position: absolute; right: -16px; bottom: -16px; width: 96px; height: 96px; background-color: rgba(255,255,255,0.1); border-radius: 48px; }
+.daily-left { flex: 1; padding-right: 16px; }
+.daily-badge { flex-direction: row; align-items: center; background-color: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 6px; margin-bottom: 8px; align-self: flex-start; }
+.daily-badge-icon { font-size: 12px; color: #ffffff; margin-right: 4px; }
+.daily-badge-text { font-size: 10px; color: #ffffff; font-weight: 500; }
+.daily-quote { font-size: 13px; color: #ffffff; font-weight: 500; font-style: italic; line-height: 1.625; }
+.daily-right { align-items: center; flex-shrink: 0; }
+.sign-btn { background-color: #ffffff; padding: 6px 12px; border-radius: 20px; flex-direction: row; align-items: center; }
+.sign-btn-icon { font-size: 12px; margin-right: 4px; }
+.sign-btn-text { font-size: 11px; color: #7c3aed; font-weight: bold; }
+.sign-streak { font-size: 9px; color: rgba(233,213,255,0.8); margin-top: 6px; }
+
+/* Promo Card */
+.promo-card { padding: 0 16px; margin-top: 16px; }
+.promo-inner { border-radius: 20px; padding: 16px; flex-direction: row; justify-content: space-between; align-items: center; overflow: hidden; position: relative; }
+.promo-blur-circle { position: absolute; left: -24px; top: -24px; width: 80px; height: 80px; background-color: rgba(255,255,255,0.1); border-radius: 40px; }
+.promo-left { flex: 1; }
+.promo-title-row { flex-direction: row; align-items: center; margin-bottom: 4px; }
+.promo-title { font-size: 15px; font-weight: bold; color: #ffffff; letter-spacing: 1px; }
+.promo-timer-badge { flex-direction: row; align-items: center; background-color: rgba(255,255,255,0.2); padding: 2px 6px; border-radius: 4px; margin-left: 8px; }
+.promo-timer-icon { font-size: 10px; margin-right: 4px; }
+.promo-timer-text { font-size: 10px; color: #ffffff; }
+.promo-desc { font-size: 11px; color: rgba(255,255,255,0.9); font-weight: 500; }
+.promo-btn { background-color: #ffffff; padding: 8px 16px; border-radius: 20px; margin-left: 8px; flex-shrink: 0; }
+.promo-btn-text { color: #ef4444; font-weight: 800; font-size: 12px; }
+
+/* Section Common */
+.section { margin-top: 24px; }
+.section-header { flex-direction: row; justify-content: space-between; align-items: center; padding: 0 20px; margin-bottom: 12px; }
+.section-title-row { flex-direction: row; align-items: center; }
+.section-title-icon { font-size: 18px; margin-right: 6px; }
+.section-title { font-size: 17px; font-weight: bold; color: #1f2937; }
+.section-more { }
+.section-more-text { font-size: 11px; color: #9ca3af; }
+
+/* Categories */
+.cats-scroll { padding: 0 20px; height: 90px; }
+.cats-row { flex-direction: row; }
+.cat-item { align-items: center; margin-right: 14px; flex-shrink: 0; }
+.cat-icon-box { width: 56px; height: 56px; border-radius: 16px; align-items: center; justify-content: center; }
+.cat-icon-emoji { font-size: 24px; }
+.cat-name { font-size: 11px; font-weight: bold; color: #374151; margin-top: 8px; }
+
+/* Tutors */
+.tutors-scroll { padding: 0 20px; height: 200px; }
+.tutors-row { flex-direction: row; }
+.tutor-card { background-color: #ffffff; border-width: 1px; border-style: solid; border-color: #f3f4f6; padding: 12px; border-radius: 16px; min-width: 120px; align-items: center; margin-right: 14px; flex-shrink: 0; position: relative; }
+.tutor-online-badge { position: absolute; top: 8px; right: 8px; background-color: #f0fdf4; border-width: 1px; border-style: solid; border-color: #dcfce7; padding: 2px 6px; border-radius: 6px; flex-direction: row; align-items: center; z-index: 10; }
+.tutor-online-dot { width: 6px; height: 6px; background-color: #22c55e; border-radius: 3px; margin-right: 4px; }
+.tutor-online-text { font-size: 9px; color: #16a34a; font-weight: bold; }
+.tutor-avatar { width: 48px; height: 48px; border-radius: 24px; margin-top: 8px; margin-bottom: 8px; border-width: 2px; border-style: solid; border-color: #fce7f3; background-color: #f3f4f6; }
+.tutor-name { font-size: 13px; font-weight: bold; color: #1f2937; }
+.tutor-tag-wrap { background-color: #f9fafb; padding: 2px 8px; border-radius: 6px; border-width: 1px; border-style: solid; border-color: #f3f4f6; margin-top: 4px; margin-bottom: 12px; }
+.tutor-tag { font-size: 10px; color: #6b7280; }
+.tutor-btn { width: 100%; background-image: linear-gradient(to right, #ffe4e6, #fce7f3); padding: 8px 0; border-radius: 12px; align-items: center; }
+.tutor-btn-text { font-size: 11px; color: #e11d48; font-weight: bold; }
+
+/* Pitfall */
+.pitfall-scroll { padding: 0 20px; height: 160px; }
+.pitfall-row { flex-direction: row; }
+.pitfall-card { background-color: #ffffff; border-width: 1px; border-style: solid; border-color: #f3f4f6; padding: 14px; border-radius: 16px; min-width: 150px; margin-right: 14px; flex-shrink: 0; }
+.pitfall-icon-wrap { width: 32px; height: 32px; border-radius: 16px; background-color: #fef2f2; align-items: center; justify-content: center; margin-bottom: 10px; }
+.pitfall-icon { font-size: 14px; }
+.pitfall-title { font-size: 13px; font-weight: bold; color: #1f2937; margin-bottom: 4px; }
+.pitfall-desc { font-size: 10px; color: #6b7280; overflow: hidden; margin-bottom: 10px; }
+.pitfall-meta { flex-direction: row; align-items: center; }
+.pitfall-meta-icon { font-size: 10px; margin-right: 4px; }
+.pitfall-meta-text { font-size: 9px; color: #9ca3af; }
+
+/* FAB */
+.fab-ai { position: fixed; right: 16px; bottom: 100px; width: 56px; height: 56px; background-image: linear-gradient(to bottom right, #ec4899, #f43f5e); border-radius: 28px; align-items: center; justify-content: center; box-shadow: 0 8px 24px -4px rgba(244,63,94,0.4); z-index: 100; flex-direction: column; }
+.fab-ai-icon { font-size: 18px; color: #ffffff; }
+.fab-ai-text { font-size: 10px; color: #ffffff; font-weight: bold; margin-top: 2px; }
+
+</style>

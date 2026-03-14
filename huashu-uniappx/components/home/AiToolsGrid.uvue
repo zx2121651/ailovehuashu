@@ -1,0 +1,112 @@
+<template>
+  <view>
+    <!-- AI 恋爱神器 -->
+    <view class="section animate-fade-in-up delay-200">
+      <view class="section-header">
+        <view class="section-title-row">
+          <text class="section-title-icon">👑</text>
+          <text class="section-title">AI 恋爱神器</text>
+        </view>
+        <view class="section-badge-purple">
+          <text class="section-badge-text">无限畅聊</text>
+        </view>
+      </view>
+      <view class="ai-tools-grid">
+        <view
+          v-for="(tool, idx) in tools"
+          :key="idx"
+          class="ai-tool-card"
+          :style="{ backgroundColor: tool.bg, borderColor: tool.borderColor }"
+          @click="$emit('open-ai', tool.query)"
+        >
+          <view class="ai-tool-icon" :style="{ backgroundColor: tool.iconBg }">
+            <text class="ai-tool-emoji">{{ tool.icon }}</text>
+          </view>
+          <view class="ai-tool-info">
+            <text class="ai-tool-title" :style="{ color: tool.titleColor }">{{ tool.title }}</text>
+            <text class="ai-tool-desc">{{ tool.desc }}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 每日情商挑战 -->
+    <view class="challenge-card animate-fade-in-up delay-300">
+      <view class="challenge-inner">
+        <view class="challenge-badge">
+          <text class="challenge-badge-icon">🎯</text>
+          <text class="challenge-badge-text">每日心动测验</text>
+        </view>
+        <view class="challenge-heart-decor">
+          <text class="heart-decor-text">❤️</text>
+        </view>
+        <text class="challenge-title">情商挑战：送命题怎么回？ ✨</text>
+        <view class="challenge-question-box">
+          <text class="challenge-question">女生突然对你说："我好像发烧到39度了，好难受..." 你该怎么回？</text>
+        </view>
+        <view class="challenge-options">
+          <view class="challenge-option" @click="$emit('show-toast', '太直男了！扣10分！正确做法请看解析')">
+            <text class="challenge-option-text">A. "多喝热水，吃药了吗？快去休息吧。"</text>
+          </view>
+          <view class="challenge-option" @click="$emit('show-toast', '高情商！加10分！')">
+            <text class="challenge-option-text">B. "开门，我在楼下带了药和粥。"</text>
+          </view>
+        </view>
+        <view class="challenge-footer">
+          <view class="challenge-ai-link" @click="$emit('open-ai', '女生说她发烧到39度了，除了说多喝热水，我该怎么高情商回复并表现出关心？')">
+            <text class="challenge-ai-text">让 AI 导师给出更多满分回答 ›</text>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+</template>
+
+<script setup lang="uts">
+const props = defineProps<{
+  tools: any[]
+}>()
+
+const emit = defineEmits<{
+  (e: 'open-ai', query: string): void
+  (e: 'show-toast', message: string): void
+}>()
+</script>
+
+<style>
+/* Section Common */
+.section { margin-top: 24px; }
+.section-header { flex-direction: row; justify-content: space-between; align-items: center; padding: 0 20px; margin-bottom: 12px; }
+.section-title-row { flex-direction: row; align-items: center; }
+.section-title-icon { font-size: 18px; margin-right: 6px; }
+.section-title { font-size: 17px; font-weight: bold; color: #1f2937; }
+.section-badge-purple { background-color: #f3e8ff; padding: 2px 8px; border-radius: 12px; }
+.section-badge-text { font-size: 11px; color: #7c3aed; font-weight: bold; }
+
+/* AI Tools Grid */
+.ai-tools-grid { padding: 0 16px; flex-direction: row; flex-wrap: wrap; justify-content: space-between; }
+.ai-tool-card { width: 48%; border-width: 1px; border-style: solid; padding: 12px; border-radius: 16px; flex-direction: row; align-items: center; margin-bottom: 12px; }
+.ai-tool-icon { width: 32px; height: 32px; border-radius: 16px; align-items: center; justify-content: center; margin-right: 10px; flex-shrink: 0; }
+.ai-tool-emoji { font-size: 16px; }
+.ai-tool-info { flex: 1; }
+.ai-tool-title { font-size: 13px; font-weight: bold; }
+.ai-tool-desc { font-size: 10px; color: #6b7280; margin-top: 2px; }
+
+/* Challenge Card */
+.challenge-card { padding: 0 16px; margin-top: 12px; }
+.challenge-inner { background-color: #fff1f2; border-width: 1px; border-style: solid; border-color: #fce7f3; border-radius: 24px; padding: 20px; position: relative; overflow: hidden; }
+.challenge-badge { position: absolute; top: 0; right: 0; background-image: linear-gradient(to right, #f472b6, #fb7185); padding: 6px 12px; border-bottom-left-radius: 16px; flex-direction: row; align-items: center; }
+.challenge-badge-icon { font-size: 12px; color: #ffffff; margin-right: 4px; }
+.challenge-badge-text { font-size: 10px; color: #ffffff; font-weight: bold; }
+.challenge-heart-decor { position: absolute; bottom: -16px; right: -16px; opacity: 0.1; }
+.heart-decor-text { font-size: 80px; }
+.challenge-title { font-size: 15px; font-weight: bold; color: #1f2937; margin-bottom: 8px; }
+.challenge-question-box { background-color: rgba(255,255,255,0.8); padding: 14px; border-radius: 12px; border-width: 1px; border-style: solid; border-color: rgba(252,231,243,0.5); margin-bottom: 16px; }
+.challenge-question { font-size: 13px; color: #374151; line-height: 1.625; }
+.challenge-options { }
+.challenge-option { background-color: rgba(255,255,255,0.9); border-width: 1px; border-style: solid; border-color: #ffffff; padding: 14px; border-radius: 12px; margin-bottom: 10px; }
+.challenge-option-text { font-size: 13px; color: #4b5563; }
+.challenge-footer { margin-top: 16px; padding-top: 12px; border-top-width: 1px; border-top-style: solid; border-top-color: rgba(252,231,243,0.5); align-items: center; }
+.challenge-ai-link { background-color: rgba(255,255,255,0.5); padding: 6px 16px; border-radius: 20px; }
+.challenge-ai-text { font-size: 11px; color: #f43f5e; font-weight: bold; }
+</style>

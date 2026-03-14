@@ -1,0 +1,275 @@
+{
+  "pages": [
+    {
+      "path": "pages/index/index",
+      "style": {
+        "navigationBarTitleText": "首页",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/login/login",
+      "style": {
+        "navigationBarTitleText": "登录",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/discover/discover",
+      "style": {
+        "navigationBarTitleText": "话术库",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/community/community",
+      "style": {
+        "navigationBarTitleText": "圈子",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/favorites/favorites",
+      "style": {
+        "navigationBarTitleText": "收藏",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/profile/profile",
+      "style": {
+        "navigationBarTitleText": "我的",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/ai/ai",
+      "style": {
+        "navigationBarTitleText": "AI导师",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/distributor/index",
+      "style": {
+        "navigationBarTitleText": "分销中心",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/settings/settings",
+      "style": {
+        "navigationBarTitleText": "设置",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/distributor/team",
+      "style": {
+        "navigationBarTitleText": "我的团队",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/distributor/withdraw",
+      "style": {
+        "navigationBarTitleText": "申请提现",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/script-detail/script-detail",
+      "style": {
+        "navigationBarTitleText": "话术详情",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/course/course",
+      "style": {
+        "navigationBarTitleText": "课程详情",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/article/article",
+      "style": {
+        "navigationBarTitleText": "文章详情",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/tasks/tasks",
+      "style": {
+        "navigationBarTitleText": "每日任务"
+      }
+    },
+    {
+      "path": "pages/history/history",
+      "style": {
+        "navigationBarTitleText": "浏览足迹"
+      }
+    },
+    {
+      "path": "pages/contributions/contributions",
+      "style": {
+        "navigationBarTitleText": "我的贡献"
+      }
+    },
+    {
+      "path": "pages/ai-history/ai-history",
+      "style": {
+        "navigationBarTitleText": "AI 聊天记录"
+      }
+    },
+    {
+      "path": "pages/notes/notes",
+      "style": {
+        "navigationBarTitleText": "情商错题本"
+      }
+    },
+    {
+      "path": "pages/feedback/feedback",
+      "style": {
+        "navigationBarTitleText": "帮助与反馈"
+      }
+    },
+    {
+      "path": "pages/profile-edit/profile-edit",
+      "style": {
+        "navigationBarTitleText": "编辑资料"
+      }
+    },
+    {
+      "path": "pages/points/points",
+      "style": {
+        "navigationBarTitleText": "我的积分"
+      }
+    },
+    {
+      "path": "pages/blind-box/blind-box",
+      "style": {
+        "navigationBarTitleText": "每日盲盒",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/contribute/contribute",
+      "style": {
+        "navigationBarTitleText": "贡献话术"
+      }
+    },
+    {
+      "path": "pages/assessment/assessment",
+      "style": {
+        "navigationBarTitleText": "恋爱评测"
+      }
+    },
+    {
+      "path": "pages/custom/custom",
+      "style": {
+        "navigationBarTitleText": "话术定制"
+      }
+    },
+    {
+      "path": "pages/support/support",
+      "style": {
+        "navigationBarTitleText": "专属客服"
+      }
+    },
+    {
+      "path": "pages/invite/invite",
+      "style": {
+        "navigationBarTitleText": "邀请有礼赚收益",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/all-pitfalls/all-pitfalls",
+      "style": {
+        "navigationBarTitleText": "避坑专栏",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/keyboard-assistant/keyboard-assistant",
+      "style": {
+        "navigationBarTitleText": "悬浮窗助手",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/download/download",
+      "style": {
+        "navigationBarTitleText": "下载 App",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/story/list",
+      "style": {
+        "navigationBarTitleText": "剧本杀",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/story/play",
+      "style": {
+        "navigationBarTitleText": "剧本播放",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/topic/topic",
+      "style": {
+        "navigationBarTitleText": "必看专题",
+        "navigationStyle": "custom"
+      }
+    }
+  ],
+  "globalStyle": {
+    "navigationBarTextStyle": "black",
+    "navigationBarTitleText": "话术App",
+    "navigationBarBackgroundColor": "#FFFFFF",
+    "backgroundColor": "#F8F8F8"
+  },
+  "tabBar": {
+    "custom": true,
+    "color": "#9ca3af",
+    "selectedColor": "#ec4899",
+    "backgroundColor": "#ffffff",
+    "borderStyle": "white",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "iconPath": "static/tabbar/home.png",
+        "selectedIconPath": "static/tabbar/home-active.png",
+        "text": "首页"
+      },
+      {
+        "pagePath": "pages/discover/discover",
+        "iconPath": "static/tabbar/discover.png",
+        "selectedIconPath": "static/tabbar/discover-active.png",
+        "text": "话术库"
+      },
+      {
+        "pagePath": "pages/community/community",
+        "iconPath": "static/tabbar/community.png",
+        "selectedIconPath": "static/tabbar/community-active.png",
+        "text": "圈子"
+      },
+      {
+        "pagePath": "pages/favorites/favorites",
+        "iconPath": "static/tabbar/favorites.png",
+        "selectedIconPath": "static/tabbar/favorites-active.png",
+        "text": "收藏"
+      },
+      {
+        "pagePath": "pages/profile/profile",
+        "iconPath": "static/tabbar/profile.png",
+        "selectedIconPath": "static/tabbar/profile-active.png",
+        "text": "我的"
+      }
+    ]
+  }
+}

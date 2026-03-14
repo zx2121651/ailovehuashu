@@ -1,0 +1,494 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Admin {
+  id        Int       @id @default(autoincrement())
+  username  String    @unique
+  name      String?
+  password  String
+  role      String    @default("admin") // superadmin, admin, editor, reviewer
+  status    String    @default("ACTIVE") // ACTIVE, INACTIVE
+  lastLogin DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model AdminLog {
+  id            Int      @id @default(autoincrement())
+  adminUsername String
+  action        String // CREATE, UPDATE, DELETE, LOGIN, APPROVE, REJECT
+  module        String // CONTENT, USER, AUTH, SETTINGS, UGC
+  detail        String
+  ip            String?
+  status        String   @default("success") // success, fail
+  createdAt     DateTime @default(now())
+}
+
+model SystemSetting {
+  id          Int      @id @default(autoincrement())
+  key         String   @unique
+  value       Json
+  description String?
+  updatedAt   DateTime @updatedAt
+}
+
+model Banner {
+  id        Int       @id @default(autoincrement())
+  title     String
+  type      String    @default("BANNER") // BANNER, ANNOUNCEMENT
+  targetUrl String?
+  imageUrl  String?
+  content   String?
+  sortOrder Int       @default(0)
+  status    String    @default("ACTIVE") // ACTIVE, INACTIVE
+  startTime DateTime?
+  endTime   DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Feedback {
+  id        Int      @id @default(autoincrement())
+  userId    String
+  userName  String
+  type      String // BUG, SUGGESTION, ACCOUNT, OTHER
+  content   String
+  status    String   @default("PENDING") // PENDING, REPLIED, IGNORED
+  reply     String?
+  images    String[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model Notification {
+  id           Int       @id @default(autoincrement())
+  title        String
+  content      String
+  target       String    @default("ALL") // ALL, VIP, SPECIFIC
+  status       String    @default("PENDING") // PENDING, SENT, FAILED
+  successCount Int       @default(0)
+  sendTime     DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+model Order {
+  id            String    @id @default(uuid())
+  userId        String
+  userName      String
+  type          String // VIP_MONTH, VIP_YEAR, POINTS_100, etc.
+  amount        Float
+  status        String    @default("PENDING") // PENDING, SUCCESS, FAILED, REFUNDED
+  paymentMethod String // WECHAT, ALIPAY
+  payTime       DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  user        User            @relation(fields: [userId], references: [id])
+  commissions CommissionLog[]
+}
+
+model User {
+  id              String              @id @default(uuid())
+  wxOpenId        String?             @unique
+  password        String? // 用于导师登录管理后台等需要密码验证的场景
+  name            String
+  avatar          String?
+  gender          String?
+  bio             String?
+  daysLearned     Int                 @default(0)
+  rank            String              @default("新手")
+  storyProgresses UserStoryProgress[]
+  points          Int                 @default(0)
+  isVip           Boolean             @default(false)
+  role            String              @default("USER") // USER, MENTOR, ADMIN
+
+  // 分销系统字段
+  inviteCode  String? @unique
+  inviterId   String?
+  inviter     User?   @relation("UserInvites", fields: [inviterId], references: [id])
+  invitees    User[]  @relation("UserInvites")
+  balance     Float   @default(0)
+  totalEarned Float   @default(0)
+
+  // 每日打卡与盲盒系统字段
+  lastSignInAt       DateTime?
+  continuousSignDays Int       @default(0)
+  vipExpireAt        DateTime? // 增加 VIP 过期时间字段，方便积分兑换
+
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  contributions Contribution[]
+  feedbacks     Feedback[]
+  orders        Order[]
+  commissions   CommissionLog[]
+  withdrawals   Withdrawal[]
+  comments      Comment[]
+  commentLikes  CommentLike[]
+  posts         Post[]
+  postLikes     PostLike[]
+  favorites     Favorite[]
+  reports       Report[]
+}
+
+model Favorite {
+  id         Int    @id @default(autoincrement())
+  targetType String // "SCRIPT", "ARTICLE", "COURSE", "POST"
+  targetId   Int // The ID of the script, article, course, or post
+
+  // Relations
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, targetType, targetId]) // A user can only favorite a target once
+  @@index([targetType, targetId])
+  @@index([userId])
+}
+
+model Post {
+  id      Int      @id @default(autoincrement())
+  content String // Text content of the post
+  images  String[] // Array of image URLs (up to 9)
+  tags    String[] // Hashtags like ['#恋爱技巧', '#求助']
+  likes   Int      @default(0)
+  status  String   @default("ACTIVE") // ACTIVE, HIDDEN, DELETED
+
+  // Urgent / Bounty Feature
+  isUrgent          Boolean   @default(false)
+  rewardPoints      Int       @default(0)
+  expireAt          DateTime?
+  resolved          Boolean   @default(false)
+  acceptedCommentId Int?
+
+  // Relations
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  categoryId Int?
+  category   Category? @relation(fields: [categoryId], references: [id])
+
+  likedBy         PostLike[]
+  reports         Report[]
+  comments        Comment[]  @relation("PostComments")
+  acceptedComment Comment?   @relation("AcceptedPostComment", fields: [acceptedCommentId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model FloatScript {
+  id        String   @id @default(uuid())
+  question  String   @db.Text
+  answer    String   @db.Text
+  category  String   @default("默认")
+  isActive  Boolean  @default(true)
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Report {
+  id      Int     @id @default(autoincrement())
+  reason  String // Reason for reporting (e.g., "垃圾广告", "色情低俗")
+  details String? // Optional extra details
+  status  String  @default("PENDING") // PENDING, RESOLVED, DISMISSED
+
+  // Relations
+  reporterId String
+  reporter   User   @relation(fields: [reporterId], references: [id])
+
+  postId Int
+  post   Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([postId])
+  @@index([reporterId])
+}
+
+model PostLike {
+  id Int @id @default(autoincrement())
+
+  // Relations
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  postId Int
+  post   Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, postId]) // A user can only like a post once
+}
+
+model CommissionLog {
+  id         Int      @id @default(autoincrement())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  orderId    String
+  order      Order    @relation(fields: [orderId], references: [id])
+  fromUserId String // 产生佣金的下级用户ID
+  level      Int // 1, 2, 3 级
+  amount     Float
+  createdAt  DateTime @default(now())
+}
+
+model Withdrawal {
+  id          Int      @id @default(autoincrement())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  amount      Float
+  status      String   @default("PENDING") // PENDING, APPROVED, REJECTED
+  accountInfo Json // 提现账号信息，如 { type: 'alipay', account: 'xxx', name: 'xxx' }
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Category {
+  id      Int           @id @default(autoincrement())
+  name    String        @unique
+  icon    String
+  color   String
+  type    String        @default("SCRIPT") // SCRIPT, POST
+  count   Int           @default(0)
+  scripts Script[]
+  posts   Post[]
+  tags    CategoryTag[] // 关联的标签
+}
+
+// 分类标签表 - 每个分类可以有多个标签
+model CategoryTag {
+  id         Int      @id @default(autoincrement())
+  name       String // 标签名称，如 "#相亲开场"
+  sortOrder  Int      @default(0) // 排序
+  categoryId Int
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  @@unique([categoryId, name])
+  @@index([categoryId])
+}
+
+// 话术库排序标签配置
+model ScriptSortTab {
+  id        Int      @id @default(autoincrement())
+  key       String   @unique // 标识，如 "latest", "hot"
+  label     String // 显示名称，如 "最新", "最热"
+  sort      String // 排序方式，如 "new", "hot", "default"
+  isDefault Boolean  @default(false) // 是否默认选中
+  sortOrder Int      @default(0) // 排序顺序
+  status    String   @default("ACTIVE") // ACTIVE, INACTIVE
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Script {
+  id         Int      @id @default(autoincrement())
+  question   String
+  type       String
+  likes      Int      @default(0)
+  isNew      Boolean  @default(false)
+  isFeatured Boolean  @default(false)
+  tags       String[] // Array of strings for tags like ['#暖心', '#高情商']
+  answers    String[] // Array of strings for answers
+
+  // Relations
+  categoryId Int
+  category   Category @relation(fields: [categoryId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Article {
+  id        Int      @id @default(autoincrement())
+  title     String
+  desc      String
+  views     String   @default("0")
+  author    String
+  date      String
+  content   Json // Store array of objects like [{ type: 'p', text: '...' }]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Contribution {
+  id       Int     @id @default(autoincrement())
+  question String
+  answer   String
+  status   String  @default("pending") // pending, approved, rejected
+  likes    Int     @default(0)
+  reason   String?
+  time     String?
+
+  // Relations
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Additional models based on frontend needs, like HotSearch and Course
+model HotSearch {
+  id      Int    @id @default(autoincrement())
+  keyword String @unique
+  order   Int    @default(0)
+}
+
+model Course {
+  id            Int      @id @default(autoincrement())
+  title         String
+  desc          String
+  cover         String
+  link          String? // Optional external link or video link
+  isRecommended Boolean  @default(false)
+  tags          String[]
+  rating        Float    @default(0)
+  students      Int      @default(0)
+  instructor    Json? // Store instructor object { name, title, avatar, desc }
+  lessons       Json? // Store array of lesson objects { title, duration, free }
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Comment {
+  id         Int    @id @default(autoincrement())
+  targetType String // "SCRIPT", "ARTICLE", "COURSE", "POST"
+  targetId   Int // The ID of the script, article, or course
+  content    String
+  likes      Int    @default(0)
+  status     String @default("ACTIVE") // ACTIVE, HIDDEN, DELETED
+
+  // Relations
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  // Post relation (when targetType is POST)
+  postId         Int?
+  post           Post?  @relation("PostComments", fields: [postId], references: [id], onDelete: Cascade)
+  acceptedInPost Post[] @relation("AcceptedPostComment")
+
+  isAccepted Boolean @default(false)
+
+  likedBy CommentLike[] // Track who liked this comment
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([targetType, targetId])
+  @@index([postId])
+}
+
+model CommentLike {
+  id Int @id @default(autoincrement())
+
+  // Relations
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  commentId Int
+  comment   Comment @relation(fields: [commentId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, commentId]) // A user can only like a comment once
+}
+
+model BlindBoxCard {
+  id        Int      @id @default(autoincrement())
+  content   String // 内容，如早安语录、脱单建议
+  type      String   @default("QUOTE") // QUOTE: 语录, TIP: 技巧建议
+  author    String? // 导师名称或来源
+  status    String   @default("ACTIVE") // ACTIVE, INACTIVE
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ==========================================
+// Interactive Story (剧本杀/互动小说) Models
+// ==========================================
+
+model InteractiveStory {
+  id             Int      @id @default(autoincrement())
+  title          String
+  description    String?
+  coverImage     String?
+  category       String?
+  authorName     String?
+  difficulty     Int      @default(1)
+  isPremium      Boolean  @default(false)
+  pointsRequired Int      @default(0)
+  status         String   @default("ACTIVE") // ACTIVE, DRAFT, INACTIVE
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  nodes      StoryNode[]
+  progresses UserStoryProgress[]
+}
+
+model StoryNode {
+  id      Int              @id @default(autoincrement())
+  storyId Int
+  story   InteractiveStory @relation(fields: [storyId], references: [id], onDelete: Cascade)
+
+  name        String? // 后台管理用的节点备注名，比如“初次见面”
+  content     String  @db.Text // 剧情内容或对话
+  speakerName String? // 讲话者名字，比如“女神”、“前任”
+  imageUrl    String? // 场景背景图或人物立绘
+  isEnd       Boolean @default(false) // 是否为结局节点
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  choices    StoryChoice[]       @relation("NodeChoices")
+  progresses UserStoryProgress[]
+}
+
+model StoryChoice {
+  id     Int       @id @default(autoincrement())
+  nodeId Int
+  node   StoryNode @relation("NodeChoices", fields: [nodeId], references: [id], onDelete: Cascade)
+
+  content         String // 选项文本，比如“微笑打招呼”
+  nextNodeId      Int? // 选择该项后跳转的下一个节点ID
+  affectionChange Int    @default(0) // 好感度增减，比如 +10, -5
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model UserStoryProgress {
+  id     Int    @id @default(autoincrement())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  storyId Int
+  story   InteractiveStory @relation(fields: [storyId], references: [id], onDelete: Cascade)
+
+  currentNodeId Int?
+  currentNode   StoryNode? @relation(fields: [currentNodeId], references: [id], onDelete: SetNull)
+
+  affectionScore Int    @default(0) // 当前累计好感度
+  status         String @default("IN_PROGRESS") // IN_PROGRESS, COMPLETED
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  completedAt DateTime?
+
+  @@unique([userId, storyId]) // 每个用户每个剧本只有一条主进度
+}

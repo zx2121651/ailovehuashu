@@ -1,0 +1,382 @@
+<template>
+  <view class="container flex-col bg-gray-50 h-full fade-in">
+    <!-- 顶部用户信息区 -->
+    <view class="header-section bg-gradient-to-b px-5 pt-12 pb-6 relative z-10">
+      <view class="flex-row items-center justify-between mb-6">
+        <view class="flex-row items-center" @click="handleEditProfile">
+          <view class="avatar-wrapper bg-white p-1 rounded-full shadow-md mr-4 relative">
+            <image class="avatar-img rounded-full" src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix&backgroundColor=fce7f3" mode="aspectFill"></image>
+            <view class="edit-badge absolute bottom-0 right-0 bg-gray-800 rounded-full flex items-center justify-center border-2 border-white">
+              <text class="text-white text-xs">✎</text>
+            </view>
+          </view>
+          <view class="flex-col">
+            <view class="flex-row items-center">
+              <text class="text-xl font-bold text-gray-800">{{ userProfile.name }}</text>
+            </view>
+            <view class="id-badge bg-white-60 rounded-full px-2 py-1 mt-2 flex-row items-center border border-white-40 shadow-sm" @click.stop="handleCopyId">
+              <text class="text-xs text-gray-500">ID: {{ userProfile.id }}</text>
+              <text class="text-xs text-gray-400 ml-1">📋</text>
+            </view>
+          </view>
+        </view>
+        <view class="settings-btn bg-white-50 p-2 rounded-full shadow-sm" @click="handleSettings">
+          <text class="text-gray-600 text-lg">⚙️</text>
+        </view>
+      </view>
+
+      <!-- 数据统计面板 -->
+      <view class="stats-panel bg-white rounded-2xl p-4 shadow-sm flex-row justify-between border border-white-50">
+        <view class="stat-item flex-col items-center flex-1">
+          <view class="flex-row items-baseline">
+            <text class="text-xl font-extrabold text-gray-800">{{ userProfile.daysLearned }}</text>
+            <text class="text-xs text-gray-400 ml-1">天</text>
+          </view>
+          <text class="text-xs text-gray-500 mt-1">累计学习</text>
+        </view>
+        <view class="divider w-px bg-gray-100"></view>
+        <view class="stat-item flex-col items-center flex-1">
+          <view class="flex-row items-baseline">
+            <text class="text-xl font-extrabold text-gray-800">12</text>
+            <text class="text-xs text-gray-400 ml-1">条</text>
+          </view>
+          <text class="text-xs text-gray-500 mt-1">我的收藏</text>
+        </view>
+        <view class="divider w-px bg-gray-100"></view>
+        <view class="stat-item flex-col items-center flex-1">
+          <text class="text-lg font-extrabold text-pink-500 mt-1">{{ userProfile.rank }}</text>
+          <text class="text-xs text-gray-500 mt-1">当前段位</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 滚动内容区 -->
+    <scroll-view class="flex-1 px-4 pb-24" scroll-y>
+
+      <!-- 积分与任务 -->
+      <view class="flex-row justify-between mb-4 mt-2">
+        <view class="task-card flex-1 bg-orange-50 rounded-2xl p-4 flex-row justify-between items-center shadow-sm border border-orange-100 mr-3" @click="handleMenuClick('我的积分')">
+          <view class="flex-col">
+            <text class="text-xs text-orange-600 font-medium mb-1">我的积分</text>
+            <text class="text-lg font-extrabold text-orange-700">{{ userProfile.points }}</text>
+          </view>
+          <view class="icon-circle bg-orange-200 text-orange-600">⚡</view>
+        </view>
+        <view class="task-card flex-1 bg-blue-50 rounded-2xl p-4 flex-row justify-between items-center shadow-sm border border-blue-100" @click="handleMenuClick('每日任务')">
+          <view class="flex-col">
+            <text class="text-xs text-blue-600 font-medium mb-1">每日任务</text>
+            <text class="text-sm font-bold text-blue-700">去完成 ➔</text>
+          </view>
+          <view class="icon-circle bg-blue-200 text-blue-600">🎯</view>
+        </view>
+      </view>
+
+      <!-- VIP 引导横幅 -->
+      <view class="vip-banner bg-gray-900 rounded-2xl p-4 shadow-lg mb-4 flex-row justify-between items-center border border-gray-700 relative overflow-hidden" @click="openVipModal">
+        <view class="vip-blur-circle"></view>
+        <view class="flex-row items-center z-10">
+          <text class="text-2xl mr-3 text-yellow-400">👑</text>
+          <view class="flex-col">
+            <text class="text-base font-bold text-yellow-400">解锁终身会员</text>
+            <text class="text-xs text-gray-400 mt-1">10,000+ 话术 & AI 导师无限聊</text>
+          </view>
+        </view>
+        <view class="vip-btn bg-yellow-400 rounded-full z-10 shadow-md">
+          <text class="text-xs font-extrabold text-gray-900">立即开通</text>
+        </view>
+      </view>
+
+      <!-- 我的内容 -->
+      <view class="menu-grid bg-white rounded-2xl shadow-sm p-4 mb-4 border border-gray-50">
+        <view class="flex-row items-center mb-4">
+          <text class="text-indigo-500 mr-2">📖</text>
+          <text class="text-sm font-bold text-gray-800">我的内容</text>
+        </view>
+        <view class="flex-row justify-between">
+          <view class="grid-item flex-col items-center flex-1" v-for="(item, idx) in contentMenus" :key="idx" @click="handleMenuClick(item.label)">
+            <view class="icon-box bg-gray-50 rounded-full p-3 mb-2 border border-gray-100">
+              <text class="text-lg">{{ item.icon }}</text>
+            </view>
+            <text class="text-xs text-gray-600 font-medium">{{ item.label }}</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 核心服务 -->
+      <view class="menu-grid bg-white rounded-2xl shadow-sm p-4 mb-4 border border-gray-50">
+        <view class="flex-row items-center mb-4">
+          <text class="text-pink-500 mr-2">✨</text>
+          <text class="text-sm font-bold text-gray-800">核心服务</text>
+        </view>
+        <view class="flex-row justify-between">
+          <view class="grid-item flex-col items-center flex-1" v-for="(item, idx) in serviceMenus" :key="idx" @click="handleMenuClick(item.label)">
+            <view class="icon-box bg-gray-50 rounded-full p-3 mb-2 border border-gray-100">
+              <text class="text-lg">{{ item.icon }}</text>
+            </view>
+            <text class="text-xs text-gray-600 font-medium">{{ item.label }}</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 底部列表 -->
+      <view class="list-menu bg-white rounded-2xl shadow-sm p-2 border border-gray-50">
+        <view class="list-item flex-row justify-between items-center p-3 border-b border-gray-50" @click="handleMenuClick('每日盲盒')">
+          <view class="flex-row items-center">
+            <text class="text-red-500 mr-3 text-lg">🎁</text>
+            <text class="text-sm text-gray-800 font-bold">每日盲盒签到</text>
+          </view>
+          <view class="flex-row items-center">
+            <text class="text-xs text-gray-400 mr-1">领积分</text>
+            <text class="text-gray-300">></text>
+          </view>
+        </view>
+        <view class="list-item flex-row justify-between items-center p-3 border-b border-gray-50" @click="handleMenuClick('邀请有礼')">
+          <view class="flex-row items-center">
+            <text class="text-green-500 mr-3 text-lg">💵</text>
+            <text class="text-sm text-gray-800 font-bold">邀请好友赚积分</text>
+          </view>
+          <view class="flex-row items-center">
+            <text class="text-xs text-gray-400 mr-1">各得 50 积分</text>
+            <text class="text-gray-300">></text>
+          </view>
+        </view>
+        <view class="list-item flex-row justify-between items-center p-3 border-b border-gray-50" @click="openVipModal">
+          <view class="flex-row items-center">
+            <text class="text-yellow-500 mr-3 text-lg">🏅</text>
+            <text class="text-sm text-gray-800 font-bold">我的特权</text>
+          </view>
+          <view class="flex-row items-center">
+            <text class="text-xs text-gray-400 mr-1">去查看</text>
+            <text class="text-gray-300">></text>
+          </view>
+        </view>
+        <view class="list-item flex-row justify-between items-center p-3" @click="handleMenuClick('帮助与反馈')">
+          <view class="flex-row items-center">
+            <text class="text-gray-500 mr-3 text-lg">❓</text>
+            <text class="text-sm text-gray-800 font-bold">帮助与反馈</text>
+          </view>
+            <text class="text-gray-300">></text>
+          </view>
+        </view>
+
+      <view class="tabbar-spacer"></view>
+
+    </scroll-view>
+
+    <!-- 挂载弹窗组件 -->
+    <VipModal :isOpen="appStore.showVipModal" @close="closeVipModal" @pay="handlePay" ></VipModal>
+
+    <DailySignModal :isOpen="appStore.showSignModal" @close="appStore.showSignModal = false" ></DailySignModal>
+    <ContributeDrawer :isOpen="appStore.showContributeDrawer" @close="appStore.showContributeDrawer = false" ></ContributeDrawer>
+
+    <CustomTabBar :current="4"></CustomTabBar>
+  </view>
+</template>
+
+<script setup lang="uts">
+import { reactive, onMounted } from 'vue'
+import { onShow } from '@dcloudio/uni-app'
+import { useAppStore } from '../../store/app.uts'
+import { getUserProfile } from '../../services/api.uts'
+import VipModal from '../../components/Modal/VipModal.uvue'
+import DailySignModal from '../../components/Modal/DailySignModal.uvue'
+import ContributeDrawer from '../../components/Modal/ContributeDrawer.uvue'
+import CustomTabBar from '../../components/common/CustomTabBar.uvue'
+
+const appStore = useAppStore
+
+onShow(() => {
+  uni.hideTabBar()
+})
+
+const userProfile = reactive({
+  name: appStore.userInfo?.name || '小红薯_8829',
+  id: appStore.userInfo?.id || '3948271',
+  avatar: appStore.userInfo?.avatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=Felix&backgroundColor=fce7f3',
+  daysLearned: 15,
+  rank: '黄金导师',
+  points: appStore.userInfo?.points || 1250,
+  favoritesCount: 0
+})
+
+onMounted(async () => {
+  try {
+    const profile = await getUserProfile()
+    if (profile) {
+      userProfile.name = profile.name || userProfile.name
+      userProfile.id = profile.id || userProfile.id
+      userProfile.avatar = profile.avatar || userProfile.avatar
+      userProfile.daysLearned = profile.daysLearned || userProfile.daysLearned
+      userProfile.rank = profile.rank || userProfile.rank
+      userProfile.points = profile.points || userProfile.points
+      userProfile.favoritesCount = profile.favoritesCount || 0
+    }
+  } catch (e) {
+    console.error('获取用户资料失败', e)
+  }
+})
+
+const contentMenus = [
+  { icon: '🕒', label: '浏览足迹' },
+  { icon: '✏️', label: '我的贡献' },
+  { icon: '🤖', label: 'AI 记录' },
+  { icon: '📝', label: '错题本' }
+]
+
+const serviceMenus = [
+  { icon: '🚀', label: '悬浮助手' },
+  { icon: '🎁', label: '分销中心' },
+  { icon: '💖', label: '恋爱评测' },
+  { icon: '💡', label: '帮助反馈' }
+]
+
+const handleEditProfile = () => {
+  uni.navigateTo({ url: '/pages/profile-edit/profile-edit' })
+}
+
+const handleSettings = () => {
+  uni.navigateTo({ url: '/pages/settings/settings' })
+}
+
+const handleCopyId = () => {
+  uni.setClipboardData({
+    data: userProfile.id,
+    success: () => {
+      appStore.showToast('ID 已复制')
+    }
+  })
+}
+
+const openVipModal = () => {
+  appStore.showVipModal = true
+}
+
+const closeVipModal = () => {
+  appStore.showVipModal = false
+}
+
+const handlePay = (plan: any) => {
+  appStore.showToast(`模拟支付成功: ${plan.name} (¥${plan.price})`)
+}
+
+const handleMenuClick = (label: string) => {
+  switch (label) {
+    case '分销中心':
+      uni.navigateTo({ url: '/pages/distributor/index' })
+      break
+    case '浏览足迹':
+      uni.navigateTo({ url: '/pages/history/history' })
+      break
+    case '我的贡献':
+      uni.navigateTo({ url: '/pages/contributions/contributions' })
+      break
+    case 'AI 记录':
+      uni.navigateTo({ url: '/pages/ai-history/ai-history' })
+      break
+    case '错题本':
+      uni.navigateTo({ url: '/pages/notes/notes' })
+      break
+    case '帮助反馈': // Match the exact label in serviceMenus
+    case '帮助与反馈': // Match the exact label in list item
+      uni.navigateTo({ url: '/pages/feedback/feedback' })
+      break
+    case '每日任务':
+      uni.navigateTo({ url: '/pages/tasks/tasks' })
+      break
+    case '我的积分':
+      // Currently points view is not implemented separately, we route it to tasks which has points UI, or keep as is if points.uvue exists
+      uni.navigateTo({ url: '/pages/tasks/tasks' })
+      break
+    case '每日盲盒':
+      // 触发签到或盲盒弹窗，这里触发新写的全局签到
+      appStore.showSignModal = true
+      break
+    case '恋爱评测':
+      uni.navigateTo({ url: '/pages/assessment/assessment' })
+      break
+    case '话术定制':
+      uni.navigateTo({ url: '/pages/custom/custom' })
+      break
+    case '专属客服':
+      uni.navigateTo({ url: '/pages/support/support' })
+      break
+    case '邀请有礼':
+      uni.navigateTo({ url: '/pages/invite/invite' })
+      break
+    case '悬浮助手':
+      // 环境判断：如果在 H5/Web 环境中，跳转到专属的 App 下载引导页；否则（原生 App）才进入真正的悬浮窗设置。
+      // #ifdef H5
+      uni.navigateTo({ url: '/pages/download/download' })
+      // #endif
+      // #ifndef H5
+      uni.navigateTo({ url: '/pages/keyboard-assistant/keyboard-assistant' })
+      // #endif
+      break
+    default:
+      appStore.showToast(`进入：${label}`)
+  }
+}
+</script>
+
+<style>
+page { display: flex; flex-direction: column; height: 100%; }
+
+/* 个人中心复刻样式 */
+.container { flex: 1; display: flex; flex-direction: column; height: 100%; }
+.tabbar-spacer { height: calc(55px + env(safe-area-inset-bottom)); width: 100%; }
+
+.bg-gradient-to-b { background-image: linear-gradient(to bottom, #fce7f3, #f9fafb); }
+.bg-white-60 { background-color: rgba(255, 255, 255, 0.6); }
+.bg-white-50 { background-color: rgba(255, 255, 255, 0.5); }
+.border-white-40 { border-color: rgba(255, 255, 255, 0.4); }
+.border-white-50 { border-color: rgba(255, 255, 255, 0.5); }
+
+.pt-12 { padding-top: 48px; }
+.pb-6 { padding-bottom: 24px; }
+.px-5 { padding-left: 20px; padding-right: 20px; }
+.p-1 { padding: 4px; }
+.p-2 { padding: 8px; }
+.p-3 { padding: 12px; }
+.p-4 { padding: 16px; }
+
+.avatar-wrapper { width: 72px; height: 72px; }
+.avatar-img { width: 100%; height: 100%; }
+.edit-badge { width: 20px; height: 20px; }
+
+.id-badge { align-self: flex-start; }
+
+.stat-item { padding-top: 8px; padding-bottom: 8px; }
+.divider { width: 1px; height: 30px; margin-top: 12px; }
+
+.task-card { height: 80px; }
+.bg-orange-50 { background-color: #fff7ed; }
+.bg-blue-50 { background-color: #eff6ff; }
+.bg-orange-200 { background-color: #fed7aa; }
+.bg-blue-200 { background-color: #bfdbfe; }
+.border-orange-100 { border-color: #ffedd5; }
+.border-blue-100 { border-color: #dbeafe; }
+.text-orange-600 { color: #ea580c; }
+.text-blue-600 { color: #2563eb; }
+.text-orange-700 { color: #c2410c; }
+.text-blue-700 { color: #1d4ed8; }
+.icon-circle { width: 32px; height: 32px; border-radius: 16px; align-items: center; justify-content: center; }
+
+.bg-gray-900 { background-color: #111827; }
+.border-gray-700 { border-color: #374151; }
+.bg-yellow-400 { background-color: #facc15; }
+.text-yellow-400 { color: #facc15; }
+
+.icon-box { width: 44px; height: 44px; align-items: center; justify-content: center; }
+
+.text-2xl { font-size: 24px; }
+.w-px { width: 1px; }
+
+.mr-4 { margin-right: 16px; }
+.mb-6 { margin-bottom: 24px; }
+.pb-24 { padding-bottom: 96px; }
+
+.vip-blur-circle { position: absolute; right: -40px; top: -40px; width: 128px; height: 128px; background-color: rgba(234, 179, 8, 0.1); border-radius: 64px; }
+.vip-btn { padding: 6px 12px; }
+.list-item { background-color: #ffffff; }
+.list-item:active { background-color: #f9fafb; }
+</style>

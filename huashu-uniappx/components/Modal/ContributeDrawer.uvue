@@ -1,0 +1,92 @@
+<template>
+  <view class="drawer-overlay" v-if="isOpen">
+    <view class="drawer-mask fade-in" @click="close"></view>
+    <view class="drawer-panel slide-up">
+      <view class="drawer-header">
+        <text class="drawer-title">发布内容</text>
+        <view class="drawer-close" @click="close">
+          <text class="close-icon">✕</text>
+        </view>
+      </view>
+
+      <view class="drawer-content">
+        <view class="action-grid">
+          <view class="action-item" @click="handleAction('/pages/contribute/contribute')">
+            <view class="icon-box bg-pink">
+              <text class="emoji">💡</text>
+            </view>
+            <text class="action-text">贡献话术</text>
+            <text class="action-desc">分享神级回复</text>
+          </view>
+
+          <view class="action-item" @click="handleAction('open-create-post', true)">
+            <view class="icon-box bg-blue">
+              <text class="emoji">🚨</text>
+            </view>
+            <text class="action-text">急救求助</text>
+            <text class="action-desc">花积分悬赏</text>
+          </view>
+
+          <view class="action-item" @click="handleAction('open-create-post', false)">
+            <view class="icon-box bg-green">
+              <text class="emoji">📝</text>
+            </view>
+            <text class="action-text">发个动态</text>
+            <text class="action-desc">分享日常心得</text>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+</template>
+
+<script setup lang="uts">
+const props = defineProps<{
+  isOpen: boolean
+}>()
+
+const emit = defineEmits<{
+  (e: 'close'): void
+}>()
+
+const close = () => {
+  emit('close')
+}
+
+const handleAction = (route: string, isUrgentMode: boolean = false) => {
+  close()
+  setTimeout(() => {
+    if (route === 'open-create-post') {
+      uni.switchTab({ url: '/pages/community/community' })
+      setTimeout(() => {
+        uni.$emit('openCreatePost', isUrgentMode)
+      }, 100)
+    } else if (route.includes('community')) {
+      uni.switchTab({ url: route })
+    } else {
+      uni.navigateTo({ url: route })
+    }
+  }, 200)
+}
+</script>
+
+<style>
+.drawer-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 1000; justify-content: flex-end; }
+.drawer-mask { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0,0,0,0.5); }
+.drawer-panel { background-color: #ffffff; border-top-left-radius: 24px; border-top-right-radius: 24px; padding: 24px 20px 40px; position: relative; z-index: 1001; }
+
+.drawer-header { flex-direction: row; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+.drawer-title { font-size: 16px; font-weight: bold; color: #1f2937; }
+.drawer-close { padding: 4px; }
+.close-icon { font-size: 16px; color: #9ca3af; }
+
+.action-grid { flex-direction: row; justify-content: space-around; }
+.action-item { align-items: center; flex: 1; }
+.icon-box { width: 64px; height: 64px; border-radius: 24px; align-items: center; justify-content: center; margin-bottom: 12px; }
+.bg-pink { background-color: #fdf2f8; }
+.bg-blue { background-color: #eff6ff; }
+.bg-green { background-color: #f0fdf4; }
+.emoji { font-size: 28px; }
+.action-text { font-size: 14px; font-weight: bold; color: #374151; margin-bottom: 4px; }
+.action-desc { font-size: 11px; color: #9ca3af; }
+</style>

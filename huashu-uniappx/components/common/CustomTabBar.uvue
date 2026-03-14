@@ -1,0 +1,117 @@
+<template>
+  <view class="custom-tab-bar">
+    <view
+      class="tab-bar-item"
+      v-for="(item, index) in list"
+      :key="index"
+      @click="switchTab(item.pagePath, index)"
+    >
+      <image
+        class="tab-bar-icon"
+        :src="current === index ? item.selectedIconPath : item.iconPath"
+        mode="aspectFit"
+      ></image>
+      <text
+        class="tab-bar-text"
+        :class="current === index ? 'active-text' : ''"
+      >{{ item.text }}</text>
+    </view>
+  </view>
+</template>
+
+<script setup lang="uts">
+const props = defineProps<{
+  current: number
+}>()
+
+const list = [
+  {
+    pagePath: "/pages/index/index",
+    iconPath: "/static/tabbar/home.png",
+    selectedIconPath: "/static/tabbar/home-active.png",
+    text: "首页"
+  },
+  {
+    pagePath: "/pages/discover/discover",
+    iconPath: "/static/tabbar/discover.png",
+    selectedIconPath: "/static/tabbar/discover-active.png",
+    text: "话术库"
+  },
+  {
+    pagePath: "/pages/community/community",
+    iconPath: "/static/tabbar/community.png",
+    selectedIconPath: "/static/tabbar/community-active.png",
+    text: "圈子"
+  },
+  {
+    pagePath: "/pages/favorites/favorites",
+    iconPath: "/static/tabbar/favorites.png",
+    selectedIconPath: "/static/tabbar/favorites-active.png",
+    text: "收藏"
+  },
+  {
+    pagePath: "/pages/profile/profile",
+    iconPath: "/static/tabbar/profile.png",
+    selectedIconPath: "/static/tabbar/profile-active.png",
+    text: "我的"
+  }
+]
+
+const switchTab = (url: string, index: number) => {
+  if (props.current !== index) {
+    uni.switchTab({
+      url: url
+    })
+  }
+}
+</script>
+
+<style>
+.custom-tab-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: calc(55px + env(safe-area-inset-bottom));
+  padding-bottom: env(safe-area-inset-bottom);
+  background-color: #ffffff;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+  align-items: center;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+  border-top-left-radius: 16px;
+  border-top-right-radius: 16px;
+  z-index: 999;
+}
+
+.tab-bar-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 55px;
+  background-color: transparent;
+}
+
+.tab-bar-icon {
+  width: 24px;
+  height: 24px;
+  margin-bottom: 2px;
+  background-color: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+.tab-bar-text {
+  font-size: 10px;
+  color: #9ca3af;
+  font-weight: 500;
+}
+
+.active-text {
+  color: #ec4899;
+  font-weight: bold;
+}
+</style>

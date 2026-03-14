@@ -1,0 +1,118 @@
+<template>
+  <view class="container">
+    <view class="header-bg">
+      <view class="header-content">
+        <text class="header-title">避坑专栏</text>
+        <text class="header-desc">识人防渣，避开恋爱雷区，少走弯路才能遇到对的人。</text>
+      </view>
+    </view>
+
+    <scroll-view class="scroll-area" scroll-y>
+      <!-- Sort Tabs -->
+      <view class="tabs">
+        <view class="tab" :class="[activeTab === 'latest' ? 'tab-active' : '']" @click="activeTab = 'latest'">
+          <text class="tab-text" :class="[activeTab === 'latest' ? 'tab-text-active' : '']">最新发布</text>
+        </view>
+        <view class="tab" :class="[activeTab === 'hot' ? 'tab-active' : '']" @click="activeTab = 'hot'">
+          <text class="tab-text" :class="[activeTab === 'hot' ? 'tab-text-active' : '']">最多阅读</text>
+        </view>
+      </view>
+
+      <view class="article-list">
+        <view class="article-card" v-for="article in articles" :key="article.id" @click="openArticle(article)">
+          <image class="article-cover" :src="article.cover" mode="aspectFill" />
+          <view class="article-info">
+            <text class="article-title" :lines="2">{{ article.title }}</text>
+            <text class="article-desc" :lines="2">{{ article.desc }}</text>
+            <view class="article-meta">
+              <view class="meta-item">
+                <text class="meta-icon">👁️</text>
+                <text class="meta-text">{{ article.views }} 阅读</text>
+              </view>
+              <text class="meta-time">{{ article.date }}</text>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <view class="bottom-spacer"></view>
+    </scroll-view>
+  </view>
+</template>
+
+<script setup lang="uts">
+import { ref } from 'vue'
+
+const activeTab = ref('latest')
+
+const articles = ref([
+  {
+    id: 1,
+    title: '如何识别高端“海王”的常用套路？',
+    desc: '海王不仅长得帅，还懂得提供情绪价值。这几点特征帮你快速识破他们的伪装...',
+    cover: 'https://images.unsplash.com/photo-1520694478166-daaaaec95b69?auto=format&fit=crop&w=400&q=80',
+    views: '12.5k',
+    date: '2023-11-20'
+  },
+  {
+    id: 2,
+    title: '冷暴力分手：他不说分手，却逼你说',
+    desc: '当对方开始冷暴力，你该如何保护自己并优雅退场？这篇指南你需要看两遍。',
+    cover: 'https://images.unsplash.com/photo-1516585427167-9f4af9627e6c?auto=format&fit=crop&w=400&q=80',
+    views: '9.8k',
+    date: '2023-11-18'
+  },
+  {
+    id: 3,
+    title: '约会时这些细节，暗示TA可能在养鱼',
+    desc: '周末总是没空、手机永远静音倒扣... 警惕这些恋爱中的异常信号。',
+    cover: 'https://images.unsplash.com/photo-1494774157365-9e04c6720e47?auto=format&fit=crop&w=400&q=80',
+    views: '15.2k',
+    date: '2023-11-15'
+  },
+  {
+    id: 4,
+    title: '不要做“恋爱脑”，保持自我框架的3个核心',
+    desc: '爱别人之前先爱自己。学会这三招，在任何关系中都能掌握主动权。',
+    cover: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=400&q=80',
+    views: '22.1k',
+    date: '2023-11-10'
+  }
+])
+
+const openArticle = (article: any) => {
+  uni.navigateTo({ url: '/pages/article/article?id=' + article.id })
+}
+</script>
+
+<style>
+page { background-color: #f9fafb; height: 100%; }
+.container { flex: 1; display: flex; flex-direction: column; height: 100%; }
+
+.header-bg { background-image: linear-gradient(to bottom right, #1f2937, #111827); padding: 40px 20px 30px; border-bottom-left-radius: 24px; border-bottom-right-radius: 24px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.2); z-index: 10; }
+.header-content { align-items: flex-start; }
+.header-title { font-size: 24px; font-weight: 900; color: #ffffff; margin-bottom: 8px; letter-spacing: 2px; }
+.header-desc { font-size: 12px; color: #9ca3af; line-height: 1.5; }
+
+.scroll-area { flex: 1; padding: 0 16px; margin-top: 16px; }
+
+.tabs { flex-direction: row; margin-bottom: 16px; background-color: #ffffff; border-radius: 12px; padding: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+.tab { flex: 1; padding: 8px 0; align-items: center; border-radius: 8px; }
+.tab-active { background-color: #f3f4f6; }
+.tab-text { font-size: 13px; color: #6b7280; font-weight: 500; }
+.tab-text-active { color: #1f2937; font-weight: bold; }
+
+.article-list { }
+.article-card { background-color: #ffffff; border-radius: 16px; overflow: hidden; margin-bottom: 16px; box-shadow: 0 4px 12px -4px rgba(0,0,0,0.05); }
+.article-cover { width: 100%; height: 160px; background-color: #e5e7eb; }
+.article-info { padding: 16px; }
+.article-title { font-size: 15px; font-weight: bold; color: #1f2937; margin-bottom: 8px; line-height: 1.4; }
+.article-desc { font-size: 12px; color: #6b7280; line-height: 1.6; margin-bottom: 12px; }
+.article-meta { flex-direction: row; justify-content: space-between; align-items: center; }
+.meta-item { flex-direction: row; align-items: center; }
+.meta-icon { font-size: 12px; margin-right: 4px; }
+.meta-text { font-size: 11px; color: #9ca3af; }
+.meta-time { font-size: 11px; color: #d1d5db; }
+
+.bottom-spacer { height: 40px; }
+</style>

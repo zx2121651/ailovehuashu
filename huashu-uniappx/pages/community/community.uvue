@@ -1,0 +1,632 @@
+<template>
+  <view class="page-container">
+    <!-- Header -->
+    <view class="community-header">
+      <text class="community-title">社区广场</text>
+    </view>
+
+    <!-- Category Tabs -->
+    <view class="category-bar">
+      <scroll-view class="category-scroll" scroll-x>
+        <view class="category-row">
+          <view
+            class="category-item"
+            :class="[activeCategoryId === null ? 'category-item-active' : '']"
+            @click="handleCategoryClick(null)"
+          >
+            <text class="category-text" :class="[activeCategoryId === null ? 'category-text-active' : '']">全部</text>
+          </view>
+          <view
+            v-for="cat in categories"
+            :key="cat.id"
+            class="category-item"
+            :class="[activeCategoryId === cat.id ? 'category-item-active' : '']"
+            @click="handleCategoryClick(cat.id)"
+          >
+            <text class="category-text" :class="[activeCategoryId === cat.id ? 'category-text-active' : '']">{{ cat.name }}</text>
+          </view>
+        </view>
+      </scroll-view>
+    </view>
+
+    <!-- Sort Tabs -->
+    <view class="tab-bar">
+      <scroll-view class="tab-scroll" scroll-x>
+        <view class="tab-row">
+          <view
+            v-for="tab in sortTabs"
+            :key="tab.key"
+            class="tab-item"
+            :class="[activeSortKey === tab.key ? 'tab-item-active' : '']"
+            @click="handleSortClick(tab)"
+          >
+            <text class="tab-text" :class="[activeSortKey === tab.key ? 'tab-text-active' : '']">{{ tab.label }}</text>
+            <view v-if="activeSortKey === tab.key" class="tab-indicator"></view>
+          </view>
+        </view>
+      </scroll-view>
+    </view>
+
+    <!-- Post List -->
+    <scroll-view class="post-list" scroll-y @scrolltolower="loadMore">
+      <view class="posts-container animate-fade-in-up">
+        <view
+          v-for="post in posts"
+          :key="post.id"
+          class="post-card"
+        >
+          <!-- Urgent Badge -->
+          <view v-if="post.isUrgent" class="urgent-banner">
+            <text class="urgent-icon">🚨</text>
+            <text class="urgent-text">急救悬赏: {{ post.rewardPoints }} 积分</text>
+            <text class="urgent-status" :class="[post.resolved ? 'resolved' : '']">{{ post.resolved ? '已解决' : '待解答' }}</text>
+          </view>
+
+          <!-- Post Header -->
+          <view class="post-header">
+            <view class="post-user-row">
+              <image :src="post.avatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=U' + post.id" class="post-avatar" mode="aspectFill" />
+              <view class="post-user-info">
+                <text class="post-username">{{ post.nickname || '匿名用户' }}</text>
+                <text class="post-time">{{ post.createdAt || '刚刚' }}</text>
+              </view>
+            </view>
+            <view class="post-more-btn" @click="appStore.showToast('功能开发中')">
+              <text class="post-more-icon">···</text>
+            </view>
+          </view>
+
+          <!-- Post Content -->
+          <text class="post-content" :lines="5">{{ post.content }}</text>
+
+          <!-- Post Tags -->
+          <view v-if="post.tags && post.tags.length > 0" class="post-tags-row">
+            <view v-for="(tag, tIdx) in post.tags" :key="tIdx" class="post-tag-item">
+              <text class="post-tag-text"># {{ tag }}</text>
+            </view>
+          </view>
+
+          <!-- Post Images -->
+          <view v-if="post.images && post.images.length > 0" class="post-images">
+            <image
+              v-for="(img, imgIdx) in post.images.slice(0, 3)"
+              :key="imgIdx"
+              :src="img"
+              class="post-image"
+              mode="aspectFill"
+              @click="previewImage(img, post.images)"
+            />
+          </view>
+
+          <!-- Post Actions -->
+          <view class="post-actions">
+            <view class="post-action" @click="toggleLike(post)">
+              <text class="post-action-icon">{{ post.isLiked ? '❤️' : '🤍' }}</text>
+              <text class="post-action-text" :class="[post.isLiked ? 'text-liked' : '']">{{ post.likes || 0 }}</text>
+            </view>
+            <view class="post-action" @click="showCommentInput(post)">
+              <text class="post-action-icon">💬</text>
+              <text class="post-action-text">{{ post.comments || 0 }}</text>
+            </view>
+            <view class="post-action" @click="appStore.showToast('分享功能开发中')">
+              <text class="post-action-icon">📤</text>
+              <text class="post-action-text">分享</text>
+            </view>
+          </view>
+
+          <!-- Top Comment Preview -->
+          <view v-if="post.topComment" class="top-comment" :class="[post.topComment.isAccepted ? 'accepted-comment' : '']">
+            <view class="top-comment-header" v-if="post.topComment.isAccepted">
+              <text class="accepted-badge">✅ 已采纳的神回复</text>
+            </view>
+            <view class="top-comment-body">
+              <text class="top-comment-text" style="flex: 1;">
+                <text class="top-comment-user">{{ post.topComment.user }}：</text>{{ post.topComment.content }}
+              </text>
+              <view
+                v-if="post.isUrgent && !post.resolved && post.userId === appStore.userInfo?.id && post.topComment.userId !== appStore.userInfo?.id"
+                class="accept-btn"
+                @click="handleAcceptAnswer(post, post.topComment)"
+              >
+                <text class="accept-btn-text">采纳此回复</text>
+              </view>
+            </view>
+          </view>
+        </view>
+
+        <!-- Loading More -->
+        <view v-if="loadingMore" class="loading-more">
+          <text class="loading-more-text">加载中...</text>
+        </view>
+        <view v-else-if="!hasMore" class="no-more">
+          <text class="no-more-text">- 没有更多了 -</text>
+        </view>
+
+        <view class="tabbar-spacer"></view>
+      </view>
+    </scroll-view>
+
+    <!-- Floating Create Post Button -->
+    <view class="fab-post" @click="handleFabClick">
+      <text class="fab-post-icon">✏️</text>
+      <text class="fab-post-text">发帖</text>
+    </view>
+
+    <!-- Contribute Drawer -->
+    <ContributeDrawer :isOpen="appStore.showContributeDrawer" @close="appStore.showContributeDrawer = false" ></ContributeDrawer>
+
+    <!-- Create Post Modal -->
+    <view v-if="showCreatePost" class="create-overlay">
+      <view class="create-mask" @click="showCreatePost = false"></view>
+      <view class="create-panel slide-up">
+        <view class="create-header">
+          <view class="create-close" @click="showCreatePost = false">
+            <text class="create-close-icon">✕</text>
+          </view>
+          <text class="create-title">发布动态</text>
+          <view class="create-submit" @click="handleCreatePost">
+            <text class="create-submit-text">发布</text>
+          </view>
+        </view>
+        <view class="create-body">
+          <textarea
+            v-model="newPostContent"
+            placeholder="分享你的恋爱心得，帮助更多人..."
+            class="create-textarea"
+            :maxlength="500"
+          />
+
+          <!-- Urgent Toggle -->
+          <view class="urgent-toggle-section">
+            <view class="urgent-toggle-header">
+              <view class="urgent-toggle-left">
+                <text class="urgent-toggle-icon">🚨</text>
+                <text class="urgent-toggle-title">开启急救悬赏</text>
+              </view>
+              <switch :checked="isUrgent" color="#ef4444" style="transform: scale(0.8);" @change="e => isUrgent = e.detail.value" />
+            </view>
+            <view v-if="isUrgent" class="reward-options">
+              <text class="reward-label">悬赏积分：</text>
+              <view class="reward-wrap">
+                <view
+                  v-for="pts in rewardOptions"
+                  :key="pts"
+                  class="reward-tag"
+                  :class="[rewardPoints === pts ? 'reward-tag-active' : '']"
+                  @click="rewardPoints = pts"
+                >
+                  <text class="reward-tag-text" :class="[rewardPoints === pts ? 'reward-tag-text-active' : '']">{{ pts }}</text>
+                </view>
+              </view>
+              <text class="reward-balance">当前余额: {{ appStore.userInfo?.points || 0 }}</text>
+            </view>
+          </view>
+
+          <!-- Tag Selection -->
+          <view class="create-tags-section">
+            <text class="create-tags-label">添加话题标签</text>
+            <view class="create-tags-wrap">
+              <view
+                v-for="tag in availableTags"
+                :key="tag"
+                class="create-tag-item"
+                :class="[newPostTags.includes(tag) ? 'create-tag-active' : '']"
+                @click="togglePostTag(tag)"
+              >
+                <text class="create-tag-text" :class="[newPostTags.includes(tag) ? 'create-tag-text-active' : '']"># {{ tag }}</text>
+              </view>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- Comment Input Bar -->
+    <view v-if="commentingPost" class="comment-bar">
+      <view class="comment-mask" @click="commentingPost = null"></view>
+      <view class="comment-bar-inner slide-up">
+        <input
+          v-model="commentText"
+          placeholder="写下你的评论..."
+          class="comment-input"
+          :focus="commentingPost !== null"
+          @confirm="submitComment"
+        />
+        <view class="comment-send" @click="submitComment">
+          <text class="comment-send-text">发送</text>
+        </view>
+      </view>
+    </view>
+
+    <CustomTabBar :current="2"></CustomTabBar>
+  </view>
+</template>
+
+<script setup lang="uts">
+import { ref, onMounted, onUnmounted } from 'vue'
+import { onShow } from '@dcloudio/uni-app'
+import { useAppStore } from '../../store/app.uts'
+import { getPosts, createPost, toggleLikePost, postComment, acceptUrgentAnswer, getPostCategories, getPostSortTabs } from '../../services/api.uts'
+import CustomTabBar from '../../components/common/CustomTabBar.uvue'
+import ContributeDrawer from '../../components/Modal/ContributeDrawer.uvue'
+
+const appStore = useAppStore
+
+onShow(() => {
+  uni.hideTabBar()
+})
+
+onMounted(async () => {
+  uni.$on('openCreatePost', (urgent: any) => {
+    isUrgent.value = urgent as boolean
+    showCreatePost.value = true
+  })
+  await Promise.all([fetchCategories(), fetchSortTabs()])
+  await fetchPosts()
+})
+
+onUnmounted(() => {
+  uni.$off('openCreatePost')
+})
+
+// 分类标签
+const categories = ref<any[]>([])
+const activeCategoryId = ref<number | null>(null)
+
+const fetchCategories = async () => {
+  try {
+    const cats = await getPostCategories()
+    categories.value = cats || []
+  } catch (error) {
+    console.error('获取分类失败:', error)
+  }
+}
+
+// 排序标签
+const sortTabs = ref<any[]>([])
+const activeSortKey = ref('latest')
+
+const fetchSortTabs = async () => {
+  try {
+    const tabs = await getPostSortTabs()
+    sortTabs.value = tabs || []
+    // 设置默认选中的排序
+    const defaultTab = sortTabs.value.find((t: any) => t.default)
+    if (defaultTab) {
+      activeSortKey.value = defaultTab.key
+    }
+  } catch (error) {
+    console.error('获取排序标签失败:', error)
+    // 使用默认值
+    sortTabs.value = [
+      { key: 'latest', label: '最新', sort: 'new', default: true },
+      { key: 'hot', label: '最热', sort: 'hot' },
+      { key: 'urgent', label: '急诊', sort: 'urgent' },
+      { key: 'featured', label: '精华', sort: 'featured' },
+      { key: 'following', label: '关注', sort: 'following' }
+    ]
+    activeSortKey.value = 'latest'
+  }
+}
+
+// 处理排序标签点击
+const handleSortClick = (tab: any) => {
+  activeSortKey.value = tab.key
+  fetchPosts(true)
+}
+
+// 获取当前排序参数
+const getCurrentSortParam = () => {
+  const tab = sortTabs.value.find((t: any) => t.key === activeSortKey.value)
+  return tab?.sort || 'new'
+}
+
+// 分类点击处理
+const handleCategoryClick = (categoryId: number | null) => {
+  activeCategoryId.value = categoryId
+  fetchPosts(true)
+}
+
+const posts = ref<any[]>([])
+const loading = ref(true)
+const loadingMore = ref(false)
+const hasMore = ref(true)
+const page = ref(1)
+
+const handleFabClick = () => {
+  // 原本可以直接打开写帖子的模态框 showCreatePost = true
+  // 这里统一收口到全局投稿抽屉，以便用户选择发帖还是发话术
+  appStore.showContributeDrawer = true
+}
+
+const showCreatePost = ref(false)
+const newPostContent = ref('')
+const newPostTags = ref<string[]>([])
+const isUrgent = ref(false)
+const rewardPoints = ref(10)
+const availableTags = ['脱单经验', '聊天技巧', '约会分享', '情感求助', '搞笑段子', '恋爱日记']
+const rewardOptions = [10, 50, 100]
+
+const commentingPost = ref<any>(null)
+const commentText = ref('')
+
+const fetchPosts = async (resetPage = false) => {
+  try {
+    loading.value = true
+    if (resetPage) {
+      page.value = 1
+    }
+    const sortParam = getCurrentSortParam()
+    const params: Record<string, any> = { page: page.value, sort: sortParam }
+    if (activeCategoryId.value !== null) {
+      params.categoryId = activeCategoryId.value
+    }
+    const data = await getPosts(params)
+    if (data && data.list) {
+      posts.value = data.list
+      hasMore.value = data.list.length >= 10
+    }
+  } catch (error) {
+    console.error('获取帖子失败:', error)
+    posts.value = []
+  } finally {
+    loading.value = false
+  }
+}
+
+const loadMore = async () => {
+  if (loadingMore.value || !hasMore.value) return
+  loadingMore.value = true
+  page.value++
+  try {
+    const sortParam = getCurrentSortParam()
+    const params: Record<string, any> = { page: page.value, sort: sortParam }
+    if (activeCategoryId.value !== null) {
+      params.categoryId = activeCategoryId.value
+    }
+    const data = await getPosts(params)
+    if (data && data.list && data.list.length > 0) {
+      posts.value = [...posts.value, ...data.list]
+      hasMore.value = data.list.length >= 10
+    } else {
+      hasMore.value = false
+    }
+  } catch (e) {
+    hasMore.value = false
+  } finally {
+    loadingMore.value = false
+  }
+}
+
+const toggleLike = async (post: any) => {
+  post.isLiked = !post.isLiked
+  post.likes = post.isLiked ? (post.likes || 0) + 1 : (post.likes || 1) - 1
+  try {
+    await toggleLikePost(post.id)
+  } catch (e) {
+    // Already toggled locally
+  }
+}
+
+const showCommentInput = (post: any) => {
+  commentingPost.value = post
+  commentText.value = ''
+}
+
+const submitComment = async () => {
+  if (!commentText.value.trim() || !commentingPost.value) return
+  try {
+    await postComment('POST', commentingPost.value.id, commentText.value)
+    commentingPost.value.comments = (commentingPost.value.comments || 0) + 1
+    appStore.showToast('评论成功')
+  } catch (e) {
+    appStore.showToast('评论失败，请重试')
+  }
+  commentingPost.value = null
+  commentText.value = ''
+}
+
+const handleCreatePost = async () => {
+  if (!newPostContent.value.trim()) {
+    return appStore.showToast('请输入内容')
+  }
+  if (isUrgent.value && (appStore.userInfo?.points || 0) < rewardPoints.value) {
+    return appStore.showToast('积分不足，无法悬赏')
+  }
+  try {
+    await createPost({
+      content: newPostContent.value,
+      tags: newPostTags.value,
+      isUrgent: isUrgent.value,
+      rewardPoints: rewardPoints.value
+    })
+    appStore.showToast('发布成功！')
+  } catch (e) {
+    appStore.showToast('发布失败，请重试')
+  }
+  showCreatePost.value = false
+  newPostContent.value = ''
+  newPostTags.value = []
+  isUrgent.value = false
+  await fetchPosts()
+}
+
+const handleAcceptAnswer = async (post: any, comment: any) => {
+  uni.showModal({
+    title: '确认采纳',
+    content: `采纳后将向该用户发放 ${post.rewardPoints} 积分，是否确认？`,
+    success: async (res) => {
+      if (res.confirm) {
+        try {
+          // 本地更新状态
+          post.resolved = true
+          comment.isAccepted = true
+          // 发送接口请求
+          await acceptUrgentAnswer(post.id, comment.id)
+          appStore.showToast('采纳成功！积分已发放')
+        } catch (e) {
+          appStore.showToast('采纳失败，请重试')
+          // 如果失败回滚状态
+          post.resolved = false
+          comment.isAccepted = false
+        }
+      }
+    }
+  })
+}
+
+const togglePostTag = (tag: string) => {
+  const idx = newPostTags.value.indexOf(tag)
+  if (idx !== -1) {
+    newPostTags.value.splice(idx, 1)
+  } else {
+    newPostTags.value.push(tag)
+  }
+}
+
+const previewImage = (current: string, urls: string[]) => {
+  uni.previewImage({
+    current: current,
+    urls: urls
+  })
+}
+</script>
+
+<style>
+page { display: flex; flex-direction: column; height: 100%; }
+.page-container { flex: 1; display: flex; flex-direction: column; height: 100%; background-color: #f5f7fa; position: relative; }
+
+/* 防止自定义 Fixed TabBar 遮挡底部内容的垫片 */
+.tabbar-spacer { height: calc(55px + env(safe-area-inset-bottom)); width: 100%; }
+
+/* Header */
+.community-header { background-color: #ffffff; padding: 32px 20px 12px; border-bottom-width: 1px; border-bottom-style: solid; border-bottom-color: #f3f4f6; }
+.community-title { font-size: 18px; font-weight: bold; color: #1f2937; text-align: center; }
+
+/* Category Bar */
+.category-bar { background-color: #ffffff; padding: 8px 16px; border-bottom-width: 1px; border-bottom-style: solid; border-bottom-color: #f3f4f6; }
+.category-scroll { height: 36px; }
+.category-row { flex-direction: row; height: 36px; align-items: center; }
+.category-item { padding: 6px 14px; margin-right: 8px; border-radius: 16px; background-color: #f3f4f6; }
+.category-item-active { background-color: #ec4899; }
+.category-text { font-size: 13px; color: #6b7280; }
+.category-text-active { color: #ffffff; font-weight: bold; }
+
+/* Tab Bar */
+.tab-bar { background-color: #ffffff; padding: 0 20px; border-bottom-width: 1px; border-bottom-style: solid; border-bottom-color: #f3f4f6; }
+.tab-scroll { height: 44px; }
+.tab-row { flex-direction: row; height: 44px; align-items: center; }
+.tab-item { padding: 0 16px; height: 44px; align-items: center; justify-content: center; position: relative; margin-right: 8px; }
+.tab-item-active { }
+.tab-text { font-size: 14px; color: #9ca3af; font-weight: 500; }
+.tab-text-active { color: #1f2937; font-weight: bold; }
+.tab-indicator { position: absolute; bottom: 0; width: 20px; height: 3px; background-color: #ec4899; border-radius: 2px; }
+
+/* Post List */
+.post-list { flex: 1; }
+.posts-container { padding: 12px 16px; }
+
+/* Post Card */
+.post-card { background-color: #ffffff; border-radius: 20px; padding: 16px; margin-bottom: 12px; box-shadow: 0 2px 12px -4px rgba(0,0,0,0.06); }
+
+/* Urgent Banner */
+.urgent-banner { background-color: #fef2f2; border-width: 1px; border-style: solid; border-color: #fca5a5; padding: 8px 12px; border-radius: 12px; flex-direction: row; align-items: center; margin-bottom: 12px; }
+.urgent-icon { font-size: 14px; margin-right: 6px; }
+.urgent-text { font-size: 13px; color: #b91c1c; font-weight: bold; flex: 1; }
+.urgent-status { font-size: 11px; color: #ef4444; font-weight: bold; background-color: #ffffff; padding: 2px 6px; border-radius: 6px; }
+.resolved { color: #10b981; }
+
+.post-header { flex-direction: row; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.post-user-row { flex-direction: row; align-items: center; }
+.post-avatar { width: 40px; height: 40px; border-radius: 20px; margin-right: 10px; background-color: #f3f4f6; }
+.post-user-info { }
+.post-username { font-size: 14px; font-weight: bold; color: #1f2937; }
+.post-time { font-size: 11px; color: #9ca3af; margin-top: 2px; }
+.post-more-btn { padding: 4px 8px; }
+.post-more-icon { font-size: 16px; color: #9ca3af; }
+
+.post-content { font-size: 14px; color: #374151; line-height: 1.75; margin-bottom: 12px; }
+
+/* Post Tags */
+.post-tags-row { flex-direction: row; flex-wrap: wrap; margin-bottom: 12px; }
+.post-tag-item { background-color: #eff6ff; padding: 4px 10px; border-radius: 8px; margin-right: 8px; margin-bottom: 4px; }
+.post-tag-text { font-size: 11px; color: #3b82f6; font-weight: 500; }
+
+/* Post Images */
+.post-images { flex-direction: row; margin-bottom: 12px; }
+.post-image { width: 100px; height: 100px; border-radius: 12px; margin-right: 8px; background-color: #f3f4f6; }
+
+/* Post Actions */
+.post-actions { flex-direction: row; padding-top: 12px; border-top-width: 1px; border-top-style: solid; border-top-color: #f9fafb; }
+.post-action { flex: 1; flex-direction: row; align-items: center; justify-content: center; padding: 4px 0; }
+.post-action-icon { font-size: 16px; margin-right: 4px; }
+.post-action-text { font-size: 12px; color: #6b7280; }
+.text-liked { color: #ef4444; }
+
+/* Top Comment */
+.top-comment { background-color: #f9fafb; padding: 10px 12px; border-radius: 12px; margin-top: 10px; }
+.accepted-comment { background-color: #ecfdf5; border-width: 1px; border-style: solid; border-color: #a7f3d0; }
+.top-comment-header { margin-bottom: 4px; }
+.accepted-badge { font-size: 10px; color: #059669; font-weight: bold; }
+.top-comment-body { flex-direction: row; justify-content: space-between; align-items: flex-start; }
+.top-comment-text { font-size: 12px; color: #6b7280; line-height: 1.5; }
+.top-comment-user { font-weight: bold; color: #374151; }
+.accept-btn { background-color: #ec4899; padding: 4px 10px; border-radius: 12px; margin-left: 8px; flex-shrink: 0; }
+.accept-btn-text { font-size: 10px; color: #ffffff; font-weight: bold; }
+
+/* Loading */
+.loading-more { padding: 16px; align-items: center; }
+.loading-more-text { font-size: 12px; color: #9ca3af; }
+.no-more { padding: 16px; align-items: center; }
+.no-more-text { font-size: 12px; color: #9ca3af; }
+
+/* FAB */
+.fab-post { position: fixed; right: 16px; bottom: 100px; background-image: linear-gradient(to right, #ec4899, #f43f5e); padding: 12px 16px; border-radius: 24px; flex-direction: row; align-items: center; box-shadow: 0 8px 24px -4px rgba(244,63,94,0.4); z-index: 40; }
+.fab-post-icon { font-size: 14px; color: #ffffff; margin-right: 6px; }
+.fab-post-text { font-size: 12px; color: #ffffff; font-weight: bold; }
+
+/* Create Post Modal */
+.create-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 50; justify-content: flex-end; }
+.create-mask { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0,0,0,0.4); }
+.create-panel { background-color: #ffffff; border-top-left-radius: 24px; border-top-right-radius: 24px; padding: 20px; padding-bottom: 40px; width: 100%; }
+.create-header { flex-direction: row; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.create-close { padding: 4px; }
+.create-close-icon { font-size: 16px; color: #6b7280; }
+.create-title { font-size: 16px; font-weight: bold; color: #1f2937; }
+.create-submit { background-color: #ec4899; padding: 6px 16px; border-radius: 16px; }
+.create-submit-text { font-size: 13px; color: #ffffff; font-weight: bold; }
+.create-body { }
+.create-textarea { width: 100%; height: 120px; font-size: 14px; color: #374151; background-color: #f9fafb; border-radius: 16px; padding: 12px; border-width: 1px; border-style: solid; border-color: #e5e7eb; }
+
+/* Urgent Toggle */
+.urgent-toggle-section { margin-top: 16px; background-color: #fef2f2; border-radius: 16px; padding: 12px; border-width: 1px; border-style: solid; border-color: #fecaca; }
+.urgent-toggle-header { flex-direction: row; justify-content: space-between; align-items: center; }
+.urgent-toggle-left { flex-direction: row; align-items: center; }
+.urgent-toggle-icon { font-size: 16px; margin-right: 6px; }
+.urgent-toggle-title { font-size: 14px; font-weight: bold; color: #b91c1c; }
+.reward-options { margin-top: 12px; border-top-width: 1px; border-top-style: dashed; border-top-color: #fca5a5; padding-top: 12px; flex-direction: row; align-items: center; justify-content: space-between; }
+.reward-label { font-size: 12px; color: #991b1b; }
+.reward-wrap { flex-direction: row; }
+.reward-tag { background-color: #ffffff; border-width: 1px; border-style: solid; border-color: #fca5a5; padding: 4px 10px; border-radius: 12px; margin-right: 8px; }
+.reward-tag-active { background-color: #ef4444; border-color: #ef4444; }
+.reward-tag-text { font-size: 12px; color: #ef4444; font-weight: bold; }
+.reward-tag-text-active { color: #ffffff; }
+.reward-balance { font-size: 11px; color: #9ca3af; }
+
+.create-tags-section { margin-top: 16px; }
+.create-tags-label { font-size: 13px; color: #6b7280; font-weight: 500; margin-bottom: 8px; }
+.create-tags-wrap { flex-direction: row; flex-wrap: wrap; }
+.create-tag-item { padding: 6px 12px; border-radius: 16px; margin-right: 8px; margin-bottom: 8px; background-color: #f9fafb; border-width: 1px; border-style: solid; border-color: #e5e7eb; }
+.create-tag-active { background-color: #fdf2f8; border-color: #fbcfe8; }
+.create-tag-text { font-size: 12px; color: #6b7280; }
+.create-tag-text-active { color: #db2777; font-weight: bold; }
+
+/* Comment Bar */
+.comment-bar { position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 50; justify-content: flex-end; }
+.comment-mask { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0,0,0,0.3); }
+.comment-bar-inner { background-color: #ffffff; padding: 12px 16px; padding-bottom: 32px; flex-direction: row; align-items: center; border-top-width: 1px; border-top-style: solid; border-top-color: #f3f4f6; }
+.comment-input { flex: 1; background-color: #f3f4f6; border-radius: 20px; padding: 8px 16px; font-size: 14px; color: #374151; margin-right: 8px; }
+.comment-send { background-color: #ec4899; padding: 8px 16px; border-radius: 16px; }
+.comment-send-text { font-size: 13px; color: #ffffff; font-weight: bold; }
+
+</style>

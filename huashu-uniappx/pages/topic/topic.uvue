@@ -1,0 +1,107 @@
+<template>
+  <view class="page-container">
+    <scroll-view class="scroll-area" scroll-y>
+      <view class="hero-section">
+        <image class="hero-image" src="https://images.unsplash.com/photo-1516726817505-f5ed825624d8?q=80&w=800&auto=format&fit=crop" mode="aspectFill"></image>
+        <view class="hero-overlay"></view>
+        <view class="hero-stats">
+          <text class="hero-stats-icon">👥</text>
+          <text class="hero-stats-text">2.5W 人在看</text>
+        </view>
+        <view class="hero-content">
+          <view class="hero-badge">
+            <text class="hero-badge-icon">🔥</text>
+            <text class="hero-badge-text">本周强推</text>
+          </view>
+          <text class="hero-title">情人节特辑：如何用一句话让她沦陷？</text>
+          <text class="hero-desc">收录全网 50+ 句高赞表白神回复，拒绝油腻土味情话，用顶级高情商一秒搞定心动女孩。</text>
+        </view>
+      </view>
+
+      <view class="content-section">
+        <view class="section-header">
+          <text class="section-title">✨ 专题精选语录</text>
+          <text class="section-action" @click="handleCopyAll">一键复制</text>
+        </view>
+
+        <view class="quote-list">
+          <view class="quote-item" v-for="(item, index) in quotes" :key="index">
+            <text class="quote-text">{{ item }}</text>
+            <view class="quote-actions">
+              <view class="action-btn" @click="handleCopy(item)">
+                <text class="action-icon">📋</text>
+                <text class="action-text">复制</text>
+              </view>
+            </view>
+          </view>
+        </view>
+      </view>
+    </scroll-view>
+  </view>
+</template>
+
+<script setup lang="uts">
+import { ref } from 'vue'
+import { useAppStore } from '../../store/app.uts'
+
+const appStore = useAppStore()
+
+const quotes = ref([
+  '“我总觉得，我应该早点认识你。不过现在也不算晚，余生还长。”',
+  '“和你在一起的时候，我从没羡慕过任何人。”',
+  '“这世界欠你的温柔，我来给。”'
+])
+
+const handleCopy = (text: string) => {
+  uni.setClipboardData({
+    data: text,
+    success: () => {
+      appStore.showToast('已复制')
+    }
+  })
+}
+
+const handleCopyAll = () => {
+  const allText = quotes.value.join('\n')
+  uni.setClipboardData({
+    data: allText,
+    success: () => {
+      appStore.showToast('已复制全部')
+    }
+  })
+}
+</script>
+
+<style>
+.page-container { flex: 1; background-color: #f8fafc; }
+.scroll-area { flex: 1; }
+
+.hero-section { position: relative; height: 260px; }
+.hero-image { width: 100%; height: 100%; }
+.hero-overlay { position: absolute; left: 0; right: 0; top: 0; bottom: 0; background-image: linear-gradient(to top, rgba(17,24,39,0.9), rgba(17,24,39,0.5), transparent); }
+
+.hero-stats { position: absolute; top: 16px; right: 16px; flex-direction: row; align-items: center; background-color: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); padding: 4px 12px; border-radius: 20px; }
+.hero-stats-icon { font-size: 12px; margin-right: 4px; color: #fff; }
+.hero-stats-text { font-size: 11px; color: #ffffff; font-weight: bold; }
+
+.hero-content { position: absolute; left: 20px; right: 20px; bottom: 30px; }
+.hero-badge { flex-direction: row; align-items: center; background-image: linear-gradient(to right, #ec4899, #f43f5e); padding: 4px 10px; border-radius: 20px; margin-bottom: 12px; align-self: flex-start; }
+.hero-badge-icon { font-size: 10px; margin-right: 4px; color: #fff; }
+.hero-badge-text { font-size: 10px; color: #ffffff; font-weight: bold; }
+
+.hero-title { font-size: 24px; color: #ffffff; font-weight: 900; margin-bottom: 8px; line-height: 1.3; }
+.hero-desc { font-size: 13px; color: rgba(255,255,255,0.8); line-height: 1.5; }
+
+.content-section { background-color: #ffffff; border-radius: 24px; padding: 24px 20px; margin-top: -20px; position: relative; z-index: 10; min-height: 500px; }
+.section-header { flex-direction: row; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid #f3f4f6; }
+.section-title { font-size: 17px; font-weight: bold; color: #1f2937; }
+.section-action { font-size: 13px; color: #ec4899; font-weight: bold; }
+
+.quote-list { flex-direction: column; }
+.quote-item { background-color: #f9fafb; border-radius: 16px; padding: 16px; margin-bottom: 12px; position: relative; }
+.quote-text { font-size: 15px; color: #4b5563; line-height: 1.6; margin-bottom: 12px; }
+.quote-actions { flex-direction: row; justify-content: flex-end; }
+.action-btn { flex-direction: row; align-items: center; background-color: #ffffff; padding: 6px 12px; border-radius: 12px; border: 1px solid #e5e7eb; }
+.action-icon { font-size: 12px; margin-right: 4px; }
+.action-text { font-size: 12px; color: #6b7280; font-weight: bold; }
+</style>

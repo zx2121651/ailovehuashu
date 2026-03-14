@@ -1,0 +1,229 @@
+<template>
+  <view class="container flex-col bg-white h-full relative fade-in">
+    <!-- Header -->
+    <view class="header-bar bg-white px-4 py-3 border-b border-gray-100 flex-row justify-between items-center z-50 sticky top-0 shadow-sm">
+      <view class="back-btn p-2 -ml-2" @click="goBack">
+        <text class="text-xl text-gray-800">‹</text>
+      </view>
+      <text class="text-lg font-bold text-gray-800">避坑指南</text>
+      <view class="w-10"></view>
+    </view>
+
+    <scroll-view class="flex-1 p-5 pb-24" scroll-y>
+      <!-- Title Area -->
+      <view class="article-header mb-5 border-b border-gray-100 pb-4">
+        <text class="text-xl font-extrabold text-gray-800 leading-snug mb-3">{{ articleData.title }}</text>
+        <view class="flex-row items-center justify-between">
+          <view class="flex-row items-center">
+            <view class="avatar-sm bg-pink-100 rounded-full flex-row items-center justify-center mr-2">
+              <text class="text-pink-500 font-bold text-xs">{{ articleData.author.charAt(0) }}</text>
+            </view>
+            <view class="flex-col">
+              <text class="text-xs font-bold text-gray-700">{{ articleData.author }}</text>
+              <text class="text-xs text-gray-400 mt-0_5" style="font-size: 10px;">{{ articleData.date }}</text>
+            </view>
+          </view>
+          <view class="views-badge bg-gray-50 px-2 py-1 rounded-md flex-row items-center">
+            <text class="text-red-400 text-xs mr-1">🔥</text>
+            <text class="text-xs text-gray-400" style="font-size: 11px;">{{ articleData.views }} 浏览</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- Content Area -->
+      <view class="article-content flex-col space-y-4">
+        <template v-for="(block, idx) in articleData.content" :key="idx">
+          <text v-if="block.type === 'p'" class="text-sm text-gray-600 leading-loose">{{ block.text }}</text>
+          <text v-else-if="block.type === 'h3'" class="text-base font-bold text-gray-800 mt-6 mb-2 border-l-4 border-pink-500 pl-2">{{ block.text }}</text>
+          <view v-else-if="block.type === 'tip'" class="tip-box bg-orange-50 p-4 rounded-xl border border-orange-100 flex-row items-start my-4">
+            <text class="text-orange-500 mr-2 mt-1 shrink-0">⚠️</text>
+            <text class="text-sm text-orange-700 leading-relaxed flex-1">{{ block.text }}</text>
+          </view>
+        </template>
+      </view>
+
+      <!-- Fake Comments -->
+      <view class="comments-section mt-10 bg-white p-4 rounded-2xl shadow-sm border border-gray-100 mb-8">
+        <text class="font-bold text-gray-800 mb-4">相关讨论 (1)</text>
+        <view class="comment-item flex-row items-start mb-4">
+          <image src="https://api.dicebear.com/7.x/avataaars/svg?seed=Reader" class="w-8 h-8 rounded-full bg-gray-100 mr-3" />
+          <view class="flex-col flex-1 border-b border-gray-50 pb-3">
+            <text class="text-xs text-gray-500 mb-1">学习者</text>
+            <text class="text-sm text-gray-800">原来如此，之前一直踩雷，感谢作者的分享！</text>
+          </view>
+        </view>
+      </view>
+    </scroll-view>
+
+    <!-- Bottom Interaction Bar -->
+    <view class="bottom-bar absolute bottom-0 w-full bg-white border-t border-gray-100 p-3 px-5 z-40 pb-safe shadow-top flex-row items-center justify-between">
+      <view class="input-box flex-1 bg-gray-50 rounded-full px-4 py-2 border border-transparent focus-within:border-pink-200 focus-within:bg-white transition-colors">
+        <input type="text" placeholder="写下你的想法..." class="w-full text-xs outline-none bg-transparent" />
+      </view>
+      <view class="action-icons flex-row items-center ml-4 space-x-4">
+        <text class="text-xl text-gray-500 cursor-pointer active:text-pink-500" @click="appStore.showToast('已点赞')">👍</text>
+        <text class="text-xl text-gray-500 cursor-pointer active:text-yellow-500" @click="appStore.showToast('已收藏')">⭐</text>
+        <text class="text-xl text-gray-500 cursor-pointer active:text-indigo-500" @click="appStore.showToast('调起分享')">📤</text>
+      </view>
+    </view>
+
+  </view>
+</template>
+
+<script setup lang="uts">
+import { ref, onMounted } from 'vue'
+import { useAppStore } from '../../store/app.uts'
+import { getArticleById } from '../../services/api.uts'
+
+const appStore = useAppStore
+
+const articleData = ref<any>({
+  id: 'a1',
+  title: '加载中...',
+  desc: '',
+  author: '加载中',
+  date: '',
+  views: '0',
+  content: [] as any[]
+})
+
+const fetchArticleData = async (id: string) => {
+  try {
+    const data = await getArticleById(id)
+    if (data) {
+      articleData.value = data
+    }
+  } catch (e) {
+    console.error('获取文章失败', e)
+    articleData.value = null
+  }
+}
+
+const goBack = () => {
+  uni.navigateBack({ delta: 1 })
+}
+
+onMounted(async () => {
+  // Mock id for now. In a real app this comes from `onLoad(options)`
+  const mockArticleId = '1'
+  await fetchArticleData(mockArticleId)
+
+  // 模拟加入浏览足迹
+  if (articleData.value && articleData.value.id) {
+    appStore.addBrowsingFootprint({
+      id: articleData.value.id,
+      type: 'article',
+      title: articleData.value.title,
+      desc: articleData.value.desc
+    })
+  }
+})
+</script>
+
+<style>
+.container { flex: 1; }
+.bg-gray-50 { background-color: #f9fafb; }
+.bg-white { background-color: #ffffff; }
+.bg-transparent { background-color: transparent; }
+
+.header-bar { height: 50px; }
+.border-b { border-bottom-width: 1px; border-style: solid; }
+.border-t { border-top-width: 1px; border-style: solid; }
+.border-gray-100 { border-color: #f3f4f6; }
+.border-gray-50 { border-color: #f9fafb; }
+.border-transparent { border-color: transparent; border-width: 1px; }
+
+.px-4 { padding-left: 16px; padding-right: 16px; }
+.px-5 { padding-left: 20px; padding-right: 20px; }
+.py-3 { padding-top: 12px; padding-bottom: 12px; }
+.py-2 { padding-top: 8px; padding-bottom: 8px; }
+.p-2 { padding: 8px; }
+.p-5 { padding: 20px; }
+.p-4 { padding: 16px; }
+.pb-4 { padding-bottom: 16px; }
+.pb-3 { padding-bottom: 12px; }
+.pb-24 { padding-bottom: 96px; }
+.pb-safe { padding-bottom: env(safe-area-inset-bottom); }
+
+.-ml-2 { margin-left: -8px; }
+.ml-2 { margin-left: 8px; }
+.ml-4 { margin-left: 16px; }
+.mr-1 { margin-right: 4px; }
+.mr-2 { margin-right: 8px; }
+.mr-3 { margin-right: 12px; }
+.mb-3 { margin-bottom: 12px; }
+.mb-4 { margin-bottom: 16px; }
+.mb-5 { margin-bottom: 20px; }
+.mb-2 { margin-bottom: 8px; }
+.mb-1 { margin-bottom: 4px; }
+.mb-8 { margin-bottom: 32px; }
+.mt-1 { margin-top: 4px; }
+.mt-6 { margin-top: 24px; }
+.mt-10 { margin-top: 40px; }
+.mt-0_5 { margin-top: 2px; }
+
+.w-10 { width: 40px; }
+.w-8 { width: 32px; }
+.h-8 { height: 32px; }
+.w-full { width: 100%; }
+
+.text-xs { font-size: 12px; }
+.text-sm { font-size: 14px; }
+.text-base { font-size: 16px; }
+.text-lg { font-size: 18px; }
+.text-xl { font-size: 20px; }
+
+.font-bold { font-weight: bold; }
+.font-medium { font-weight: 500; }
+.font-extrabold { font-weight: 800; }
+
+.text-gray-800 { color: #1f2937; }
+.text-gray-700 { color: #374151; }
+.text-gray-600 { color: #4b5563; }
+.text-gray-500 { color: #6b7280; }
+.text-gray-400 { color: #9ca3af; }
+.text-pink-500 { color: #ec4899; }
+.text-red-400 { color: #f87171; }
+.text-orange-700 { color: #c2410c; }
+.text-orange-500 { color: #f97316; }
+
+.bg-pink-100 { background-color: #fce7f3; }
+.bg-orange-50 { background-color: #fff7ed; }
+
+.border-pink-500 { border-color: #ec4899; }
+.border-l-4 { border-left-width: 4px; border-left-style: solid; }
+.pl-2 { padding-left: 8px; }
+.border-orange-100 { border-color: #ffedd5; border-width: 1px; }
+
+.rounded-full { border-radius: 9999px; }
+.rounded-xl { border-radius: 12px; }
+.rounded-2xl { border-radius: 16px; }
+.rounded-md { border-radius: 6px; }
+
+.shadow-sm { box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); }
+.shadow-top { box-shadow: 0 -10px 20px -10px rgba(0,0,0,0.05); }
+
+.avatar-sm { width: 32px; height: 32px; }
+
+.leading-snug { line-height: 1.375; }
+.leading-loose { line-height: 2; }
+.leading-relaxed { line-height: 1.625; }
+
+.absolute { position: absolute; }
+.relative { position: relative; }
+.sticky { position: sticky; }
+.bottom-0 { bottom: 0; }
+.top-0 { top: 0; }
+.z-40 { z-index: 40; }
+.z-50 { z-index: 50; }
+
+.flex-1 { flex: 1; }
+.flex-row { flex-direction: row; }
+.flex-col { flex-direction: column; }
+.items-center { align-items: center; }
+.items-start { align-items: flex-start; }
+.justify-center { justify-content: center; }
+.justify-between { justify-content: space-between; }
+.shrink-0 { flex-shrink: 0; }
+.outline-none { outline: none; }
+</style>

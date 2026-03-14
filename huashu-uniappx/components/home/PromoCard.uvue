@@ -1,0 +1,43 @@
+<template>
+  <view class="promo-card animate-fade-in-up delay-200" @click="$emit('open-vip')">
+    <view class="promo-inner bg-gradient-red">
+      <view class="promo-blur-circle"></view>
+      <view class="promo-left">
+        <view class="promo-title-row">
+          <text class="promo-title">新人限时特惠</text>
+          <view class="promo-timer-badge">
+            <text class="promo-timer-icon animate-pulse">⏳</text>
+            <text class="promo-timer-text">距结束 02:14:59</text>
+          </view>
+        </view>
+        <text class="promo-desc">终身 Pro 会员仅需 ¥98，立省 ¥201</text>
+      </view>
+      <view class="promo-btn">
+        <text class="promo-btn-text">立即抢购</text>
+      </view>
+    </view>
+  </view>
+</template>
+
+<script setup lang="uts">
+const emit = defineEmits<{
+  (e: 'open-vip'): void
+}>()
+</script>
+
+<style>
+/* Promo Card */
+.promo-card { padding: 0 16px; margin-top: 16px; }
+.promo-inner { border-radius: 20px; padding: 16px; flex-direction: row; justify-content: space-between; align-items: center; overflow: hidden; position: relative; }
+.bg-gradient-red { background-image: linear-gradient(to right, #ef4444, #e11d48); }
+.promo-blur-circle { position: absolute; left: -24px; top: -24px; width: 80px; height: 80px; background-color: rgba(255,255,255,0.1); border-radius: 40px; }
+.promo-left { flex: 1; }
+.promo-title-row { flex-direction: row; align-items: center; margin-bottom: 4px; }
+.promo-title { font-size: 15px; font-weight: bold; color: #ffffff; letter-spacing: 1px; }
+.promo-timer-badge { flex-direction: row; align-items: center; background-color: rgba(255,255,255,0.2); padding: 2px 6px; border-radius: 4px; margin-left: 8px; }
+.promo-timer-icon { font-size: 10px; margin-right: 4px; }
+.promo-timer-text { font-size: 10px; color: #ffffff; }
+.promo-desc { font-size: 11px; color: rgba(255,255,255,0.9); font-weight: 500; }
+.promo-btn { background-color: #ffffff; padding: 8px 16px; border-radius: 20px; margin-left: 8px; flex-shrink: 0; }
+.promo-btn-text { color: #ef4444; font-weight: 800; font-size: 12px; }
+</style>

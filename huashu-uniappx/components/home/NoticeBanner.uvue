@@ -1,0 +1,33 @@
+<template>
+  <view class="notice-banner animate-fade-in-up" style="animation-delay: 50ms;">
+    <view class="notice-inner">
+      <text class="notice-icon">📢</text>
+      <view class="notice-scroll-wrap">
+        <view class="notice-scroll-content animate-marquee">
+          <text class="notice-item" v-for="(msg, idx) in defaultMessages" :key="idx">{{ msg }}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+</template>
+
+<script setup lang="uts">
+const defaultMessages = [
+  '🎉 恭喜 杭州的李同学 通过话术成功邀约女神！',
+  '❤️ 恭喜 北京的张先生 挽回前任成功！',
+  '🎁 恭喜 上海的王女士 领取了专属恋爱白皮书！',
+  '🎉 恭喜 杭州的李同学 通过话术成功邀约女神！',
+  '❤️ 恭喜 北京的张先生 挽回前任成功！',
+  '🎁 恭喜 上海的王女士 领取了专属恋爱白皮书！'
+]
+</script>
+
+<style>
+/* Notice Banner */
+.notice-banner { padding: 0 20px; margin-top: 16px; }
+.notice-inner { background-color: #fff7ed; border-width: 1px; border-style: solid; border-color: #ffedd5; border-radius: 16px; padding: 10px 12px; flex-direction: row; align-items: center; overflow: hidden; }
+.notice-icon { font-size: 14px; margin-right: 8px; flex-shrink: 0; }
+.notice-scroll-wrap { flex: 1; overflow: hidden; height: 16px; }
+.notice-scroll-content { flex-direction: row; align-items: center; height: 16px; }
+.notice-item { font-size: 11px; color: #ea580c; margin-right: 32px; flex-shrink: 0; }
+</style>

@@ -1,0 +1,173 @@
+<template>
+  <view class="container flex-col bg-slate-50 h-full relative fade-in">
+    <!-- Header -->
+    <view class="header-bar bg-white border-b border-slate-100 flex-col z-50 sticky top-0 shadow-sm">
+      <view class="flex-row justify-between items-center px-4 py-3">
+        <view class="back-btn p-2 -ml-2" @click="goBack">
+          <text class="text-xl text-slate-600">‹</text>
+        </view>
+        <text class="text-lg font-bold text-slate-800">我的团队 ({{ counts.total }})</text>
+        <view class="w-10"></view>
+      </view>
+
+      <!-- Tabs -->
+      <view class="tabs-row flex-row px-4 pt-2">
+        <view
+          v-for="(tab, idx) in tabs"
+          :key="tab.key"
+          class="tab-item flex-1 flex-row items-center justify-center pb-3 border-b-2 transition-colors"
+          :class="[activeTab === tab.key ? 'border-indigo-600' : 'border-transparent']"
+          @click="activeTab = tab.key"
+        >
+          <text class="text-sm font-medium" :class="[activeTab === tab.key ? 'text-indigo-600' : 'text-slate-500']">{{ tab.label }}</text>
+          <text class="text-xs ml-1 opacity-80" :class="[activeTab === tab.key ? 'text-indigo-600' : 'text-slate-500']">({{ counts[tab.key] }})</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- Content List -->
+    <scroll-view class="flex-1 mt-2 bg-white border-t border-slate-100" scroll-y>
+      <view v-if="loading" class="py-10 flex-row justify-center">
+        <text class="text-slate-400 text-sm">加载中...</text>
+      </view>
+      <view v-else-if="currentList.length === 0" class="py-20 flex-col items-center justify-center">
+        <text class="text-5xl text-slate-200 mb-4">👥</text>
+        <text class="text-slate-400 text-sm">暂无下级成员</text>
+      </view>
+      <view v-else class="list-wrap flex-col px-4">
+        <view v-for="(member, index) in currentList" :key="member.id" class="list-item py-4 flex-row items-center justify-between" :class="[index !== currentList.length - 1 ? 'border-b border-slate-50' : '']">
+          <view class="flex-row items-center">
+            <image :src="member.avatar" class="w-12 h-12 rounded-full border border-slate-100 mr-3" mode="aspectFill" />
+            <view class="flex-col">
+              <text class="font-semibold text-slate-800 text-sm">{{ member.name }}</text>
+              <text class="text-xs text-slate-500 mt-0.5">注册时间: {{ member.createdAt }}</text>
+            </view>
+          </view>
+          <view class="flex-col items-end">
+            <text class="text-xs text-slate-500 mb-0.5">累计贡献</text>
+            <text class="font-bold text-emerald-600 text-sm">¥ {{ (member.totalEarned * 0.1).toFixed(2) }}</text>
+          </view>
+        </view>
+      </view>
+    </scroll-view>
+  </view>
+</template>
+
+<script setup lang="uts">
+import { ref, computed, onMounted } from 'vue'
+import { getMyTeam } from '../../services/api.uts'
+
+const activeTab = ref('level1')
+const loading = ref(true)
+
+const tabs = [
+  { key: 'level1', label: '直推' },
+  { key: 'level2', label: '间推' },
+  { key: 'level3', label: '三级' }
+]
+
+const counts = ref<Record<string, number>>({
+  level1: 0,
+  level2: 0,
+  level3: 0,
+  total: 0
+})
+
+type Member = {
+  id: string
+  name: string
+  avatar: string
+  createdAt: string
+  totalEarned: number
+}
+
+const teamData = ref<Record<string, Member[]>>({
+  level1: [],
+  level2: [],
+  level3: []
+})
+
+const currentList = computed(() => {
+  return teamData.value[activeTab.value] || []
+})
+
+onMounted(async () => {
+  loading.value = true
+  try {
+    const data = await getMyTeam()
+    if (data) {
+      if (data.counts) counts.value = data.counts
+      if (data.level1) teamData.value['level1'] = data.level1 as Member[]
+      if (data.level2) teamData.value['level2'] = data.level2 as Member[]
+      if (data.level3) teamData.value['level3'] = data.level3 as Member[]
+    }
+  } catch (e) {
+    console.error('获取团队数据失败', e)
+    counts.value = { level1: 0, level2: 0, level3: 0, total: 0 }
+    teamData.value = { level1: [], level2: [], level3: [] }
+  } finally {
+    loading.value = false
+  }
+})
+
+const goBack = () => {
+  uni.navigateBack({ delta: 1 })
+}
+</script>
+
+<style>
+.container { flex: 1; }
+.bg-slate-50 { background-color: #f8fafc; }
+.bg-white { background-color: #ffffff; }
+
+.border-b { border-bottom-width: 1px; border-style: solid; }
+.border-b-2 { border-bottom-width: 2px; border-style: solid; }
+.border-t { border-top-width: 1px; border-style: solid; }
+.border-slate-100 { border-color: #f1f5f9; }
+.border-slate-50 { border-color: #f8fafc; }
+.border-transparent { border-color: transparent; }
+.border-indigo-600 { border-color: #4f46e5; }
+
+.px-4 { padding-left: 16px; padding-right: 16px; }
+.py-3 { padding-top: 12px; padding-bottom: 12px; }
+.p-2 { padding: 8px; }
+.py-10 { padding-top: 40px; padding-bottom: 40px; }
+.py-20 { padding-top: 80px; padding-bottom: 80px; }
+.py-4 { padding-top: 16px; padding-bottom: 16px; }
+.pt-2 { padding-top: 8px; }
+.pb-3 { padding-bottom: 12px; }
+.-ml-2 { margin-left: -8px; }
+.w-10 { width: 40px; }
+.ml-1 { margin-left: 4px; }
+.mr-3 { margin-right: 12px; }
+.mt-2 { margin-top: 8px; }
+.mt-0_5 { margin-top: 2px; }
+.mb-0_5 { margin-bottom: 2px; }
+.mb-4 { margin-bottom: 16px; }
+
+.text-lg { font-size: 18px; }
+.text-xl { font-size: 20px; }
+.text-5xl { font-size: 48px; }
+.text-sm { font-size: 14px; }
+.text-xs { font-size: 12px; }
+
+.font-bold { font-weight: bold; }
+.font-medium { font-weight: 500; }
+.font-semibold { font-weight: 600; }
+
+.text-slate-800 { color: #1e293b; }
+.text-slate-600 { color: #475569; }
+.text-slate-500 { color: #64748b; }
+.text-slate-400 { color: #94a3b8; }
+.text-slate-200 { color: #e2e8f0; }
+.text-indigo-600 { color: #4f46e5; }
+.text-emerald-600 { color: #059669; }
+
+.opacity-80 { opacity: 0.8; }
+.shadow-sm { box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); }
+
+.w-12 { width: 48px; }
+.h-12 { height: 48px; }
+.rounded-full { border-radius: 9999px; }
+
+</style>

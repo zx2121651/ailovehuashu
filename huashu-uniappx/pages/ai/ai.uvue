@@ -1,0 +1,353 @@
+<template>
+  <view class="container flex-col bg-gray-50 h-full relative fade-in">
+    <!-- Header -->
+    <view class="header-bar bg-white px-5 py-3 border-b border-gray-100 flex-row justify-between items-center z-20 sticky top-0 shadow-sm">
+      <view class="back-btn p-2 -ml-2" @click="goBack">
+        <text class="text-xl text-gray-800">‹</text>
+      </view>
+      <view class="flex-col items-center">
+        <view class="flex-row items-center justify-center">
+          <text class="text-base font-bold text-gray-800">AI 恋爱导师</text>
+          <view class="dot bg-green-500 rounded-full ml-1_5 animate-pulse"></view>
+        </view>
+        <text class="text-xs text-gray-400 mt-0_5 font-medium">{{ isAiTyping ? '导师正在思考中...' : '随时在线，秒出回复方案' }}</text>
+      </view>
+      <view class="more-btn p-2 -mr-2" @click="appStore.showToast('更多功能开发中')">
+        <text class="text-xl text-gray-800">···</text>
+      </view>
+    </view>
+
+    <!-- Chat History -->
+    <scroll-view class="flex-1 px-4 py-4 z-0 bg-gray-50" scroll-y :scroll-into-view="scrollTargetId" scroll-with-animation>
+      <view class="flex-row justify-center mb-4">
+        <text class="time-badge bg-gray-200 text-gray-500 px-2_5 py-1 rounded-md text-xs">今天 10:24</text>
+      </view>
+
+      <view v-for="msg in chatMessages" :key="msg.id" :id="msg.id" :class="['msg-row flex-row mb-5 animate-fade-in-up', msg.role === 'user' ? 'justify-end' : 'justify-start']">
+
+        <!-- AI Avatar -->
+        <view v-if="msg.role === 'ai'" class="avatar-wrap w-9 h-9 rounded-full bg-gradient-pink flex-row items-center justify-center shadow-pink-200 mr-3 shrink-0">
+          <text class="text-white text-base">✨</text>
+        </view>
+
+        <!-- Message Content -->
+        <view :class="['msg-content-wrap flex-col', msg.role === 'user' ? 'items-end' : 'items-start', 'max-w-80']">
+
+          <!-- Text Bubble -->
+          <view v-if="msg.type === 'text'" :class="['bubble p-3_5 rounded-2xl shadow-sm', msg.role === 'user' ? 'bg-gradient-pink text-white rounded-tr-none shadow-pink-200' : 'bg-white border border-gray-100 text-gray-800 rounded-tl-none']">
+            <text :class="['text-sm leading-relaxed', msg.role === 'user' ? 'text-white' : 'text-gray-800']">{{ msg.content }}</text>
+          </view>
+
+          <!-- Suggestions Bubble -->
+          <view v-if="msg.type === 'suggestions'" class="suggestions-bubble bg-white p-4 rounded-2xl rounded-tl-none shadow-sm border border-gray-100 flex-col w-full">
+            <text class="font-bold text-gray-900 text-sm border-b border-gray-50 pb-2 mb-3">{{ msg.content }}</text>
+
+            <view v-for="(sug, idx) in msg.suggestions" :key="idx" :class="['sug-item p-3_5 rounded-xl border relative mb-3', getSugStyle(sug.color).bg, getSugStyle(sug.color).border]">
+              <view :class="['sug-badge absolute -top-2_5 left-3 px-2_5 py-0_5 rounded-full shadow-sm flex-row items-center', getSugStyle(sug.color).badgeBg]">
+                <text class="text-white text-xs font-bold">{{ sug.label }}</text>
+              </view>
+              <text class="mt-2 text-sm text-gray-800 leading-relaxed">{{ sug.text }}</text>
+
+              <view class="flex-row justify-end mt-2">
+                <view :class="['copy-btn px-2 py-1 rounded-md flex-row items-center', getSugStyle(sug.color).btnBg]" @click="copySug(msg.id + idx, sug.text)">
+                  <text :class="['text-xs font-bold mr-1', getSugStyle(sug.color).text]">{{ copiedId === msg.id + idx ? '✔' : '📋' }}</text>
+                  <text :class="['text-xs font-bold', getSugStyle(sug.color).text]">复制</text>
+                </view>
+              </view>
+            </view>
+
+            <view class="flex-row items-center mt-1 pt-2 border-t border-gray-50">
+              <view class="flex-row items-center mr-4" @click="appStore.showToast('已生成新方案')">
+                <text class="text-gray-400 text-xs mr-1">🔄</text>
+                <text class="text-gray-400 text-xs">换一换</text>
+              </view>
+              <text class="text-gray-300 mr-4">|</text>
+              <text class="text-gray-400 text-sm mr-3" @click="appStore.showToast('感谢反馈！')">👍</text>
+              <text class="text-gray-400 text-sm" @click="appStore.showToast('我们会继续努力优化')">👎</text>
+            </view>
+          </view>
+
+        </view>
+
+        <!-- User Avatar -->
+        <view v-if="msg.role === 'user'" class="avatar-wrap w-9 h-9 rounded-full bg-gray-300 flex-row items-center justify-center shadow-sm ml-3 shrink-0 overflow-hidden">
+          <image src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=100&auto=format&fit=crop" class="w-full h-full" mode="aspectFill"></image>
+        </view>
+
+      </view>
+
+      <!-- Typing Indicator -->
+      <view v-if="isAiTyping" id="typing-indicator" class="msg-row flex-row justify-start mb-5 animate-fade-in-up">
+        <view class="avatar-wrap w-9 h-9 rounded-full bg-gradient-pink flex-row items-center justify-center shadow-pink-200 mr-3 shrink-0">
+          <text class="text-white text-base">✨</text>
+        </view>
+        <view class="bubble bg-white p-3_5 rounded-2xl rounded-tl-none shadow-sm border border-gray-100 flex-row items-center">
+          <text class="text-pink-500 text-sm mr-1_5 animate-spin">🌀</text>
+          <text class="text-gray-400 text-xs">AI 正在思考中...</text>
+        </view>
+      </view>
+
+      <view class="pb-32"></view>
+    </scroll-view>
+
+    <!-- Bottom Input Area -->
+    <view class="input-area absolute bottom-0 w-full bg-gray-50 z-30 pb-safe">
+      <!-- Quick Chips -->
+      <scroll-view class="chips-row px-3 pb-2 pt-1" scroll-x :show-scrollbar="false">
+        <view class="flex-row pb-1">
+          <view v-for="(chip, idx) in chips" :key="idx" class="chip-btn bg-white px-3 py-1_5 rounded-full shadow-sm border border-gray-100 mr-2 flex-row items-center" @click="setInput(chip)">
+            <text class="text-gray-600 text-xs whitespace-nowrap">{{ chip }}</text>
+          </view>
+        </view>
+      </scroll-view>
+
+      <!-- Input Bar -->
+      <view class="input-bar border-t border-gray-200 p-3 px-4 flex-row items-center bg-gray-50">
+        <text class="text-gray-600 text-2xl mr-3" @click="appStore.showToast('暂未获取麦克风权限')">🎙</text>
+        <view class="input-box flex-1 bg-white border border-gray-200 rounded-full flex-row items-center px-3 py-1_5 shadow-sm mr-3">
+          <input v-model="chatInput" type="text" placeholder="粘贴对方说的话..." class="flex-1 bg-transparent text-sm py-1 px-1 text-gray-800" confirm-type="send" @confirm="handleSend" />
+          <text class="text-gray-400 text-xl ml-1" @click="appStore.showToast('表情包加载中...')">😊</text>
+        </view>
+
+        <view v-if="chatInput.trim()" class="send-btn bg-pink-500 rounded-full w-8 h-8 flex-row items-center justify-center shadow-md shadow-pink-200" @click="handleSend">
+          <text class="text-white text-sm font-bold">➤</text>
+        </view>
+        <text v-else class="text-gray-600 text-3xl" @click="appStore.showToast('更多功能开发中...')">⊕</text>
+      </view>
+    </view>
+  </view>
+</template>
+
+<script setup lang="uts">
+import { ref, reactive, nextTick } from 'vue'
+import { useAppStore } from '../../store/app.uts'
+import { chatWithAI } from '../../services/api.uts'
+
+const appStore = useAppStore
+
+const chatInput = ref('')
+const isAiTyping = ref(false)
+const copiedId = ref('')
+const scrollTargetId = ref('')
+
+const chips = ['帮我幽默回复', '高情商拒绝', '怎么自然邀约', '帮我写个晚安']
+
+type Suggestion = {
+  label: string
+  text: string
+  color: string
+}
+
+type ChatMessage = {
+  id: string
+  role: string
+  type: string
+  content: string
+  time: string
+  suggestions?: Suggestion[]
+}
+
+const chatMessages = reactive<ChatMessage[]>([
+  { id: 'msg1', role: 'ai', type: 'text', content: '嗨！我是你的专属恋爱导师。不知道怎么回消息？把TA的话发给我，我帮你生成高情商回复方案！🥰', time: '10:24' },
+  { id: 'msg2', role: 'user', type: 'text', content: '她刚对我说：“我觉得我们还是做朋友比较好” 怎么回？？在线等急！', time: '10:25' },
+  { id: 'msg3', role: 'ai', type: 'suggestions', content: '为你生成以下高情商方案：', suggestions: [
+    { label: '方案A：以退为进 (推荐)', text: '好啊，那作为朋友，周末请我喝杯奶茶不过分吧？', color: 'blue' },
+    { label: '方案B：幽默化解', text: '其实我也这么想，做恋人容易吵架，做朋友我就可以理直气壮地蹭你饭了。', color: 'purple' }
+  ], time: '10:25' }
+])
+
+const goBack = () => {
+  uni.navigateBack({ delta: 1 })
+}
+
+const setInput = (text: string) => {
+  chatInput.value = text
+}
+
+const copySug = (id: string, text: string) => {
+  uni.setClipboardData({
+    data: text,
+    success: () => {
+      copiedId.value = id
+      appStore.showToast('已复制')
+      setTimeout(() => {
+        copiedId.value = ''
+      }, 2000)
+    }
+  })
+}
+
+const scrollToBottom = () => {
+  nextTick(() => {
+    scrollTargetId.value = isAiTyping.value ? 'typing-indicator' : chatMessages[chatMessages.length - 1].id
+  })
+}
+
+const handleSend = async () => {
+  if (chatInput.value.trim() === '') return
+
+  const inputStr = chatInput.value
+  const newUserMsg: ChatMessage = {
+    id: 'user_' + Date.now(),
+    role: 'user',
+    type: 'text',
+    content: inputStr,
+    time: '刚刚'
+  }
+
+  chatMessages.push(newUserMsg)
+  chatInput.value = ''
+  isAiTyping.value = true
+  scrollToBottom()
+
+  try {
+    const aiResponse = await chatWithAI(inputStr)
+
+    // API returns text or standard data. Adapt format:
+    let newAiMsg: ChatMessage = {
+        id: 'ai_' + Date.now(),
+        role: 'ai',
+        type: 'text', // Assuming text by default from true AI
+        content: aiResponse || '...',
+        time: '刚刚'
+    }
+    chatMessages.push(newAiMsg)
+  } catch (e) {
+    console.error('AI Request failed', e)
+    const errorMsg: ChatMessage = {
+      id: 'ai_' + Date.now(),
+      role: 'ai',
+      type: 'text',
+      content: '抱歉，AI服务暂时不可用，请稍后重试。',
+      time: '刚刚'
+    }
+    chatMessages.push(errorMsg)
+  } finally {
+    isAiTyping.value = false
+    scrollToBottom()
+  }
+}
+
+// 颜色映射逻辑
+const getSugStyle = (color: string) => {
+  const map: Record<string, Record<string, string>> = {
+    blue: { bg: 'bg-blue-50', border: 'border-blue-100', badgeBg: 'bg-blue-500', text: 'text-blue-600', btnBg: 'bg-blue-100' },
+    purple: { bg: 'bg-purple-50', border: 'border-purple-100', badgeBg: 'bg-purple-500', text: 'text-purple-600', btnBg: 'bg-purple-100' },
+    pink: { bg: 'bg-pink-50', border: 'border-pink-100', badgeBg: 'bg-pink-500', text: 'text-pink-600', btnBg: 'bg-pink-100' }
+  }
+  return map[color] || map['blue']
+}
+
+</script>
+
+<style>
+.container { flex: 1; }
+.bg-gray-50 { background-color: #f9fafb; }
+.bg-gray-200 { background-color: #e5e7eb; }
+.bg-gray-300 { background-color: #d1d5db; }
+.bg-white { background-color: #ffffff; }
+
+.header-bar { height: 50px; }
+.border-b { border-bottom-width: 1px; border-style: solid; }
+.border-t { border-top-width: 1px; border-style: solid; }
+.border-gray-100 { border-color: #f3f4f6; }
+.border-gray-50 { border-color: #f9fafb; }
+.border-gray-200 { border-color: #e5e7eb; }
+
+.px-5 { padding-left: 20px; padding-right: 20px; }
+.px-4 { padding-left: 16px; padding-right: 16px; }
+.px-3 { padding-left: 12px; padding-right: 12px; }
+.py-4 { padding-top: 16px; padding-bottom: 16px; }
+.py-3 { padding-top: 12px; padding-bottom: 12px; }
+.p-2 { padding: 8px; }
+.py-1 { padding-top: 4px; padding-bottom: 4px; }
+.py-1_5 { padding-top: 6px; padding-bottom: 6px; }
+.px-2_5 { padding-left: 10px; padding-right: 10px; }
+.py-0_5 { padding-top: 2px; padding-bottom: 2px; }
+.p-3_5 { padding: 14px; }
+.p-4 { padding: 16px; }
+
+.ml-1_5 { margin-left: 6px; }
+.ml-1 { margin-left: 4px; }
+.ml-3 { margin-left: 12px; }
+.mr-1 { margin-right: 4px; }
+.mr-2 { margin-right: 8px; }
+.mr-3 { margin-right: 12px; }
+.mr-4 { margin-right: 16px; }
+.mt-0_5 { margin-top: 2px; }
+.mt-1 { margin-top: 4px; }
+.mt-2 { margin-top: 8px; }
+.mb-3 { margin-bottom: 12px; }
+.mb-4 { margin-bottom: 16px; }
+.mb-5 { margin-bottom: 20px; }
+.-ml-2 { margin-left: -8px; }
+.-mr-2 { margin-right: -8px; }
+.-top-2_5 { top: -10px; }
+.left-3 { left: 12px; }
+
+.dot { width: 8px; height: 8px; }
+.bg-green-500 { background-color: #22c55e; }
+
+.text-gray-900 { color: #111827; }
+.text-gray-800 { color: #1f2937; }
+.text-gray-600 { color: #4b5563; }
+.text-gray-500 { color: #6b7280; }
+.text-gray-400 { color: #9ca3af; }
+.text-gray-300 { color: #d1d5db; }
+.text-white { color: #ffffff; }
+.text-pink-500 { color: #ec4899; }
+.text-green-500 { color: #22c55e; }
+
+.text-xl { font-size: 20px; }
+.text-2xl { font-size: 24px; }
+.text-3xl { font-size: 30px; }
+.text-base { font-size: 16px; }
+.text-sm { font-size: 14px; }
+.text-xs { font-size: 12px; }
+.font-bold { font-weight: bold; }
+
+.bg-gradient-pink { background-image: linear-gradient(to right, #ec4899, #fb7185); }
+.bg-pink-500 { background-color: #ec4899; }
+
+.shadow-sm { box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); }
+.shadow-md { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+.shadow-pink-200 { box-shadow: 0 4px 6px -1px rgba(24bc, 72, 153, 0.2); }
+
+.w-9 { width: 36px; }
+.h-9 { height: 36px; }
+.w-8 { width: 32px; }
+.h-8 { height: 32px; }
+
+.rounded-full { border-radius: 9999px; }
+.rounded-xl { border-radius: 12px; }
+.rounded-2xl { border-radius: 16px; }
+.rounded-md { border-radius: 6px; }
+.rounded-tr-none { border-top-right-radius: 0; }
+.rounded-tl-none { border-top-left-radius: 0; }
+
+.max-w-80 { max-width: 80%; }
+.pb-32 { padding-bottom: 128px; }
+.pb-safe { padding-bottom: env(safe-area-inset-bottom); }
+
+.chips-row { width: 100%; white-space: nowrap; }
+.input-area { bottom: 0; }
+.bg-transparent { background-color: transparent; }
+
+/* Colors Map */
+.bg-blue-50 { background-color: #eff6ff; }
+.bg-blue-100 { background-color: #dbeafe; }
+.bg-blue-500 { background-color: #3b82f6; }
+.border-blue-100 { border-color: #dbeafe; border-width: 1px; border-style: solid; }
+.text-blue-600 { color: #2563eb; }
+
+.bg-purple-50 { background-color: #faf5ff; }
+.bg-purple-100 { background-color: #f3e8ff; }
+.bg-purple-500 { background-color: #a855f7; }
+.border-purple-100 { border-color: #f3e8ff; border-width: 1px; border-style: solid; }
+.text-purple-600 { color: #9333ea; }
+
+.bg-pink-50 { background-color: #fdf2f8; }
+.bg-pink-100 { background-color: #fce7f3; }
+.border-pink-100 { border-color: #fce7f3; border-width: 1px; border-style: solid; }
+.text-pink-600 { color: #db2777; }
+</style>

@@ -1,0 +1,283 @@
+import { useAppStore } from '../store/app.uts'
+
+// 开发环境使用 localhost，生产环境使用域名
+const DEV_BASE_URL = 'http://localhost:3000/api/v1'
+const PROD_BASE_URL = 'https://your-domain.com/api/v1'
+
+const BASE_URL = DEV_BASE_URL // 指向真实的 huashu-backend
+
+export interface RequestOptions {
+    url: string
+    method?: 'GET' | 'POST' | 'PUT' | 'DELETE'
+    data?: any
+}
+
+export function request<T>(options: RequestOptions): Promise<T> {
+    return new Promise((resolve, reject) => {
+        let header: any = {
+            'Content-Type': 'application/json'
+        }
+
+        // 自动携带 token (替代原 axios 拦截器)
+        if (useAppStore.token) {
+            header['Authorization'] = `Bearer ${useAppStore.token}`
+        }
+
+        uni.request({
+            url: BASE_URL + options.url,
+            method: options.method || 'GET',
+            data: options.data,
+            header: header,
+            success: (res: any) => {
+                // Node 后端统一返回 { code, message, data } 格式
+                const resData = res.data as any
+                if (res.statusCode === 200) {
+                   resolve(resData as T)
+                } else if (res.statusCode === 401 || res.statusCode === 403) {
+                   useAppStore.logout()
+                   reject(new Error('未授权或登录已过期'))
+                } else {
+                   reject(resData)
+                }
+            },
+            fail: (err) => {
+                reject(err)
+            }
+        })
+    })
+}
+
+// Auth API
+export async function wxLogin(code: string): Promise<any> {
+    const res = await request<any>({
+        url: '/auth/wx-login',
+        method: 'POST',
+        data: { code }
+    })
+    return res.data
+}
+
+export async function acceptUrgentAnswer(postId: number, commentId: number): Promise<any> {
+    const res = await request<any>({
+        url: `/posts/${postId}/accept`,
+        method: 'POST',
+        data: { commentId }
+    })
+    return res
+}
+
+// 模拟登录（供本地开发测试）
+export async function mockLogin(): Promise<any> {
+    // 假设后端存在一个测试用的登录口，或者直接返回 mock
+    return new Promise((resolve) => {
+        setTimeout(() => {
+            resolve({ token: 'test_token_123', userId: 'user_1' })
+        }, 500)
+    })
+}
+
+// Scripts API
+export async function getCategories(): Promise<any[]> {
+    const res = await request<any>({ url: '/categories' })
+    return res.data || []
+}
+
+export async function getHotSearches(): Promise<string[]> {
+    const res = await request<any>({ url: '/scripts/hot-searches' })
+    return res.data || []
+}
+
+export async function getScripts(params: Record<string, any> = {}): Promise<any> {
+    // 构建 query string
+    const keys = Object.keys(params)
+    const qs = keys.map(k => `${k}=${encodeURIComponent(params[k] as string)}`).join('&')
+    const url = qs ? `/scripts?${qs}` : '/scripts'
+
+    const res = await request<any>({ url })
+    return res.data || { list: [], total: 0 }
+}
+
+// 获取话术库排序标签
+export async function getScriptSortTabs(): Promise<any[]> {
+    const res = await request<any>({ url: '/scripts/sort-tabs' })
+    return res.data || []
+}
+
+// 获取指定分类的标签
+export async function getCategoryTags(categoryId: number): Promise<any[]> {
+    const res = await request<any>({ url: `/categories/${categoryId}/tags` })
+    return res.data || []
+}
+
+export async function getScriptById(id: string): Promise<any> {
+    const res = await request<any>({ url: `/scripts/${id}` })
+    return res.data
+}
+
+// Articles API
+export async function getArticles(): Promise<any[]> {
+    const res = await request<any>({ url: '/articles' })
+    return res.data || []
+}
+
+export async function getArticleById(id: string): Promise<any> {
+    const res = await request<any>({ url: `/articles/${id}` })
+    return res.data
+}
+
+// Courses API
+export async function getFeaturedCourse(): Promise<any> {
+    const res = await request<any>({ url: '/courses/featured' })
+    return res.data
+}
+
+export async function getRecommendedCourses(): Promise<any[]> {
+    const res = await request<any>({ url: '/courses/recommended' })
+    return res.data || []
+}
+
+// User API
+export async function getUserProfile(): Promise<any> {
+    const res = await request<any>({ url: '/user/profile' })
+    return res.data
+}
+
+// AI API
+export async function chatWithAI(prompt: string): Promise<any> {
+    const res = await request<any>({
+        url: '/ai/chat',
+        method: 'POST',
+        data: { prompt }
+    })
+    return res.data
+}
+
+// Community API
+export async function getPostCategories(): Promise<any[]> {
+    const res = await request<any>({ url: '/posts/categories' })
+    return res.data || []
+}
+
+export async function getPostSortTabs(): Promise<any[]> {
+    const res = await request<any>({ url: '/posts/sort-tabs' })
+    return res.data || []
+}
+
+export async function getPosts(params: Record<string, any> = {}): Promise<any> {
+    const keys = Object.keys(params)
+    const qs = keys.map(k => `${k}=${encodeURIComponent(params[k] as string)}`).join('&')
+    const url = qs ? `/posts?${qs}` : '/posts'
+
+    const res = await request<any>({ url })
+    return res.data || { list: [], total: 0 }
+}
+
+export async function createPost(postData: Record<string, any>): Promise<any> {
+    const res = await request<any>({
+        url: '/posts',
+        method: 'POST',
+        data: postData
+    })
+    return res.data
+}
+
+export async function toggleLikePost(postId: string): Promise<any> {
+    const res = await request<any>({
+        url: `/posts/${postId}/like`,
+        method: 'POST'
+    })
+    return res.data
+}
+
+// Distributor / Commission API
+export async function getDistributorInfo(): Promise<any> {
+    const res = await request<any>({ url: '/commission/distributor-info' })
+    return res.data
+}
+
+export async function getMyTeam(): Promise<any> {
+    const res = await request<any>({ url: '/commission/my-team' })
+    return res.data
+}
+
+export async function applyWithdrawal(amount: number, accountInfo: Record<string, any>): Promise<any> {
+    const res = await request<any>({
+        url: '/commission/withdraw',
+        method: 'POST',
+        data: { amount, accountInfo }
+    })
+    return res
+}
+
+// Contributions API
+export async function submitContribution(contribution: Record<string, any>): Promise<any> {
+    const res = await request<any>({
+        url: '/contributions',
+        method: 'POST',
+        data: contribution
+    })
+    return res
+}
+
+export async function getMyContributions(): Promise<any[]> {
+    const res = await request<any>({ url: '/contributions/my' })
+    return res.data || []
+}
+
+// Favorites API
+export async function addFavorite(targetType: string, targetId: string): Promise<any> {
+    const res = await request<any>({
+        url: '/favorites',
+        method: 'POST',
+        data: { targetType, targetId }
+    })
+    return res
+}
+
+export async function removeFavorite(targetType: string, targetId: string): Promise<any> {
+    const res = await request<any>({
+        url: '/favorites',
+        method: 'DELETE',
+        data: { targetType, targetId }
+    })
+    return res
+}
+
+export async function checkFavoriteStatus(targetType: string, targetId: string): Promise<any> {
+    const res = await request<any>({
+        url: `/favorites/check?targetType=${targetType}&targetId=${targetId}`
+    })
+    return res.data
+}
+
+export async function getMyFavorites(params: Record<string, any> = {}): Promise<any> {
+    const keys = Object.keys(params)
+    const qs = keys.map(k => `${k}=${encodeURIComponent(params[k] as string)}`).join('&')
+    const url = qs ? `/favorites/my?${qs}` : '/favorites/my'
+
+    const res = await request<any>({ url })
+    return res.data || { list: [], total: 0 }
+}
+
+// Comments API
+export async function getComments(targetType: string, targetId: string): Promise<any[]> {
+    const res = await request<any>({ url: `/comments/${targetType}/${targetId}` })
+    return res.data || []
+}
+
+export async function postComment(targetType: string, targetId: string, content: string): Promise<any> {
+    const res = await request<any>({
+        url: '/comments',
+        method: 'POST',
+        data: { targetType, targetId, content }
+    })
+    return res.data
+}
+
+export async function toggleLikeComment(commentId: string): Promise<any> {
+    const res = await request<any>({
+        url: `/comments/${commentId}/like`,
+        method: 'POST'
+    })
+    return res.data
+}

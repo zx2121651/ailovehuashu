@@ -1,0 +1,70 @@
+<template>
+  <view class="section animate-fade-in-up delay-400">
+    <view class="section-header">
+      <view class="section-title-row">
+        <text class="section-title-icon">👤</text>
+        <text class="section-title">金牌导师 1V1</text>
+      </view>
+      <view class="section-more" @click="$emit('show-toast', '导师列表开发中')">
+        <text class="section-more-text">查看全部 ›</text>
+      </view>
+    </view>
+    <scroll-view class="tutors-scroll" scroll-x>
+      <view class="tutors-row">
+        <view
+          v-for="(tutor, idx) in tutors"
+          :key="idx"
+          class="tutor-card"
+        >
+          <view class="tutor-online-badge">
+            <view class="tutor-online-dot"></view>
+            <text class="tutor-online-text">在线</text>
+          </view>
+          <image :src="tutor.avatar" class="tutor-avatar" mode="aspectFill" />
+          <text class="tutor-name">{{ tutor.name }}</text>
+          <view class="tutor-tag-wrap">
+            <text class="tutor-tag">{{ tutor.tag }}</text>
+          </view>
+          <view class="tutor-btn" @click="$emit('show-toast', '咨询功能开发中')">
+            <text class="tutor-btn-text">立即咨询</text>
+          </view>
+        </view>
+      </view>
+    </scroll-view>
+  </view>
+</template>
+
+<script setup lang="uts">
+const props = defineProps<{
+  tutors: any[]
+}>()
+
+const emit = defineEmits<{
+  (e: 'show-toast', message: string): void
+}>()
+</script>
+
+<style>
+/* Section Common */
+.section { margin-top: 24px; }
+.section-header { flex-direction: row; justify-content: space-between; align-items: center; padding: 0 20px; margin-bottom: 12px; }
+.section-title-row { flex-direction: row; align-items: center; }
+.section-title-icon { font-size: 18px; margin-right: 6px; }
+.section-title { font-size: 17px; font-weight: bold; color: #1f2937; }
+.section-more { }
+.section-more-text { font-size: 11px; color: #9ca3af; }
+
+/* Tutors */
+.tutors-scroll { padding: 0 20px; height: 200px; }
+.tutors-row { flex-direction: row; }
+.tutor-card { background-color: #ffffff; border-width: 1px; border-style: solid; border-color: #f3f4f6; padding: 12px; border-radius: 16px; min-width: 120px; align-items: center; margin-right: 14px; flex-shrink: 0; position: relative; }
+.tutor-online-badge { position: absolute; top: 8px; right: 8px; background-color: #f0fdf4; border-width: 1px; border-style: solid; border-color: #dcfce7; padding: 2px 6px; border-radius: 6px; flex-direction: row; align-items: center; z-index: 10; }
+.tutor-online-dot { width: 6px; height: 6px; background-color: #22c55e; border-radius: 3px; margin-right: 4px; }
+.tutor-online-text { font-size: 9px; color: #16a34a; font-weight: bold; }
+.tutor-avatar { width: 48px; height: 48px; border-radius: 24px; margin-top: 8px; margin-bottom: 8px; border-width: 2px; border-style: solid; border-color: #fce7f3; background-color: #f3f4f6; }
+.tutor-name { font-size: 13px; font-weight: bold; color: #1f2937; }
+.tutor-tag-wrap { background-color: #f9fafb; padding: 2px 8px; border-radius: 6px; border-width: 1px; border-style: solid; border-color: #f3f4f6; margin-top: 4px; margin-bottom: 12px; }
+.tutor-tag { font-size: 10px; color: #6b7280; }
+.tutor-btn { width: 100%; background-image: linear-gradient(to right, #ffe4e6, #fce7f3); padding: 8px 0; border-radius: 12px; align-items: center; }
+.tutor-btn-text { font-size: 11px; color: #e11d48; font-weight: bold; }
+</style>

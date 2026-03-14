@@ -1,0 +1,61 @@
+<template>
+  <view class="modal-overlay" v-if="isOpen">
+    <view class="modal-mask fade-in" @click="close"></view>
+    <view class="modal-content zoom-in">
+      <view class="sign-header">
+        <text class="sign-emoji">✨</text>
+        <text class="sign-title">签到成功</text>
+      </view>
+
+      <view class="reward-box">
+        <text class="reward-text">+10</text>
+        <text class="reward-label">积分</text>
+      </view>
+
+      <text class="streak-text">你已连续签到 <text class="streak-highlight">3</text> 天</text>
+      <text class="tip-text">明日签到可得 20 积分，保持哦！</text>
+
+      <view class="btn-wrap">
+        <view class="primary-btn" @click="close">
+          <text class="btn-text">开心收下</text>
+        </view>
+      </view>
+    </view>
+  </view>
+</template>
+
+<script setup lang="uts">
+const props = defineProps<{
+  isOpen: boolean
+}>()
+
+const emit = defineEmits<{
+  (e: 'close'): void
+}>()
+
+const close = () => {
+  emit('close')
+}
+</script>
+
+<style>
+.modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 1000; align-items: center; justify-content: center; }
+.modal-mask { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0,0,0,0.6); }
+.modal-content { background-color: #ffffff; width: 280px; border-radius: 24px; padding: 32px 20px; align-items: center; z-index: 1001; position: relative; overflow: hidden; }
+
+.sign-header { align-items: center; margin-bottom: 24px; }
+.sign-emoji { font-size: 40px; margin-bottom: 8px; }
+.sign-title { font-size: 20px; font-weight: 900; color: #db2777; letter-spacing: 2px; }
+
+.reward-box { background-image: linear-gradient(to bottom right, #fce7f3, #fdf2f8); border-width: 2px; border-style: dashed; border-color: #fbcfe8; width: 120px; height: 120px; border-radius: 60px; align-items: center; justify-content: center; margin-bottom: 24px; flex-direction: row; align-items: baseline; }
+.reward-text { font-size: 48px; font-weight: 900; color: #e11d48; margin-right: 4px; }
+.reward-label { font-size: 14px; font-weight: bold; color: #e11d48; }
+
+.streak-text { font-size: 14px; color: #4b5563; font-weight: bold; margin-bottom: 8px; flex-direction: row; }
+.streak-highlight { color: #ec4899; font-size: 16px; margin: 0 4px; }
+.tip-text { font-size: 11px; color: #9ca3af; margin-bottom: 32px; }
+
+.btn-wrap { width: 100%; padding: 0 20px; }
+.primary-btn { background-image: linear-gradient(to right, #ec4899, #f43f5e); padding: 12px 0; border-radius: 24px; align-items: center; box-shadow: 0 8px 20px rgba(236,72,153,0.3); }
+.btn-text { font-size: 15px; font-weight: bold; color: #ffffff; }
+</style>

@@ -1,0 +1,186 @@
+<template>
+  <view v-if="isOpen" class="modal-overlay">
+    <!-- 背景遮罩动画 -->
+    <view class="backdrop fade-in" @click="close"></view>
+
+    <!-- 内容容器弹窗动画 -->
+    <view class="modal-content slide-up">
+      <!-- 关闭按钮 -->
+      <view class="close-btn" @click="close">
+        <text class="close-icon">✖</text>
+      </view>
+
+      <view class="header items-center flex-col" style="margin-top: 16px;">
+        <view class="vip-icon-box bg-gradient-pink shadow-lg relative" style="margin-bottom: 16px;">
+           <text class="vip-icon text-white animate-pulse">👑</text>
+        </view>
+        <text class="title font-bold text-gray-800">升级 VIP 会员</text>
+        <text class="subtitle text-gray-500">解锁全部 10,000+ 高情商话术</text>
+      </view>
+
+      <!-- 选项列表 -->
+      <view class="options-list w-full mt-6">
+        <view
+          v-for="(item, index) in plans"
+          :key="index"
+          class="option-card relative"
+          :class="[selectedPlan === index ? 'selected-card' : '']"
+          @click="selectedPlan = index"
+        >
+          <!-- 选中标识角标 -->
+          <view v-if="selectedPlan === index" class="badge-tag">
+            <text class="badge-text">✓</text>
+          </view>
+
+          <view class="flex flex-row justify-between items-center w-full">
+            <view class="flex flex-col">
+               <text class="plan-name font-bold" :class="[selectedPlan === index ? 'text-pink' : 'text-gray-800']">{{ item.name }}</text>
+               <text class="plan-desc text-gray-500">{{ item.desc }}</text>
+            </view>
+            <view class="flex flex-col items-center">
+               <view class="flex flex-row items-center">
+                 <text class="price-symbol text-pink font-bold">¥</text>
+                 <text class="price text-pink font-bold">{{ item.price }}</text>
+               </view>
+               <text class="old-price text-gray-500">{{ item.oldPrice }}</text>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <!-- 支付按钮 -->
+      <button class="pay-btn bg-gradient-pink shadow-lg mt-6 w-full" @click="handlePay">
+        <text class="btn-text text-white font-bold text-center">立即解锁 (¥{{ plans[selectedPlan].price }})</text>
+      </button>
+
+      <view class="footer-text mt-4">
+        <text class="text-gray-500">支付即代表同意 </text>
+        <text class="text-pink">《会员服务协议》</text>
+      </view>
+    </view>
+  </view>
+</template>
+
+<script setup lang="uts">
+import { ref } from 'vue'
+
+const props = defineProps<{
+  isOpen: boolean
+}>()
+
+const emit = defineEmits(['close', 'pay'])
+
+const selectedPlan = ref(1)
+
+const plans = [
+  { name: '连续包月', desc: '首月特惠，随时取消', price: '19', oldPrice: '¥29' },
+  { name: '终身会员', desc: '一次买断，永久畅享', price: '99', oldPrice: '¥199' },
+]
+
+const close = () => {
+  emit('close')
+}
+
+const handlePay = () => {
+  // 模拟支付逻辑
+  emit('pay', plans[selectedPlan.value])
+  close()
+}
+</script>
+
+<style>
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 50;
+  align-items: center;
+  justify-content: flex-end; /* 底部弹出 */
+}
+
+.backdrop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5); /* bg-black/50 */
+}
+
+.modal-content {
+  background-color: #ffffff;
+  width: 100%;
+  border-top-left-radius: 24px;
+  border-top-right-radius: 24px;
+  padding: 24px;
+  align-items: center;
+  padding-bottom: 40px; /* Safe area padding */
+}
+
+.close-btn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 32px;
+  height: 32px;
+  background-color: #f3f4f6; /* bg-gray-100 */
+  border-radius: 16px;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+.close-icon { font-size: 14px; color: #4b5563; }
+
+.header { align-items: center; }
+.vip-icon-box {
+  width: 56px;
+  height: 56px;
+  border-radius: 20px;
+  align-items: center;
+  justify-content: center;
+}
+.bg-gradient-pink { background-image: linear-gradient(to right, #ec4899, #fb7185); }
+.text-pink { color: #ec4899; }
+.vip-icon { font-size: 28px; }
+.title { font-size: 20px; margin-bottom: 8px; }
+.subtitle { font-size: 14px; }
+
+.options-list { flex-direction: column; }
+.option-card {
+  padding: 16px;
+  border: 2px solid #f3f4f6; /* border-gray-100 */
+  border-radius: 16px;
+  margin-bottom: 12px;
+}
+.selected-card {
+  border-color: #ec4899; /* border-pink-500 */
+  background-color: #fdf2f8; /* bg-pink-50 */
+}
+
+.badge-tag {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background-color: #ec4899;
+  border-bottom-left-radius: 16px;
+  border-top-right-radius: 14px;
+  padding: 2px 8px;
+}
+.badge-text { color: #ffffff; font-size: 10px; font-weight: bold; }
+
+.plan-name { font-size: 16px; }
+.plan-desc { font-size: 12px; margin-top: 4px; }
+.price-symbol { font-size: 14px; margin-right: 2px; margin-top: 6px; }
+.price { font-size: 24px; }
+.old-price { font-size: 12px; text-decoration: line-through; }
+
+.pay-btn {
+  height: 50px;
+  border-radius: 25px;
+  justify-content: center;
+  align-items: center;
+}
+.footer-text { flex-direction: row; font-size: 12px; }
+</style>

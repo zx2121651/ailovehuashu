@@ -1,0 +1,122 @@
+<template>
+  <view class="page-container bg-gradient-dark">
+    <view class="header-bar">
+      <text class="header-title">每日盲盒</text>
+      <view class="points-badge">
+        <text class="points-icon">⚡</text>
+        <text class="points-text">{{ currentPoints }}</text>
+      </view>
+    </view>
+
+    <view class="main-content">
+      <view class="box-container" :class="{'box-shaking': isOpening}">
+        <!-- 盲盒本体展示 -->
+        <text class="box-emoji">{{ boxOpen ? '🎁' : '📦' }}</text>
+        <view class="box-glow" v-if="!boxOpen"></view>
+      </view>
+
+      <view class="text-info">
+        <text class="main-title" v-if="!boxOpen">开启今日惊喜</text>
+        <text class="main-title text-gold" v-else>恭喜获得</text>
+
+        <text class="sub-desc" v-if="!boxOpen">每次开启将消耗 50 积分，100% 中奖！最高可得终身 Pro 会员</text>
+        <text class="reward-desc" v-else>{{ rewardText }}</text>
+      </view>
+
+      <view class="action-area">
+        <button class="primary-btn" v-if="!boxOpen" @click="handleOpenBox" :disabled="isOpening">
+          {{ isOpening ? '开启中...' : '立即开启 (50积分)' }}
+        </button>
+        <button class="secondary-btn" v-else @click="resetBox">
+          继续开启
+        </button>
+      </view>
+    </view>
+
+    <view class="rules-link">
+      <text class="rules-text">查看盲盒规则</text>
+    </view>
+  </view>
+</template>
+
+<script setup lang="uts">
+import { ref } from 'vue'
+import { useAppStore } from '../../store/app.uts'
+
+const appStore = useAppStore
+const currentPoints = ref(appStore.userInfo?.points || 1250)
+const isOpening = ref(false)
+const boxOpen = ref(false)
+const rewardText = ref('')
+
+const handleOpenBox = () => {
+  if (currentPoints.value < 50) {
+    appStore.showToast('积分不足，快去完成任务赚取吧！')
+    return
+  }
+
+  isOpening.value = true
+
+  // 模拟抽奖请求延迟
+  setTimeout(() => {
+    isOpening.value = false
+    boxOpen.value = true
+    currentPoints.value -= 50
+    // 更新全局状态的模拟
+    if (appStore.userInfo) {
+      appStore.userInfo.points = currentPoints.value
+    }
+
+    // 随机一个结果
+    const rewards = ['高情商话术包 x1', '200 积分', '导师咨询优惠券', '神级开场白 x3']
+    const randomIdx = Math.floor(Math.random() * rewards.length)
+    rewardText.value = rewards[randomIdx]
+
+    appStore.showToast('开启成功！')
+  }, 1500)
+}
+
+const resetBox = () => {
+  boxOpen.value = false
+  rewardText.value = ''
+}
+</script>
+
+<style>
+page { display: flex; flex-direction: column; height: 100%; background-color: #111827; }
+.page-container { flex: 1; position: relative; }
+.bg-gradient-dark { background-image: linear-gradient(to bottom, #1f2937, #111827); }
+
+.header-bar { flex-direction: row; justify-content: space-between; align-items: center; padding: 20px 24px; margin-top: 40px; }
+.header-title { color: #ffffff; font-size: 18px; font-weight: bold; }
+.points-badge { flex-direction: row; align-items: center; background-color: rgba(255,255,255,0.1); padding: 4px 12px; border-radius: 20px; border-width: 1px; border-style: solid; border-color: rgba(255,255,255,0.2); }
+.points-icon { color: #facc15; font-size: 14px; margin-right: 4px; }
+.points-text { color: #facc15; font-size: 14px; font-weight: bold; }
+
+.main-content { flex: 1; align-items: center; justify-content: center; padding: 0 32px; margin-top: -60px; }
+
+.box-container { position: relative; width: 160px; height: 160px; align-items: center; justify-content: center; margin-bottom: 40px; }
+.box-emoji { font-size: 120px; z-index: 10; }
+.box-glow { position: absolute; width: 120px; height: 120px; background-color: #facc15; border-radius: 60px; opacity: 0.3; filter: blur(20px); z-index: 1; }
+.box-shaking { animation: shake 0.5s ease-in-out infinite; }
+@keyframes shake {
+  0% { transform: translateX(0); }
+  25% { transform: translateX(-10px) rotate(-5deg); }
+  50% { transform: translateX(10px) rotate(5deg); }
+  75% { transform: translateX(-10px) rotate(-5deg); }
+  100% { transform: translateX(0); }
+}
+
+.text-info { align-items: center; margin-bottom: 60px; }
+.main-title { color: #ffffff; font-size: 24px; font-weight: bold; margin-bottom: 12px; }
+.text-gold { color: #facc15; }
+.sub-desc { color: #9ca3af; font-size: 13px; text-align: center; line-height: 1.5; }
+.reward-desc { color: #ffffff; font-size: 20px; font-weight: bold; text-align: center; padding: 12px 24px; background-color: rgba(255,255,255,0.1); border-radius: 12px; }
+
+.action-area { width: 100%; }
+.primary-btn { background-image: linear-gradient(to right, #f59e0b, #ea580c); color: #ffffff; font-size: 16px; font-weight: bold; border-radius: 28px; padding: 14px 0; width: 100%; text-align: center; border: none; }
+.secondary-btn { background-color: transparent; color: #facc15; font-size: 16px; font-weight: bold; border-radius: 28px; padding: 14px 0; width: 100%; text-align: center; border-width: 1px; border-style: solid; border-color: #facc15; }
+
+.rules-link { position: absolute; bottom: 40px; width: 100%; align-items: center; }
+.rules-text { color: #6b7280; font-size: 12px; text-decoration: underline; }
+</style>

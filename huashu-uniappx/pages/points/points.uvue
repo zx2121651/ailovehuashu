@@ -1,0 +1,62 @@
+<template>
+  <view class="page-container">
+    <view class="points-header bg-gradient-orange">
+      <text class="points-label">我的积分</text>
+      <text class="points-num">{{ currentPoints }}</text>
+      <text class="points-desc">积分可用于解锁部分高级话术</text>
+    </view>
+
+    <view class="points-detail">
+      <view class="section-title-wrap">
+        <text class="section-title">积分明细</text>
+      </view>
+      <scroll-view class="scroll-area" scroll-y>
+        <view class="log-item" v-for="log in logs" :key="log.id">
+          <view class="log-left">
+            <text class="log-title">{{ log.title }}</text>
+            <text class="log-time">{{ log.time }}</text>
+          </view>
+          <text class="log-amount" :class="{'is-add': log.amount > 0}">{{ log.amount > 0 ? '+' : '' }}{{ log.amount }}</text>
+        </view>
+      </scroll-view>
+    </view>
+  </view>
+</template>
+
+<script setup lang="uts">
+import { ref } from 'vue'
+import { useAppStore } from '../../store/app.uts'
+
+const appStore = useAppStore
+const currentPoints = ref(appStore.userInfo?.points || 1250)
+
+const logs = ref([
+  { id: 1, title: '每日签到', time: '2023-10-26 08:00', amount: 10 },
+  { id: 2, title: '完成一次对话', time: '2023-10-25 14:20', amount: 5 },
+  { id: 3, title: '解锁高级话术', time: '2023-10-24 10:10', amount: -20 },
+  { id: 4, title: '分享给好友', time: '2023-10-24 09:00', amount: 30 }
+])
+</script>
+
+<style>
+page { display: flex; flex-direction: column; height: 100%; background-color: #f5f7fa; }
+.page-container { flex: 1; background-color: #f5f7fa; }
+
+.points-header { padding: 40px 20px; align-items: center; justify-content: center; }
+.bg-gradient-orange { background-image: linear-gradient(to bottom, #fdba74, #ea580c); }
+.points-label { font-size: 14px; color: rgba(255,255,255,0.8); margin-bottom: 8px; }
+.points-num { font-size: 48px; font-weight: bold; color: #ffffff; margin-bottom: 8px; }
+.points-desc { font-size: 11px; color: rgba(255,255,255,0.6); }
+
+.points-detail { flex: 1; background-color: #ffffff; border-top-left-radius: 24px; border-top-right-radius: 24px; margin-top: -20px; }
+.section-title-wrap { padding: 20px 20px 10px; border-bottom-width: 1px; border-bottom-style: solid; border-bottom-color: #f3f4f6; }
+.section-title { font-size: 16px; font-weight: bold; color: #1f2937; }
+
+.scroll-area { flex: 1; padding: 0 20px; }
+.log-item { flex-direction: row; justify-content: space-between; align-items: center; padding: 16px 0; border-bottom-width: 1px; border-bottom-style: dashed; border-bottom-color: #f3f4f6; }
+.log-left { flex: 1; }
+.log-title { font-size: 14px; font-weight: bold; color: #374151; margin-bottom: 6px; }
+.log-time { font-size: 11px; color: #9ca3af; }
+.log-amount { font-size: 16px; font-weight: bold; color: #374151; }
+.is-add { color: #ea580c; }
+</style>

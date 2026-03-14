@@ -1,0 +1,88 @@
+<template>
+  <view class="section animate-fade-in-up delay-250" v-if="courses.length > 0">
+    <view class="section-header">
+      <view class="section-title-row">
+        <text class="section-title-icon">👑</text>
+        <text class="section-title">精选课程</text>
+      </view>
+    </view>
+    <scroll-view class="courses-scroll" scroll-x>
+      <view class="courses-row">
+        <view
+          v-for="course in courses"
+          :key="course.id"
+          class="course-card bg-gradient-rose"
+          @click="handleClick(course)"
+        >
+          <image :src="course.cover" class="course-cover-img" mode="aspectFill" @error="handleImgError" />
+          <view class="course-mask"></view>
+          <view class="course-content">
+            <view class="course-tags-row">
+              <view v-for="(tag, idx) in (course.tags || []).slice(0, 2)" :key="idx" class="course-tag">
+                <text class="course-tag-text">{{ tag }}</text>
+              </view>
+              <view class="course-rating-badge" v-if="course.rating && course.rating > 0">
+                <text class="course-rating-icon">🔥</text>
+                <text class="course-rating-text">{{ course.rating }}分</text>
+              </view>
+            </view>
+            <text class="course-title" :lines="1">{{ course.title }}</text>
+            <view class="course-bottom">
+              <text class="course-desc" :lines="1">{{ course.desc }}</text>
+              <view class="course-play-btn">
+                <text class="course-play-text">学习 ▶</text>
+              </view>
+            </view>
+          </view>
+        </view>
+      </view>
+    </scroll-view>
+  </view>
+</template>
+
+<script setup lang="uts">
+const props = defineProps<{
+  courses: any[]
+}>()
+
+const emit = defineEmits<{
+  (e: 'open-course', course: any): void
+}>()
+
+const handleClick = (course: any) => {
+  emit('open-course', course)
+}
+
+const handleImgError = (e: any) => {
+  // Ignore
+}
+</script>
+
+<style>
+/* Section Common */
+.section { margin-top: 24px; }
+.section-header { flex-direction: row; justify-content: space-between; align-items: center; padding: 0 20px; margin-bottom: 12px; }
+.section-title-row { flex-direction: row; align-items: center; }
+.section-title-icon { font-size: 18px; margin-right: 6px; }
+.section-title { font-size: 17px; font-weight: bold; color: #1f2937; }
+
+/* Courses */
+.courses-scroll { padding: 0 20px; height: 180px; }
+.courses-row { flex-direction: row; }
+.course-card { width: 240px; height: 160px; border-radius: 24px; margin-right: 16px; flex-shrink: 0; position: relative; overflow: hidden; justify-content: flex-end; }
+.bg-gradient-rose { background-image: linear-gradient(to bottom right, #fb7185, #f472b6, #d946ef); }
+.course-cover-img { position: absolute; left: 0; top: 0; width: 100%; height: 100%; opacity: 0.8; }
+.course-mask { position: absolute; left: 0; top: 0; width: 100%; height: 100%; background-image: linear-gradient(to top, rgba(17,24,39,0.9), rgba(17,24,39,0.4), transparent); }
+.course-content { padding: 16px; z-index: 10; }
+.course-tags-row { flex-direction: row; align-items: center; margin-bottom: 6px; }
+.course-tag { background-color: #ec4899; padding: 2px 8px; border-radius: 6px; margin-right: 6px; }
+.course-tag-text { color: #ffffff; font-size: 10px; font-weight: bold; }
+.course-rating-badge { flex-direction: row; align-items: center; background-color: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 6px; border-width: 1px; border-style: solid; border-color: rgba(255,255,255,0.1); }
+.course-rating-icon { font-size: 10px; margin-right: 4px; color: #fb923c; }
+.course-rating-text { color: #ffffff; font-size: 10px; }
+.course-title { color: #ffffff; font-size: 17px; font-weight: bold; margin-bottom: 4px; }
+.course-bottom { flex-direction: row; justify-content: space-between; align-items: center; }
+.course-desc { color: #e5e7eb; font-size: 11px; width: 130px; }
+.course-play-btn { background-color: #ffffff; padding: 4px 10px; border-radius: 20px; flex-direction: row; align-items: center; }
+.course-play-text { color: #111827; font-size: 10px; font-weight: bold; }
+</style>

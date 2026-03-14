@@ -1,0 +1,546 @@
+<template>
+  <view class="page-container">
+    <!-- Loading -->
+    <view v-if="loading && categories.length === 0" class="loading-wrap">
+      <view class="spinner"></view>
+      <text class="loading-text">加载中...</text>
+    </view>
+
+    <template v-else>
+      <!-- Header Search -->
+      <view class="search-header">
+        <view class="search-input-wrap" :class="[isSearchFocused ? 'search-focused' : '']">
+          <text class="search-icon-sm">🔍</text>
+          <input
+            type="text"
+            v-model="searchQuery"
+            placeholder="搜索库内话术..."
+            class="search-input-field"
+            @focus="isSearchFocused = true"
+            @blur="delayBlur"
+            @confirm="executeSearch(searchQuery)"
+          />
+          <view v-if="searchQuery" class="clear-btn" @click="searchQuery = ''">
+            <text class="clear-icon">✕</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- Hot Search Overlay -->
+      <view v-if="isSearchFocused && !searchQuery" class="hot-overlay">
+        <view class="hot-mask" @click="isSearchFocused = false"></view>
+        <view class="hot-panel slide-up">
+          <view class="hot-panel-header">
+            <text class="hot-panel-title">全网热搜</text>
+            <view class="hot-refresh" @click="appStore.showToast('已刷新热搜词')">
+              <text class="hot-refresh-icon">🔄</text>
+            </view>
+          </view>
+          <view class="hot-words-wrap">
+            <view
+              v-for="(hot, idx) in hotSearches"
+              :key="idx"
+              class="hot-word-tag"
+              :class="[idx < 2 ? 'hot-word-top' : '']"
+              @click="selectHotWord(hot)"
+            >
+              <text v-if="idx < 2" class="hot-fire-icon">🔥</text>
+              <text class="hot-word-text" :class="[idx < 2 ? 'hot-word-text-top' : '']">{{ hot }}</text>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <!-- Main Content -->
+      <view class="main-content">
+        <!-- Category Sidebar -->
+        <scroll-view class="sidebar" scroll-y>
+          <view
+            v-for="cat in categories"
+            :key="cat.id"
+            class="sidebar-item"
+            :class="[activeCategory === cat.id && !searchQuery ? 'sidebar-item-active' : '']"
+            @click="selectCategory(cat.id)"
+          >
+            <text class="sidebar-icon" :class="[activeCategory === cat.id && !searchQuery ? 'sidebar-icon-active' : '']">{{ cat.icon }}</text>
+            <text class="sidebar-name" :class="[activeCategory === cat.id && !searchQuery ? 'sidebar-name-active' : '']">{{ cat.name }}</text>
+            <text class="sidebar-count">{{ cat.count }} 篇</text>
+          </view>
+        </scroll-view>
+
+        <!-- Right Panel -->
+        <scroll-view class="right-panel" scroll-y>
+          <view class="right-inner animate-fade-in-up">
+            <!-- Sticky Header -->
+            <view class="panel-header">
+              <view class="panel-title-row">
+                <text class="panel-title">{{ searchQuery ? '包含 "' + searchQuery + '"' : currentCatName }}</text>
+                <view class="panel-count-badge">
+                  <text class="panel-count-text">{{ filteredScripts.length }} 条</text>
+                </view>
+              </view>
+              <!-- Sort Tabs -->
+              <scroll-view class="sort-scroll" scroll-x>
+                <view class="sort-row">
+                  <view
+                    v-for="sortTab in sortTabs"
+                    :key="sortTab.key"
+                    class="sort-tag"
+                    :class="[sort === sortTab.label ? 'sort-tag-active' : '']"
+                    @click="sort = sortTab.label"
+                  >
+                    <text class="sort-tag-text" :class="[sort === sortTab.label ? 'sort-tag-text-active' : '']">{{ sortTab.label }}</text>
+                  </view>
+                </view>
+              </scroll-view>
+            </view>
+
+            <!-- Tag Filters (when not searching) -->
+            <scroll-view v-if="!searchQuery" class="tag-scroll" scroll-x>
+              <view class="tag-row">
+                <view
+                  v-for="tag in categoryTags"
+                  :key="tag.id"
+                  class="filter-tag"
+                  :class="[activeTag === tag.name ? 'filter-tag-active' : '']"
+                  @click="activeTag = tag.name"
+                >
+                  <text class="filter-tag-text" :class="[activeTag === tag.name ? 'filter-tag-text-active' : '']">{{ tag.name }}</text>
+                </view>
+              </view>
+            </scroll-view>
+
+            <!-- Featured Scripts (daily pick) -->
+            <view v-if="!searchQuery && featuredScripts.length > 0 && activeTag === '全部'" class="featured-section">
+              <view class="featured-title-row">
+                <text class="featured-fire">🔥</text>
+                <text class="featured-title">每日精选</text>
+              </view>
+              <scroll-view class="featured-scroll" scroll-x>
+                <view class="featured-row">
+                  <view
+                    v-for="script in featuredScripts"
+                    :key="'featured-' + script.id"
+                    class="featured-card"
+                    @click="openScriptDetail(script)"
+                  >
+                    <view class="featured-badge-wrap">
+                      <view class="featured-badge">
+                        <text class="featured-badge-text">官方推荐</text>
+                      </view>
+                    </view>
+                    <text class="featured-question" :lines="2">{{ script.question }}</text>
+                    <view class="featured-answer-box">
+                      <text class="featured-answer" :lines="2">{{ script.answers && script.answers[0] ? script.answers[0] : '暂无回复' }}</text>
+                    </view>
+                  </view>
+                </view>
+              </scroll-view>
+            </view>
+
+            <!-- Topic Banner -->
+            <view v-if="!searchQuery" class="topic-banner" @click="goToTopic">
+              <view class="topic-banner-inner">
+                <view class="topic-blur-right"></view>
+                <view class="topic-blur-left"></view>
+                <view class="topic-content">
+                  <view class="topic-label">
+                    <text class="topic-label-icon">🧭</text>
+                    <text class="topic-label-text">必看专题</text>
+                  </view>
+                  <text class="topic-title">七夕特辑：高分表白话术</text>
+                  <view class="topic-meta-row">
+                    <text class="topic-meta-icon">📈</text>
+                    <text class="topic-meta-text">收录 50+ 句直击灵魂的告白</text>
+                  </view>
+                </view>
+                <view class="topic-arrow">
+                  <text class="topic-arrow-text">›</text>
+                </view>
+              </view>
+            </view>
+
+            <!-- Script List -->
+            <view v-if="filteredScripts.length > 0" class="script-list">
+              <ScriptList
+                :scripts="filteredScripts"
+                :copiedId="copiedId"
+                :favoriteIds="favoriteIds"
+                :showHeader="false"
+                @copy-script="handleCopy"
+                @toggle-fav="toggleFavorite"
+                @show-more="showMoreReplies"
+              ></ScriptList>
+              <text class="end-text">- 到底啦，快去实战吧 -</text>
+            </view>
+
+            <!-- Empty State -->
+            <view v-else class="empty-state">
+              <view class="empty-icon-wrap">
+                <text class="empty-icon">💬</text>
+              </view>
+              <text class="empty-title">未找到匹配的话术</text>
+              <text class="empty-desc">你可以尝试更换搜索词，或者直接让 AI 导师为你定制专属回复</text>
+              <view class="empty-actions">
+                <view class="empty-btn-clear" @click="searchQuery = ''">
+                  <text class="empty-btn-clear-text">清除搜索</text>
+                </view>
+                <view class="empty-btn-ai" @click="goToAI">
+                  <text class="empty-btn-ai-icon">✨</text>
+                  <text class="empty-btn-ai-text">问 AI 导师</text>
+                </view>
+              </view>
+            </view>
+
+            <view class="bottom-spacer"></view>
+          </view>
+        </scroll-view>
+      </view>
+
+      <!-- Floating Contribute Button -->
+      <view class="fab-contribute" @click="goToContribute">
+        <text class="fab-contribute-icon">✏️</text>
+        <text class="fab-contribute-text">发布话术</text>
+      </view>
+    </template>
+
+    <ContributeDrawer :isOpen="appStore.showContributeDrawer" @close="appStore.showContributeDrawer = false" ></ContributeDrawer>
+    <CustomTabBar :current="1"></CustomTabBar>
+  </view>
+</template>
+
+<script setup lang="uts">
+import { ref, computed, onMounted, watch } from 'vue'
+import { onShow } from '@dcloudio/uni-app'
+import { useAppStore } from '../../store/app.uts'
+import { getCategories, getScripts, getHotSearches, getScriptSortTabs, getCategoryTags } from '../../services/api.uts'
+import ScriptList from '../../components/common/ScriptList.uvue'
+import ContributeDrawer from '../../components/Modal/ContributeDrawer.uvue'
+import CustomTabBar from '../../components/common/CustomTabBar.uvue'
+
+const appStore = useAppStore
+
+const isSearchFocused = ref(false)
+const favoriteIds = ref<string[]>([])
+const searchQuery = ref('')
+const activeCategory = ref(1)
+const sort = ref('推荐')
+const activeTag = ref('全部')
+const copiedId = ref('')
+
+const categories = ref<any[]>([])
+const scripts = ref<any[]>([])
+const hotSearches = ref<string[]>([])
+const loading = ref(true)
+
+const goToTopic = () => {
+  uni.navigateTo({ url: '/pages/topic/topic' })
+}
+const sortTabs = ref<any[]>([])
+const categoryTags = ref<any[]>([])
+
+onShow(() => {
+  uni.hideTabBar()
+})
+
+onMounted(async () => {
+  try {
+    loading.value = true
+    const [cats, hotWords, tabs] = await Promise.all([
+      getCategories(),
+      getHotSearches(),
+      getScriptSortTabs()
+    ])
+    categories.value = cats || []
+    hotSearches.value = hotWords || []
+    sortTabs.value = tabs || []
+    
+    // 设置默认排序
+    const defaultTab = sortTabs.value.find((t: any) => t.isDefault)
+    if (defaultTab) {
+      sort.value = defaultTab.label
+    } else if (sortTabs.value.length > 0) {
+      sort.value = sortTabs.value[0].label
+    }
+    
+    if (categories.value.length > 0) {
+      activeCategory.value = categories.value[0].id
+      // 获取第一个分类的标签
+      await fetchCategoryTags(activeCategory.value)
+    }
+  } catch (error) {
+    console.error('获取数据失败:', error)
+    categories.value = [
+      { id: 1, name: '初识破冰', icon: '💬', count: 120 },
+      { id: 2, name: '日常聊天', icon: '☀️', count: 95 },
+      { id: 3, name: '情感升温', icon: '🔥', count: 80 },
+      { id: 4, name: '化解尴尬', icon: '😅', count: 65 },
+      { id: 5, name: '晚安早安', icon: '🌙', count: 50 },
+      { id: 6, name: '挽回前任', icon: '💔', count: 45 },
+      { id: 7, name: '幽默搞笑', icon: '😂', count: 70 }
+    ]
+    hotSearches.value = ['相亲怎么聊', '约会破冰', '哄女孩开心', '挽回技巧', '如何制造暧昧', '土味情话']
+    sortTabs.value = [
+      { key: 'latest', label: '最新', sort: 'new', isDefault: false },
+      { key: 'hot', label: '最热', sort: 'hot', isDefault: false },
+      { key: 'recommend', label: '推荐', sort: 'default', isDefault: true }
+    ]
+    sort.value = '推荐'
+  } finally {
+    loading.value = false
+  }
+})
+
+// 获取分类标签
+const fetchCategoryTags = async (categoryId: number) => {
+  try {
+    const tags = await getCategoryTags(categoryId)
+    // 添加 "全部" 到标签列表开头
+    categoryTags.value = [{ id: 'all', name: '全部' }, ...tags]
+  } catch (error) {
+    console.error('获取分类标签失败:', error)
+    categoryTags.value = [{ id: 'all', name: '全部' }]
+  }
+}
+
+// Watch category/search/sort changes to fetch scripts
+watch([() => activeCategory.value, () => searchQuery.value, () => sort.value], async () => {
+  try {
+    loading.value = true
+    const params = {} as any
+    if (searchQuery.value) {
+      params.keyword = searchQuery.value
+    } else if (activeCategory.value) {
+      params.categoryId = activeCategory.value
+    }
+    if (sort.value === '最新') params.sort = 'new'
+    else if (sort.value === '最热') params.sort = 'hot'
+
+    const data = await getScripts(params)
+    scripts.value = (data && data.list) ? data.list : []
+  } catch (error) {
+    console.error('获取话术失败:', error)
+    scripts.value = []
+  } finally {
+    loading.value = false
+  }
+}, { immediate: true })
+
+const currentCatName = computed(() => {
+  const cat = categories.value.find(c => c.id === activeCategory.value)
+  return cat ? cat.name : '全部'
+})
+
+const featuredScripts = computed(() => {
+  return scripts.value.filter(s => s.isFeatured)
+})
+
+const filteredScripts = computed(() => {
+  let result = [...scripts.value]
+  if (activeTag.value !== '全部') {
+    result = result.filter(s => s.tags && s.tags.includes(activeTag.value))
+  }
+  if (sort.value === '最新') {
+    result.sort((a, b) => (b.isNew === a.isNew) ? 0 : b.isNew ? 1 : -1)
+  } else if (sort.value === '最热') {
+    result.sort((a, b) => (b.likes || 0) - (a.likes || 0))
+  }
+  return result
+})
+
+const delayBlur = () => {
+  setTimeout(() => {
+    isSearchFocused.value = false
+  }, 200)
+}
+
+const executeSearch = (query: string) => {
+  if (!query.trim()) return
+  isSearchFocused.value = false
+  appStore.addSearchHistory(query)
+}
+
+const selectHotWord = (word: string) => {
+  searchQuery.value = word
+  isSearchFocused.value = false
+}
+
+const selectCategory = async (catId: number) => {
+  activeCategory.value = catId
+  searchQuery.value = ''
+  activeTag.value = '全部'
+  // 获取新分类的标签
+  await fetchCategoryTags(catId)
+  // 重置为默认排序
+  const defaultTab = sortTabs.value.find((t: any) => t.isDefault)
+  if (defaultTab) {
+    sort.value = defaultTab.label
+  }
+}
+
+const handleCopy = (script: any) => {
+  const text = (script.answers && script.answers[0]) ? script.answers[0] : ''
+  uni.setClipboardData({
+    data: text,
+    success: () => {
+      copiedId.value = script.id
+      appStore.showToast('已复制到剪贴板')
+      setTimeout(() => { copiedId.value = '' }, 2000)
+    }
+  })
+}
+
+const toggleFavorite = (id: string) => {
+  const index = favoriteIds.value.indexOf(id)
+  if (index > -1) {
+    favoriteIds.value.splice(index, 1)
+    appStore.showToast('已取消收藏')
+  } else {
+    favoriteIds.value.push(id)
+    appStore.showToast('收藏成功')
+  }
+}
+
+const showMoreReplies = (script: any) => {
+  uni.navigateTo({ url: '/pages/script-detail/script-detail?id=' + script.id })
+}
+
+const openScriptDetail = (script: any) => {
+  uni.navigateTo({ url: '/pages/script-detail/script-detail?id=' + script.id })
+}
+
+const goToAI = () => {
+  uni.switchTab({ url: '/pages/ai/ai' })
+}
+
+const goToContribute = () => {
+  appStore.showContributeDrawer = true
+}
+</script>
+
+<style>
+page { display: flex; flex-direction: column; height: 100%; }
+.page-container { flex: 1; display: flex; flex-direction: column; height: 100%; background-color: #ffffff; position: relative; }
+
+/* Loading */
+.loading-wrap { flex: 1; align-items: center; justify-content: center; }
+.spinner { width: 48px; height: 48px; border-radius: 24px; border-width: 2px; border-style: solid; border-color: #ec4899; border-top-color: transparent; animation: spin 1s linear infinite; }
+.loading-text { color: #6b7280; margin-top: 16px; font-size: 14px; }
+
+/* Search Header */
+.search-header { background-color: #ffffff; padding: 32px 20px 12px; border-bottom-width: 1px; border-bottom-style: solid; border-bottom-color: #f3f4f6; z-index: 30; }
+.search-input-wrap { flex-direction: row; align-items: center; background-color: rgba(243,244,246,0.8); border-radius: 20px; padding: 0 12px; height: 40px; border-width: 1px; border-style: solid; border-color: transparent; }
+.search-focused { background-color: rgba(253,242,248,0.5); border-color: #fbcfe8; }
+.search-icon-sm { font-size: 14px; color: #9ca3af; margin-right: 8px; }
+.search-input-field { flex: 1; font-size: 13px; color: #374151; background-color: transparent; }
+.clear-btn { padding: 4px; }
+.clear-icon { font-size: 12px; color: #9ca3af; }
+
+/* Hot Search Overlay */
+.hot-overlay { position: absolute; top: 68px; left: 0; right: 0; bottom: 0; z-index: 20; }
+.hot-mask { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0,0,0,0.2); }
+.hot-panel { position: absolute; top: 0; left: 0; right: 0; background-color: #ffffff; padding: 20px; border-bottom-left-radius: 24px; border-bottom-right-radius: 24px; z-index: 30; box-shadow: 0 10px 30px -5px rgba(0,0,0,0.1); }
+.hot-panel-header { flex-direction: row; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.hot-panel-title { font-size: 14px; font-weight: bold; color: #1f2937; }
+.hot-refresh { padding: 4px; }
+.hot-refresh-icon { font-size: 14px; color: #9ca3af; }
+.hot-words-wrap { flex-direction: row; flex-wrap: wrap; }
+.hot-word-tag { padding: 6px 14px; border-radius: 20px; margin-right: 10px; margin-bottom: 10px; background-color: #f9fafb; border-width: 1px; border-style: solid; border-color: #f3f4f6; flex-direction: row; align-items: center; }
+.hot-word-top { background-color: #fdf2f8; border-color: #fce7f3; }
+.hot-fire-icon { font-size: 12px; margin-right: 4px; }
+.hot-word-text { font-size: 12px; color: #4b5563; }
+.hot-word-text-top { color: #db2777; font-weight: 500; }
+
+/* Main Content */
+.main-content { flex: 1; flex-direction: row; background-color: #f9fafb; }
+
+/* Sidebar */
+.sidebar { width: 90px; background-color: rgba(255,241,242,0.3); border-right-width: 1px; border-right-style: solid; border-right-color: rgba(252,231,243,0.6); padding-bottom: 96px; }
+.sidebar-item { padding: 16px 0; align-items: center; justify-content: center; }
+.sidebar-item-active { background-color: #ffffff; border-left-width: 4px; border-left-style: solid; border-left-color: #f43f5e; }
+.sidebar-icon { font-size: 22px; margin-bottom: 4px; }
+.sidebar-icon-active { transform: scale(1.1); }
+.sidebar-name { font-size: 11px; color: #6b7280; font-weight: 500; margin-top: 4px; }
+.sidebar-name-active { color: #db2777; font-weight: bold; }
+.sidebar-count { font-size: 9px; color: #9ca3af; margin-top: 2px; }
+
+/* Right Panel */
+.right-panel { flex: 1; padding: 12px; padding-bottom: 96px; background-color: #f8f9fa; }
+.right-inner { }
+
+/* Panel Header */
+.panel-header { background-color: rgba(248,249,250,0.9); padding-bottom: 8px; margin-bottom: 8px; border-bottom-width: 1px; border-bottom-style: solid; border-bottom-color: rgba(229,231,235,0.5); }
+.panel-title-row { flex-direction: row; justify-content: space-between; align-items: center; padding: 0 4px; margin-bottom: 8px; }
+.panel-title { font-size: 15px; font-weight: bold; color: #1f2937; }
+.panel-count-badge { background-color: #fce7f3; padding: 2px 8px; border-radius: 12px; margin-left: 8px; }
+.panel-count-text { font-size: 12px; color: #db2777; }
+
+/* Sort Tabs */
+.sort-scroll { height: 32px; }
+.sort-row { flex-direction: row; align-items: center; }
+.sort-tag { padding: 6px 12px; border-radius: 20px; margin-right: 8px; background-color: #ffffff; border-width: 1px; border-style: solid; border-color: #f3f4f6; flex-shrink: 0; }
+.sort-tag-active { background-color: #111827; border-color: #111827; }
+.sort-tag-text { font-size: 11px; color: #4b5563; font-weight: bold; }
+.sort-tag-text-active { color: #ffffff; }
+
+/* Tag Filters */
+.tag-scroll { height: 36px; margin-bottom: 16px; margin-top: 4px; }
+.tag-row { flex-direction: row; align-items: center; }
+.filter-tag { padding: 6px 14px; border-radius: 12px; margin-right: 8px; background-color: #ffffff; border-width: 1px; border-style: solid; border-color: rgba(252,231,243,0.6); flex-shrink: 0; }
+.filter-tag-active { background-image: linear-gradient(to right, #fb7185, #ec4899); border-color: transparent; }
+.filter-tag-text { font-size: 11px; color: #6b7280; }
+.filter-tag-text-active { color: #ffffff; font-weight: bold; }
+
+/* Featured Section */
+.featured-section { margin-bottom: 20px; }
+.featured-title-row { flex-direction: row; align-items: center; padding: 0 4px; margin-bottom: 12px; }
+.featured-fire { font-size: 16px; margin-right: 6px; }
+.featured-title { font-size: 14px; font-weight: 800; color: #1f2937; }
+.featured-scroll { height: 140px; }
+.featured-row { flex-direction: row; }
+.featured-card { min-width: 85%; background-color: #eef2ff; border-width: 1px; border-style: solid; border-color: rgba(199,210,254,0.6); padding: 16px; border-radius: 16px; margin-right: 12px; flex-shrink: 0; }
+.featured-badge-wrap { flex-direction: row; margin-bottom: 8px; }
+.featured-badge { background-color: #6366f1; padding: 2px 8px; border-radius: 12px; }
+.featured-badge-text { font-size: 9px; color: #ffffff; font-weight: bold; }
+.featured-question { font-size: 14px; font-weight: bold; color: #111827; line-height: 1.375; margin-bottom: 10px; }
+.featured-answer-box { background-color: rgba(255,255,255,0.6); padding: 10px; border-radius: 12px; }
+.featured-answer { font-size: 12px; color: rgba(79,70,229,0.8); line-height: 1.5; }
+
+/* Topic Banner */
+.topic-banner { margin-bottom: 16px; }
+.topic-banner-inner { background-image: linear-gradient(to right, #ec4899, #fb7185); border-radius: 16px; padding: 16px; flex-direction: row; align-items: center; justify-content: space-between; position: relative; overflow: hidden; }
+.topic-blur-right { position: absolute; right: -16px; top: -16px; width: 96px; height: 96px; background-color: rgba(255,255,255,0.2); border-radius: 48px; }
+.topic-blur-left { position: absolute; bottom: -24px; left: -24px; width: 80px; height: 80px; background-color: rgba(219,39,119,0.3); border-radius: 40px; }
+.topic-content { flex: 1; }
+.topic-label { flex-direction: row; align-items: center; background-color: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 6px; margin-bottom: 6px; align-self: flex-start; }
+.topic-label-icon { font-size: 12px; color: #ffffff; margin-right: 4px; }
+.topic-label-text { font-size: 10px; color: #ffffff; }
+.topic-title { font-size: 15px; font-weight: bold; color: #ffffff; margin-bottom: 2px; }
+.topic-meta-row { flex-direction: row; align-items: center; }
+.topic-meta-icon { font-size: 12px; color: #ffffff; margin-right: 4px; }
+.topic-meta-text { font-size: 11px; color: rgba(255,255,255,0.9); }
+.topic-arrow { width: 32px; height: 32px; background-color: rgba(255,255,255,0.2); border-radius: 16px; align-items: center; justify-content: center; }
+.topic-arrow-text { font-size: 20px; color: #ffffff; }
+
+/* Empty State */
+.empty-state { align-items: center; justify-content: center; padding: 64px 16px; }
+.empty-icon-wrap { background-color: #f3f4f6; width: 64px; height: 64px; border-radius: 32px; align-items: center; justify-content: center; margin-bottom: 16px; }
+.empty-icon { font-size: 32px; }
+.empty-title { font-size: 14px; color: #4b5563; font-weight: bold; margin-bottom: 4px; }
+.empty-desc { font-size: 12px; color: #9ca3af; text-align: center; margin-bottom: 24px; padding: 0 16px; }
+.empty-actions { flex-direction: row; width: 100%; padding: 0 24px; }
+.empty-btn-clear { flex: 1; background-color: #ffffff; border-width: 1px; border-style: solid; border-color: #e5e7eb; padding: 10px 0; border-radius: 12px; align-items: center; margin-right: 12px; }
+.empty-btn-clear-text { font-size: 12px; color: #4b5563; font-weight: 500; }
+.empty-btn-ai { flex: 1; background-color: #ec4899; padding: 10px 0; border-radius: 12px; align-items: center; flex-direction: row; justify-content: center; }
+.empty-btn-ai-icon { font-size: 14px; color: #ffffff; margin-right: 4px; }
+.empty-btn-ai-text { font-size: 12px; color: #ffffff; font-weight: bold; }
+
+.end-text { font-size: 12px; color: #9ca3af; text-align: center; margin-top: 24px; margin-bottom: 16px; }
+
+/* FAB */
+.fab-contribute { position: fixed; right: 16px; bottom: 96px; background-image: linear-gradient(to right, #f43f5e, #ec4899); padding: 10px 14px; border-radius: 20px; flex-direction: row; align-items: center; box-shadow: 0 8px 20px -4px rgba(244,63,94,0.3); z-index: 40; }
+.fab-contribute-icon { font-size: 14px; color: #ffffff; margin-right: 6px; }
+.fab-contribute-text { font-size: 11px; color: #ffffff; font-weight: bold; }
+
+.bottom-spacer { height: calc(96px + env(safe-area-inset-bottom)); }
+</style>

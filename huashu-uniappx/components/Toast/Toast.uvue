@@ -1,0 +1,61 @@
+<template>
+  <view v-if="visible" class="toast-overlay" :class="[fadeOut ? 'fade-out' : 'fade-in']">
+    <view class="toast-box shadow-lg">
+      <text class="toast-text">{{ message }}</text>
+    </view>
+  </view>
+</template>
+
+<script setup lang="uts">
+import { ref, watch } from 'vue'
+import { useAppStore } from '../../store/app.uts'
+
+const props = defineProps<{
+  message: string
+}>()
+
+const visible = ref(false)
+const fadeOut = ref(false)
+let timer: number | null = null
+
+watch(() => props.message, (newVal) => {
+  if (newVal) {
+    if (timer !== null) {
+      clearTimeout(timer)
+    }
+    visible.value = true
+    fadeOut.value = false
+
+    timer = setTimeout(() => {
+      fadeOut.value = true
+      setTimeout(() => {
+        visible.value = false
+        useAppStore.toastMsg = '' // 重置全局状态
+      }, 300) // 等待退出动画结束
+    }, 2000)
+  }
+})
+</script>
+
+<style>
+.toast-overlay {
+  position: fixed;
+  top: 100px;
+  left: 0;
+  right: 0;
+  align-items: center;
+  z-index: 1000;
+  pointer-events: none; /* 让点击穿透 */
+}
+
+.toast-box {
+  background-color: rgba(31, 41, 55, 0.9); /* bg-gray-800 */
+  padding: 12px 24px;
+  border-radius: 20px;
+}
+
+.toast-text {
+  color: #ffffff;
+  font-size: 14px;
+}
+</style>

@@ -1,0 +1,144 @@
+<template>
+  <view class="container">
+    <scroll-view class="scroll-area" scroll-y>
+      <view class="poster-card">
+        <!-- 装饰背景 -->
+        <view class="poster-bg-glow"></view>
+
+        <view class="poster-header">
+          <text class="poster-title">邀请好友 赚积分</text>
+          <text class="poster-subtitle">每成功邀请一位好友注册，即可获得</text>
+          <view class="reward-box">
+            <text class="reward-num">50</text>
+            <text class="reward-unit">积分</text>
+          </view>
+        </view>
+
+        <view class="poster-steps">
+          <view class="step-item">
+            <view class="step-num-wrap"><text class="step-num">1</text></view>
+            <text class="step-text">分享邀请码给好友</text>
+          </view>
+          <view class="step-divider"></view>
+          <view class="step-item">
+            <view class="step-num-wrap"><text class="step-num">2</text></view>
+            <text class="step-text">好友注册时填写</text>
+          </view>
+          <view class="step-divider"></view>
+          <view class="step-item">
+            <view class="step-num-wrap"><text class="step-num">3</text></view>
+            <text class="step-text">双方各得50积分</text>
+          </view>
+        </view>
+
+        <view class="code-section">
+          <text class="code-label">我的专属邀请码</text>
+          <view class="code-box">
+            <text class="code-text">{{ inviteCode }}</text>
+            <view class="copy-btn" @click="copyCode">
+              <text class="copy-btn-text">复制</text>
+            </view>
+          </view>
+        </view>
+
+        <!-- 模拟二维码 -->
+        <view class="qrcode-section">
+          <view class="qrcode-placeholder">
+            <text class="qrcode-emoji">📱</text>
+            <text class="qrcode-tip">扫码下载 App</text>
+          </view>
+          <text class="qrcode-desc">长按保存海报，分享至微信 / 朋友圈</text>
+        </view>
+      </view>
+
+      <view class="action-bar">
+        <view class="action-btn share-btn" @click="shareToWechat">
+          <text class="action-btn-icon">💬</text>
+          <text class="action-btn-text">微信分享</text>
+        </view>
+        <view class="action-btn save-btn" @click="savePoster">
+          <text class="action-btn-icon">⬇️</text>
+          <text class="action-btn-text">保存海报</text>
+        </view>
+      </view>
+
+      <view class="bottom-spacer"></view>
+    </scroll-view>
+  </view>
+</template>
+
+<script setup lang="uts">
+import { ref } from 'vue'
+import { useAppStore } from '../../store/app.uts'
+
+const appStore = useAppStore
+
+const inviteCode = ref(appStore.userInfo?.id || 'HSHU8829')
+
+const copyCode = () => {
+  uni.setClipboardData({
+    data: inviteCode.value,
+    success: () => {
+      appStore.showToast('邀请码已复制，快去分享吧！')
+    }
+  })
+}
+
+const shareToWechat = () => {
+  appStore.showToast('正在调起微信分享...')
+}
+
+const savePoster = () => {
+  uni.showLoading({ title: '正在生成海报...' })
+  setTimeout(() => {
+    uni.hideLoading()
+    appStore.showToast('海报已保存到相册')
+  }, 1500)
+}
+</script>
+
+<style>
+page { background-color: #fdf2f8; height: 100%; }
+.container { flex: 1; display: flex; flex-direction: column; height: 100%; }
+
+.scroll-area { flex: 1; padding: 20px; }
+
+.poster-card { background-color: #ffffff; border-radius: 24px; padding: 32px 24px; align-items: center; box-shadow: 0 20px 40px -10px rgba(236,72,153,0.15); position: relative; overflow: hidden; margin-bottom: 24px; }
+.poster-bg-glow { position: absolute; top: -50px; left: -50px; width: 150px; height: 150px; background-image: linear-gradient(to bottom right, rgba(244,63,94,0.1), rgba(236,72,153,0)); border-radius: 75px; }
+
+.poster-header { align-items: center; margin-bottom: 32px; z-index: 10; }
+.poster-title { font-size: 24px; font-weight: 900; color: #db2777; margin-bottom: 8px; letter-spacing: 1px; }
+.poster-subtitle { font-size: 13px; color: #6b7280; margin-bottom: 12px; }
+.reward-box { flex-direction: row; align-items: baseline; background-image: linear-gradient(to right, #fce7f3, #fdf2f8); padding: 8px 24px; border-radius: 20px; border-width: 1px; border-style: solid; border-color: #fbcfe8; }
+.reward-num { font-size: 32px; font-weight: 900; color: #e11d48; margin-right: 4px; }
+.reward-unit { font-size: 14px; color: #e11d48; font-weight: bold; }
+
+.poster-steps { flex-direction: row; align-items: center; justify-content: space-between; width: 100%; margin-bottom: 32px; padding: 0 10px; z-index: 10; }
+.step-item { align-items: center; width: 70px; }
+.step-num-wrap { width: 24px; height: 24px; border-radius: 12px; background-color: #fbcfe8; align-items: center; justify-content: center; margin-bottom: 8px; }
+.step-num { font-size: 12px; color: #db2777; font-weight: bold; }
+.step-text { font-size: 11px; color: #4b5563; text-align: center; line-height: 1.4; }
+.step-divider { width: 24px; height: 1px; background-color: #fce7f3; margin-top: -24px; }
+
+.code-section { width: 100%; align-items: center; margin-bottom: 32px; z-index: 10; }
+.code-label { font-size: 12px; color: #9ca3af; margin-bottom: 8px; }
+.code-box { flex-direction: row; align-items: center; background-color: #f9fafb; padding: 6px 6px 6px 20px; border-radius: 24px; border-width: 1px; border-style: dashed; border-color: #d1d5db; width: 200px; justify-content: space-between; }
+.code-text { font-size: 20px; font-weight: 900; color: #1f2937; letter-spacing: 2px; }
+.copy-btn { background-image: linear-gradient(to right, #ec4899, #f43f5e); padding: 8px 16px; border-radius: 16px; }
+.copy-btn-text { font-size: 12px; color: #ffffff; font-weight: bold; }
+
+.qrcode-section { align-items: center; z-index: 10; }
+.qrcode-placeholder { width: 100px; height: 100px; background-color: #f3f4f6; border-radius: 12px; align-items: center; justify-content: center; margin-bottom: 12px; border-width: 1px; border-style: solid; border-color: #e5e7eb; }
+.qrcode-emoji { font-size: 32px; margin-bottom: 8px; }
+.qrcode-tip { font-size: 10px; color: #9ca3af; }
+.qrcode-desc { font-size: 11px; color: #6b7280; }
+
+.action-bar { flex-direction: row; justify-content: space-between; }
+.action-btn { flex: 1; flex-direction: row; align-items: center; justify-content: center; padding: 14px 0; border-radius: 24px; }
+.share-btn { background-color: #10b981; margin-right: 12px; box-shadow: 0 8px 16px rgba(16,185,129,0.2); }
+.save-btn { background-image: linear-gradient(to right, #ec4899, #f43f5e); box-shadow: 0 8px 16px rgba(236,72,153,0.3); }
+.action-btn-icon { font-size: 16px; margin-right: 6px; }
+.action-btn-text { font-size: 14px; font-weight: bold; color: #ffffff; }
+
+.bottom-spacer { height: 40px; }
+</style>
