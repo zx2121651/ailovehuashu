@@ -1,0 +1,97 @@
+<template>
+  <view class="page-container">
+    <view class="tool-header" :style="{ backgroundColor: bgColor }">
+      <view class="header-icon-wrap" :style="{ backgroundColor: iconBg }">
+         <text class="header-icon">{{ icon }}</text>
+      </view>
+      <text class="header-title" :style="{ color: textColor }">{{ title }}</text>
+      <text class="header-desc" :style="{ color: textColor }">{{ desc }}</text>
+    </view>
+
+    <scroll-view class="chat-area" scroll-y :scroll-into-view="scrollToId">
+      <view class="message ai-message">
+        <view class="avatar ai-avatar">✨</view>
+        <view class="bubble ai-bubble">
+          你好！我是你的专属【{{ title }}】助手。告诉我现在的情况，我马上帮你生成专属方案。
+        </view>
+      </view>
+
+      <view class="message user-message" id="msg-last">
+        <view class="bubble user-bubble">
+          {{ query }}
+        </view>
+        <view class="avatar user-avatar">👦</view>
+      </view>
+
+      <view class="message ai-message">
+        <view class="avatar ai-avatar">✨</view>
+        <view class="bubble ai-bubble typing-bubble">
+          <text class="typing-text">AI 正在飞速思考中...</text>
+        </view>
+      </view>
+    </scroll-view>
+
+    <view class="input-area">
+      <view class="input-wrap">
+        <input class="input" placeholder="继续输入更多细节..." />
+        <view class="send-btn" @click="appStore.showToast('生成中...')">
+          <text class="send-icon">↑</text>
+        </view>
+      </view>
+    </view>
+  </view>
+</template>
+
+<script setup lang="uts">
+import { ref } from 'vue'
+import { onLoad } from '@dcloudio/uni-app'
+import { useAppStore } from '../../store/app.uts'
+
+const appStore = useAppStore()
+
+const title = ref('AI 恋爱导师')
+const desc = ref('智能分析，专属定制')
+const icon = ref('✨')
+const query = ref('')
+const bgColor = ref('#f3e8ff')
+const textColor = ref('#7e22ce')
+const iconBg = ref('#e9d5ff')
+const scrollToId = ref('msg-last')
+
+onLoad((options: any) => {
+  if (options.title) title.value = decodeURIComponent(options.title)
+  if (options.desc) desc.value = decodeURIComponent(options.desc)
+  if (options.icon) icon.value = decodeURIComponent(options.icon)
+  if (options.query) query.value = decodeURIComponent(options.query)
+  if (options.bg) bgColor.value = decodeURIComponent(options.bg)
+  if (options.text) textColor.value = decodeURIComponent(options.text)
+  if (options.iconBg) iconBg.value = decodeURIComponent(options.iconBg)
+})
+</script>
+
+<style>
+.page-container { flex: 1; background-color: #f8fafc; }
+.tool-header { padding: 20px 20px 30px; align-items: center; border-bottom-left-radius: 24px; border-bottom-right-radius: 24px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+.header-icon-wrap { width: 48px; height: 48px; border-radius: 24px; align-items: center; justify-content: center; margin-bottom: 12px; }
+.header-icon { font-size: 24px; }
+.header-title { font-size: 20px; font-weight: bold; margin-bottom: 4px; }
+.header-desc { font-size: 13px; opacity: 0.8; }
+
+.chat-area { flex: 1; padding: 20px; }
+.message { flex-direction: row; margin-bottom: 20px; max-width: 90%; }
+.ai-message { align-self: flex-start; }
+.user-message { align-self: flex-end; justify-content: flex-end; }
+.avatar { width: 32px; height: 32px; border-radius: 16px; align-items: center; justify-content: center; }
+.ai-avatar { background-image: linear-gradient(to bottom right, #c084fc, #ec4899); color: white; margin-right: 12px; font-size: 14px; }
+.user-avatar { background-color: #dbeafe; margin-left: 12px; font-size: 16px; }
+.bubble { padding: 12px 16px; border-radius: 16px; max-width: 260px; }
+.ai-bubble { background-color: #ffffff; border-top-left-radius: 4px; color: #374151; font-size: 14px; box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05); line-height: 1.5; }
+.user-bubble { background-color: #1f2937; color: #ffffff; border-top-right-radius: 4px; font-size: 14px; box-shadow: 0 2px 4px 0 rgba(0,0,0,0.1); line-height: 1.5; }
+.typing-text { font-size: 12px; color: #9ca3af; }
+
+.input-area { background-color: #ffffff; padding: 12px 20px 24px; border-top: 1px solid #f3f4f6; }
+.input-wrap { flex-direction: row; background-color: #f3f4f6; border-radius: 24px; padding: 4px 4px 4px 16px; align-items: center; }
+.input { flex: 1; height: 36px; font-size: 14px; color: #1f2937; }
+.send-btn { width: 36px; height: 36px; border-radius: 18px; background-color: #111827; align-items: center; justify-content: center; margin-left: 8px; }
+.send-icon { color: white; font-weight: bold; font-size: 16px; margin-top: -2px; }
+</style>

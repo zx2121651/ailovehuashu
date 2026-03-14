@@ -728,6 +728,75 @@ export default function ServicePages() {
             )}
 
             {/* 精选专题页面 */}
+
+            {id === 'ai-tool' && data && (
+              <div className="h-[calc(100vh-120px)] flex flex-col bg-white rounded-3xl overflow-hidden shadow-sm border border-gray-100 mb-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                <div className={`p-5 ${data.bg} border-b ${data.border} flex flex-col items-center justify-center relative overflow-hidden`}>
+                   <div className="absolute inset-0 bg-white/40 backdrop-blur-sm"></div>
+                   <div className="relative z-10 flex flex-col items-center">
+                     <div className={`w-14 h-14 ${data.iconBg} rounded-full flex items-center justify-center mb-3 shadow-sm border border-white/50`}>
+                       {data.icon}
+                     </div>
+                     <h3 className={`font-extrabold text-xl ${data.text} mb-1 tracking-tight`}>{data.title}</h3>
+                     <p className={`text-[12px] font-medium opacity-80 ${data.text}`}>{data.desc}</p>
+                   </div>
+                </div>
+
+                <div className="flex-1 overflow-y-auto p-4 bg-gray-50/50 flex flex-col space-y-4">
+                   <div className="flex w-full mt-2 space-x-3 max-w-[85%]">
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-400 to-pink-500 flex-shrink-0 flex items-center justify-center text-white shadow-sm border border-white">
+                        <Sparkles size={14} />
+                      </div>
+                      <div>
+                        <div className="bg-white p-3.5 rounded-2xl rounded-tl-sm shadow-sm border border-gray-100/80 text-[13px] text-gray-700 leading-relaxed">
+                          你好！我是你的专属【{data.title}】助手。告诉我现在的情况，我马上帮你生成专属方案。
+                        </div>
+                      </div>
+                   </div>
+
+                   <div className="flex w-full justify-end space-x-3 max-w-[85%] self-end">
+                      <div>
+                        <div className={`bg-gradient-to-r from-gray-800 to-gray-900 p-3.5 rounded-2xl rounded-tr-sm shadow-md text-[13px] text-white leading-relaxed`}>
+                          {data.query}
+                        </div>
+                      </div>
+                      <div className="w-8 h-8 rounded-full flex-shrink-0 overflow-hidden shadow-sm border border-white">
+                         <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" className="w-full h-full bg-blue-50" alt="Me" />
+                      </div>
+                   </div>
+
+                   <div className="flex w-full mt-2 space-x-3 max-w-[85%]">
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-400 to-pink-500 flex-shrink-0 flex items-center justify-center text-white shadow-sm border border-white">
+                        <Sparkles size={14} />
+                      </div>
+                      <div>
+                        <div className="bg-white p-3.5 rounded-2xl rounded-tl-sm shadow-sm border border-gray-100/80 text-[13px] text-gray-700 leading-relaxed">
+                          <div className="flex space-x-1.5 items-center mb-1">
+                            <div className="w-1.5 h-1.5 bg-pink-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                            <div className="w-1.5 h-1.5 bg-pink-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                            <div className="w-1.5 h-1.5 bg-pink-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                          </div>
+                          <span className="text-gray-400 text-xs">AI 正在飞速为你思考中...</span>
+                        </div>
+                      </div>
+                   </div>
+                </div>
+
+                <div className="p-4 bg-white border-t border-gray-100">
+                  <div className="bg-gray-100/80 rounded-[1.5rem] p-1.5 flex items-end shadow-inner border border-gray-200/50">
+                    <textarea
+                      className="flex-1 bg-transparent max-h-24 min-h-[40px] text-[13px] px-3 py-2.5 focus:outline-none resize-none placeholder-gray-400 text-gray-700"
+                      placeholder="继续输入更多细节..."
+                      rows="1"
+                    ></textarea>
+                    <button className="w-9 h-9 flex-shrink-0 bg-gradient-to-r from-gray-900 to-black text-white rounded-full flex items-center justify-center shadow-md active:scale-95 transition-transform mb-0.5 mr-0.5">
+                      <Send size={15} className="-ml-0.5" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {id === 'topic' && (
               <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300 pb-10">
                 <div className="relative h-56 rounded-[2rem] overflow-hidden shadow-xl shadow-gray-200/50 mb-2 group">
