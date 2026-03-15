@@ -31,7 +31,8 @@
     </view>
 
     <!-- Hot Search Tags -->
-    <scroll-view class="hot-tags-scroll" scroll-x="true">
+    <scroll-view class="hot-tags-scroll" direction="horizontal">
+      <view class="hot-tags-row">
         <view class="hot-label-wrap">
           <text class="hot-label-icon">📈</text>
           <text class="hot-label-text">猜你想搜</text>
@@ -44,6 +45,7 @@
         >
           <text class="hot-tag-text">{{ tag }}</text>
         </view>
+    </view>
     </scroll-view>
   </view>
 </template>
@@ -103,8 +105,9 @@ const handleTagClick = (tag: string) => {
 .hot-tag { background-color: #f9fafb; border-width: 1px; border-style: solid; border-color: #f3f4f6; padding: 6px 12px; border-radius: 20px; margin-right: 8px; flex-shrink: 0; }
 .hot-tag-text { font-size: 11px; color: #6b7280; }
 
-.hot-tags-scroll { white-space: nowrap; direction: ltr; width: 100%; height: 32px; }
+.hot-tags-scroll { flex-direction: row; height: 32px; }
 .hot-label-wrap { display: inline-flex; flex-direction: row; align-items: center; vertical-align: top; }
 .hot-tag { display: inline-flex; flex-direction: row; align-items: center; vertical-align: top; }
 
+.hot-tags-row { flex-direction: row; align-items: center; }
 </style>

@@ -572,7 +572,8 @@ page { display: flex; flex-direction: column; height: 100%; }
 
 /* .bottom-spacer { height: 120px; } */
 
-.folder-tabs { white-space: nowrap; direction: ltr; width: 100%; }
-.folder-tab { display: inline-flex; vertical-align: top; flex-direction: row; }
+.folder-tabs { flex-direction: row; }
+.folder-tab { flex-shrink: 0; flex-direction: row; }
 
+.folder-tabs-row { flex-direction: row; align-items: center; }
 </style>

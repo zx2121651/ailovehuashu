@@ -93,11 +93,12 @@
     <!-- Bottom Input Area -->
     <view class="input-area absolute bottom-0 w-full bg-gray-50 z-30 pb-safe">
       <!-- Quick Chips -->
-      <scroll-view class="chips-row px-3 pb-2 pt-1" scroll-x :show-scrollbar="false">
-        <view class="flex-row pb-1">
-          <view v-for="(chip, idx) in chips" :key="idx" class="chip-btn bg-white px-3 py-1_5 rounded-full shadow-sm border border-gray-100 mr-2 flex-row items-center" @click="setInput(chip)">
+      <scroll-view class="chips-row px-3 pb-2 pt-1" direction="horizontal" :show-scrollbar="false">
+        <view class="flex-row pb-1" style="flex-direction: row; align-items: flex-start;">
+          <view v-for="(chip, idx) in chips" :key="idx" class="chip-btn " style="flex-shrink: 0;" bg-white px-3 py-1_5 rounded-full shadow-sm border border-gray-100 mr-2 flex-row items-center" @click="setInput(chip)">
             <text class="text-gray-600 text-xs whitespace-nowrap">{{ chip }}</text>
           </view>
+        </view>
         </view>
       </scroll-view>
 

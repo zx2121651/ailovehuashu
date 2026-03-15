@@ -6,7 +6,8 @@
         <text class="section-more-text">全部 ›</text>
       </view>
     </view>
-    <scroll-view class="cats-scroll" scroll-x="true">
+    <scroll-view class="cats-scroll" direction="horizontal">
+      <view class="cats-row">
       <view
         v-for="cat in categories"
         :key="cat.id"
@@ -17,6 +18,7 @@
           <text class="cat-icon-emoji">{{ cat.icon }}</text>
         </view>
         <text class="cat-name">{{ cat.name }}</text>
+      </view>
       </view>
     </scroll-view>
   </view>
@@ -41,9 +43,10 @@ const emit = defineEmits<{
 .section-more-text { font-size: 11px; color: #9ca3af; }
 
 /* Categories */
-.cats-scroll { padding: 0 20px; height: 90px; white-space: nowrap; direction: ltr; width: 100%; }
+.cats-scroll { padding: 0 20px; height: 90px; flex-direction: row; }
+.cats-row { flex-direction: row; align-items: flex-start; }
 
-.cat-item { display: inline-flex; flex-direction: column; align-items: center; justify-content: flex-start; margin-right: 14px; width: 56px; height: 90px; vertical-align: top; }
+.cat-item { align-items: center; justify-content: flex-start; margin-right: 14px; width: 56px; height: 90px; flex-shrink: 0; }
 .cat-icon-box { width: 56px; height: 56px; border-radius: 16px; align-items: center; justify-content: center; }
 .cat-icon-emoji { font-size: 24px; }
 .cat-name { font-size: 11px; font-weight: bold; color: #374151; margin-top: 8px; }
