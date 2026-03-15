@@ -65,8 +65,7 @@
             <text class="sidebar-icon" :class="[activeCategory === cat.id && !searchQuery ? 'sidebar-icon-active' : '']">{{ cat.icon }}</text>
             <text class="sidebar-name" :class="[activeCategory === cat.id && !searchQuery ? 'sidebar-name-active' : '']">{{ cat.name }}</text>
             <text class="sidebar-count">{{ cat.count }} 篇</text>
-          </view>
-        </scroll-view>
+          </scroll-view>
 
         <!-- Right Panel -->
         <scroll-view class="right-panel" scroll-y>
@@ -92,8 +91,7 @@
                     <text class="sort-tag-text" :class="[sort === sortTab.label ? 'sort-tag-text-active' : '']">{{ sortTab.label }}</text>
                   </view>
               </view>
-              </view>
-            </scroll-view>
+</scroll-view>
             </view>
 
             <!-- Tag Filters (when not searching) -->
@@ -108,7 +106,6 @@
                 >
                   <text class="filter-tag-text" :class="[activeTag === tag.name ? 'filter-tag-text-active' : '']">{{ tag.name }}</text>
                 </view>
-            </view>
             </scroll-view>
 
             <!-- Featured Scripts (daily pick) -->
@@ -136,8 +133,7 @@
                     </view>
                   </view>
               </view>
-              </view>
-            </scroll-view>
+              </scroll-view>
             </view>
 
             <!-- Topic Banner -->
@@ -204,10 +200,12 @@
         <text class="fab-contribute-icon">✏️</text>
         <text class="fab-contribute-text">发布话术</text>
       </view>
-    </template>
+      </view>
+</template>
 
     <ContributeDrawer :isOpen="appStore.showContributeDrawer" @close="appStore.showContributeDrawer = false" ></ContributeDrawer>
     <CustomTabBar :current="1"></CustomTabBar>
+  </view>
   </view>
 </template>
 
