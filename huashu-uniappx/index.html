@@ -4,6 +4,36 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, viewport-fit=cover" />
     <title>话术 App</title>
+    <style>
+      /* Web 端 scroll-view 横向滚动支持 */
+      scroll-view[scroll-x] {
+        display: block !important;
+        width: 100% !important;
+        overflow-x: auto !important;
+        overflow-y: hidden !important;
+        -webkit-overflow-scrolling: touch !important;
+        white-space: nowrap !important;
+        box-sizing: border-box !important;
+      }
+      scroll-view[scroll-x] > view {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        min-width: min-content !important;
+        width: auto !important;
+      }
+      scroll-view[scroll-x] > view > view {
+        flex-shrink: 0 !important;
+      }
+      /* 隐藏滚动条但保持滚动功能 */
+      scroll-view[scroll-x]::-webkit-scrollbar {
+        display: none !important;
+      }
+      scroll-view[scroll-x] {
+        -ms-overflow-style: none !important;
+        scrollbar-width: none !important;
+      }
+    </style>
   </head>
   <body>
     <div id="app"><!--app-html--></div>

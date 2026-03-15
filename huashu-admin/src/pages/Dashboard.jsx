@@ -43,6 +43,8 @@ const Dashboard = () => {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [userGrowthData, setUserGrowthData] = useState([]);
+  const [scriptDistribution, setScriptDistribution] = useState([]);
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -54,6 +56,9 @@ const Dashboard = () => {
         const data = await res.json();
         if (data.success || data.code === 200) {
           setStats(data.data);
+          // 设置图表数据，如果没有则使用空数组
+          setUserGrowthData(data.data.userGrowth || []);
+          setScriptDistribution(data.data.scriptDistribution || []);
         } else {
           setError('获取数据失败');
         }
@@ -190,26 +195,29 @@ const Dashboard = () => {
           </div>
 
           <div className="h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={[
-                { name: '10/19', users: 45 }, { name: '10/20', users: 52 },
-                { name: '10/21', users: 38 }, { name: '10/22', users: 65 },
-                { name: '10/23', users: 85 }, { name: '10/24', users: 120 },
-                { name: '10/25', users: 156 }
-              ]} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="colorUsers" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#4f46e5" stopOpacity={0.4}/>
-                    <stop offset="95%" stopColor="#4f46e5" stopOpacity={0}/>
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f8fafc" />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 12, fontWeight: 'bold'}} dy={10} />
-                <YAxis axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 12, fontWeight: 'bold'}} />
-                <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#4f46e5', strokeWidth: 1, strokeDasharray: '5 5' }} />
-                <Area type="monotone" dataKey="users" name="新增用户" stroke="#4f46e5" strokeWidth={4} fillOpacity={1} fill="url(#colorUsers)" activeDot={{ r: 8, strokeWidth: 0, fill: '#4f46e5' }} />
-              </AreaChart>
-            </ResponsiveContainer>
+            {userGrowthData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={userGrowthData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="colorUsers" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#4f46e5" stopOpacity={0.4}/>
+                      <stop offset="95%" stopColor="#4f46e5" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f8fafc" />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 12, fontWeight: 'bold'}} dy={10} />
+                  <YAxis axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 12, fontWeight: 'bold'}} />
+                  <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#4f46e5', strokeWidth: 1, strokeDasharray: '5 5' }} />
+                  <Area type="monotone" dataKey="users" name="新增用户" stroke="#4f46e5" strokeWidth={4} fillOpacity={1} fill="url(#colorUsers)" activeDot={{ r: 8, strokeWidth: 0, fill: '#4f46e5' }} />
+                </AreaChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex flex-col items-center justify-center h-full text-slate-400">
+                <BarChart2 className="w-12 h-12 mb-3 opacity-30" />
+                <p className="text-sm font-medium">暂无用户增长数据</p>
+                <p className="text-xs mt-1 opacity-60">新用户注册后将在此显示</p>
+              </div>
+            )}
           </div>
         </div>
 
@@ -220,24 +228,29 @@ const Dashboard = () => {
             <p className="text-sm font-medium text-slate-400 mt-1">核心品类占比概览</p>
           </div>
           <div className="flex-1 flex items-center justify-center min-h-[250px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={[
-                    { name: '幽默撩人', value: 256 }, { name: '开场破冰', value: 128 },
-                    { name: '巧妙化解', value: 112 }, { name: '长期关系', value: 154 }
-                  ]}
-                  cx="50%" cy="50%" innerRadius={70} outerRadius={100} paddingAngle={6}
-                  dataKey="value" stroke="none" cornerRadius={8}
-                >
-                  {[ '#4f46e5', '#0ea5e9', '#f43f5e', '#10b981' ].map((color, index) => (
-                    <Cell key={`cell-${index}`} fill={color} className="hover:opacity-80 transition-opacity outline-none" />
-                  ))}
-                </Pie>
-                <Tooltip content={<CustomTooltip />} />
-                <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: '13px', fontWeight: 'bold', color: '#64748b' }} />
-              </PieChart>
-            </ResponsiveContainer>
+            {scriptDistribution.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={scriptDistribution}
+                    cx="50%" cy="50%" innerRadius={70} outerRadius={100} paddingAngle={6}
+                    dataKey="value" stroke="none" cornerRadius={8}
+                  >
+                    {[ '#4f46e5', '#0ea5e9', '#f43f5e', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899' ].map((color, index) => (
+                      <Cell key={`cell-${index}`} fill={color} className="hover:opacity-80 transition-opacity outline-none" />
+                    ))}
+                  </Pie>
+                  <Tooltip content={<CustomTooltip />} />
+                  <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: '13px', fontWeight: 'bold', color: '#64748b' }} />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex flex-col items-center justify-center h-full text-slate-400">
+                <div className="w-12 h-12 rounded-full border-4 border-slate-200 border-t-indigo-500 animate-spin mb-3" />
+                <p className="text-sm font-medium">暂无分类数据</p>
+                <p className="text-xs mt-1 opacity-60">添加话术分类后将在此显示</p>
+              </div>
+            )}
           </div>
         </div>
 
