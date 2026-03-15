@@ -30,6 +30,7 @@ export default function Home() {
   const [scripts, setScripts] = useState([]);
   const [articles, setArticles] = useState([]);
   const [recommendedCourses, setRecommendedCourses] = useState([]);
+  const [aiTools, setAiTools] = useState([]);
   const [loading, setLoading] = useState(true);
 
   // 从 API 获取数据
@@ -37,16 +38,23 @@ export default function Home() {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const [cats, scriptsData, articlesData, coursesData] = await Promise.all([
+        const [cats, scriptsData, articlesData, coursesData, toolsData] = await Promise.all([
           getCategories(),
           getScripts({ pageSize: 10 }),
           getArticles(),
-          getRecommendedCourses().catch(() => [])
+          getRecommendedCourses().catch(() => []),
+          Promise.resolve({ data: [
+          { title: '朋友圈文案', desc: '高级感拉满', icon: '✏️', bg: 'bg-blue-50/50', border: 'border-blue-100', text: 'text-blue-700', iconBg: 'bg-blue-100', query: '帮我写一段发朋友圈的文案，展现我积极阳光的生活状态，带点幽默感', suggestedChips: ['分享美食', '旅行打卡', '深夜 EMO', '搞怪自黑'] },
+          { title: '高情商道歉', desc: '秒变乖狗狗', icon: '😊', bg: 'bg-orange-50/50', border: 'border-orange-100', text: 'text-orange-700', iconBg: 'bg-orange-100', query: '我惹女朋友生气了，帮我写一段真诚又带点幽默的高情商道歉话术', suggestedChips: ['没回消息', '忘记纪念日', '态度不好', '无理取闹'] },
+          { title: '土味情话', desc: '撩到她脸红', icon: '💕', bg: 'bg-pink-50/50', border: 'border-pink-100', text: 'text-pink-700', iconBg: 'bg-pink-100', query: '给我来5句土味情话，越土越好', suggestedChips: ['土到掉渣', '霸道总裁', '硬核撩妹', '文艺浪漫'] },
+          { title: '冷场急救', desc: '破解尴尬', icon: '⚡', bg: 'bg-yellow-50/50', border: 'border-yellow-100', text: 'text-yellow-700', iconBg: 'bg-yellow-100', query: '现在聊天冷场了，不知道说什么，给我提供几个有趣的话题破冰', suggestedChips: ['相亲冷场', '刚刚认识', '共同爱好', '转移话题'] }
+        ] })
         ]);
         setCategories(cats);
         setScripts(scriptsData.list || []);
         setArticles(articlesData || []);
         setRecommendedCourses(coursesData || []);
+        setAiTools(toolsData.data || []);
       } catch (error) {
         console.error('获取数据失败:', error);
         showToast('数据加载失败，请刷新重试');
@@ -204,12 +212,7 @@ export default function Home() {
           <span className="text-[11px] bg-purple-100 text-purple-600 px-2 py-0.5 rounded-full font-bold">无限畅聊</span>
         </div>
         <div className="px-4 grid grid-cols-2 gap-3">
-           {[
-             { title: '朋友圈文案', desc: '高级感拉满', icon: <Edit3 size={16} className="text-blue-500" />, bg: 'bg-blue-50/50', border: 'border-blue-100', text: 'text-blue-700', iconBg: 'bg-blue-100', query: '帮我写一段发朋友圈的文案，展现我积极阳光的生活状态，带点幽默感' },
-             { title: '高情商道歉', desc: '秒变乖狗狗', icon: <Smile size={16} className="text-orange-500" />, bg: 'bg-orange-50/50', border: 'border-orange-100', text: 'text-orange-700', iconBg: 'bg-orange-100', query: '我惹女朋友生气了，帮我写一段真诚又带点幽默的高情商道歉话术' },
-             { title: '土味情话', desc: '撩到她脸红', icon: <Heart size={16} className="text-pink-500" />, bg: 'bg-pink-50/50', border: 'border-pink-100', text: 'text-pink-700', iconBg: 'bg-pink-100', query: '给我来5句土味情话，越土越好' },
-             { title: '冷场急救', desc: '破解尴尬', icon: <Zap size={16} className="text-yellow-500" />, bg: 'bg-yellow-50/50', border: 'border-yellow-100', text: 'text-yellow-700', iconBg: 'bg-yellow-100', query: '现在聊天冷场了，不知道说什么，给我提供几个有趣的话题破冰' }
-           ].map((tool, idx) => (
+           {aiTools.map((tool, idx) => (
              <div key={idx} onClick={() => { setActiveServicePage({ id: 'ai-tool', data: tool }); }} className={`${tool.bg} border ${tool.border} p-3 rounded-2xl flex items-center cursor-pointer hover:scale-[1.02] active:scale-95 transition-all shadow-sm`}>
                <div className={`w-8 h-8 rounded-full ${tool.iconBg} flex items-center justify-center mr-2.5 shrink-0 shadow-sm`}>
                  {tool.icon}

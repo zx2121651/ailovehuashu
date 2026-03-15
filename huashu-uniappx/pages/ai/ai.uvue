@@ -87,7 +87,8 @@
         </view>
       </view>
 
-      <view class="pb-32"></scroll-view>
+      <view class="pb-32"></view>
+    </scroll-view>
 
     <!-- Bottom Input Area -->
     <view class="input-area absolute bottom-0 w-full bg-gray-50 z-30 pb-safe">
