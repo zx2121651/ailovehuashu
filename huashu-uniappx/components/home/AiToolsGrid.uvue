@@ -69,6 +69,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: 'open-ai', query: string): void
+  (e: 'open-ai-tool', tool: any): void
   (e: 'show-toast', message: string): void
 }>()
 </script>

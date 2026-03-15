@@ -571,4 +571,8 @@ page { display: flex; flex-direction: column; height: 100%; }
 .drawer-new-text { font-size: 14px; color: #3b82f6; font-weight: 500; }
 
 /* .bottom-spacer { height: 120px; } */
+
+.folder-tabs { white-space: nowrap; direction: ltr; width: 100%; }
+.folder-tab { display: inline-flex; vertical-align: top; flex-direction: row; }
+
 </style>
