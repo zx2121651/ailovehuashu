@@ -6,7 +6,7 @@
       <text class="loading-text">加载中...</text>
     </view>
 
-    <scroll-view v-else class="scroll-area" scroll-y>
+    <scroll-view v-else class="scroll-area" scroll-y="true">
       <!-- Header + Search Area -->
       <HomeHeader
         :hotTags="hotTags"
