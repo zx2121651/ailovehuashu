@@ -45,7 +45,9 @@ val abilityCards = listOf(
 )
 
 @Composable
-fun HomeScreen() {
+fun HomeScreen(
+    onNavigateToChatBooster: () -> Unit
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -67,7 +69,13 @@ fun HomeScreen() {
                     title = card.title,
                     subtitle = card.subtitle,
                     colors = card.colors,
-                    onClick = { /* Navigate to feature */ }
+                    onClick = {
+                        if (card.id == "chat_hero") {
+                            onNavigateToChatBooster()
+                        } else {
+                            // Navigate to other features
+                        }
+                    }
                 )
             }
         }
