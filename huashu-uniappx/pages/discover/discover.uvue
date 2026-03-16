@@ -65,8 +65,7 @@
             <text class="sidebar-icon" :class="[activeCategory === cat.id && !searchQuery ? 'sidebar-icon-active' : '']">{{ cat.icon }}</text>
             <text class="sidebar-name" :class="[activeCategory === cat.id && !searchQuery ? 'sidebar-name-active' : '']">{{ cat.name }}</text>
             <text class="sidebar-count">{{ cat.count }} 篇</text>
-          </view>
-        </scroll-view>
+          </scroll-view>
 
         <!-- Right Panel -->
         <scroll-view class="right-panel" scroll-y>
@@ -80,7 +79,7 @@
                 </view>
               </view>
               <!-- Sort Tabs -->
-              <scroll-view class="sort-scroll" scroll-x>
+              <scroll-view class="sort-scroll" direction="horizontal">
                 <view class="sort-row">
                   <view
                     v-for="sortTab in sortTabs"
@@ -91,13 +90,13 @@
                   >
                     <text class="sort-tag-text" :class="[sort === sortTab.label ? 'sort-tag-text-active' : '']">{{ sortTab.label }}</text>
                   </view>
-                </view>
-              </scroll-view>
+              </view>
+</scroll-view>
             </view>
 
             <!-- Tag Filters (when not searching) -->
-            <scroll-view v-if="!searchQuery" class="tag-scroll" scroll-x>
-              <view class="tag-row">
+            <scroll-view v-if="!searchQuery" class="tag-scroll" direction="horizontal">
+                <view class="tag-row">
                 <view
                   v-for="tag in categoryTags"
                   :key="tag.id"
@@ -107,7 +106,6 @@
                 >
                   <text class="filter-tag-text" :class="[activeTag === tag.name ? 'filter-tag-text-active' : '']">{{ tag.name }}</text>
                 </view>
-              </view>
             </scroll-view>
 
             <!-- Featured Scripts (daily pick) -->
@@ -116,8 +114,8 @@
                 <text class="featured-fire">🔥</text>
                 <text class="featured-title">每日精选</text>
               </view>
-              <scroll-view class="featured-scroll" scroll-x>
-                <view class="featured-row">
+              <scroll-view class="featured-scroll" direction="horizontal">
+                  <view class="featured-row">
                   <view
                     v-for="script in featuredScripts"
                     :key="'featured-' + script.id"
@@ -134,7 +132,7 @@
                       <text class="featured-answer" :lines="2">{{ script.answers && script.answers[0] ? script.answers[0] : '暂无回复' }}</text>
                     </view>
                   </view>
-                </view>
+              </view>
               </scroll-view>
             </view>
 
@@ -202,10 +200,12 @@
         <text class="fab-contribute-icon">✏️</text>
         <text class="fab-contribute-text">发布话术</text>
       </view>
-    </template>
+      </view>
+</template>
 
     <ContributeDrawer :isOpen="appStore.showContributeDrawer" @close="appStore.showContributeDrawer = false" ></ContributeDrawer>
     <CustomTabBar :current="1"></CustomTabBar>
+  </view>
   </view>
 </template>
 
@@ -543,4 +543,12 @@ page { display: flex; flex-direction: column; height: 100%; }
 .fab-contribute-text { font-size: 11px; color: #ffffff; font-weight: bold; }
 
 .bottom-spacer { height: calc(96px + env(safe-area-inset-bottom)); }
+
+.sort-scroll { flex-direction: row; }
+.sort-tag { flex-shrink: 0; flex-direction: row; }
+.tag-scroll { flex-direction: row; }
+.filter-tag { flex-shrink: 0; flex-direction: row; }
+.featured-scroll { flex-direction: row; }
+.featured-card { flex-shrink: 0; flex-direction: column; }
+
 </style>

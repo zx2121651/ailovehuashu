@@ -765,6 +765,16 @@ export default function ServicePages() {
                       </div>
                    </div>
 
+                   {data.suggestedChips && data.suggestedChips.length > 0 && (
+                     <div className="flex flex-wrap gap-2 mt-4 ml-12">
+                       {data.suggestedChips.map((chip, idx) => (
+                         <div key={idx} className="bg-white border border-gray-200 text-gray-600 text-[12px] px-3 py-1.5 rounded-full shadow-sm hover:bg-gray-50 cursor-pointer flex items-center active:scale-95 transition-transform">
+                           <span className="mr-1.5 text-blue-500">👉</span> {chip}
+                         </div>
+                       ))}
+                     </div>
+                   )}
+
                    <div className="flex w-full mt-2 space-x-3 max-w-[85%]">
                       <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-400 to-pink-500 flex-shrink-0 flex items-center justify-center text-white shadow-sm border border-white">
                         <Sparkles size={14} />

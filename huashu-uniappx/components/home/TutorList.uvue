@@ -9,7 +9,8 @@
         <text class="section-more-text">查看全部 ›</text>
       </view>
     </view>
-    <scroll-view class="tutors-scroll" scroll-x="true">
+    <scroll-view class="tutors-scroll" direction="horizontal">
+      <view class="tutors-row">
       <view
         v-for="(tutor, idx) in tutors"
         :key="idx"
@@ -27,6 +28,7 @@
         <view class="tutor-btn" @click="$emit('show-toast', '咨询功能开发中')">
           <text class="tutor-btn-text">立即咨询</text>
         </view>
+      </view>
       </view>
     </scroll-view>
   </view>
@@ -53,9 +55,10 @@ const emit = defineEmits<{
 .section-more-text { font-size: 11px; color: #9ca3af; }
 
 /* Tutors */
-.tutors-scroll { padding: 0 20px; height: 200px; white-space: nowrap; direction: ltr; width: 100%; }
+.tutors-scroll { padding: 0 20px; height: 200px; flex-direction: row; }
+.tutors-row { flex-direction: row; align-items: flex-start; }
 
-.tutor-card { display: inline-flex; flex-direction: column; background-color: #ffffff; border-width: 1px; border-style: solid; border-color: #f3f4f6; padding: 12px; border-radius: 16px; width: 120px; align-items: center; margin-right: 14px; position: relative; vertical-align: top; }
+.tutor-card { background-color: #ffffff; border-width: 1px; border-style: solid; border-color: #f3f4f6; padding: 12px; border-radius: 16px; width: 120px; align-items: center; margin-right: 14px; position: relative; flex-shrink: 0; }
 .tutor-online-badge { position: absolute; top: 8px; right: 8px; background-color: #f0fdf4; border-width: 1px; border-style: solid; border-color: #dcfce7; padding: 2px 6px; border-radius: 6px; flex-direction: row; align-items: center; z-index: 10; }
 .tutor-online-dot { width: 6px; height: 6px; background-color: #22c55e; border-radius: 3px; margin-right: 4px; }
 .tutor-online-text { font-size: 9px; color: #16a34a; font-weight: bold; }

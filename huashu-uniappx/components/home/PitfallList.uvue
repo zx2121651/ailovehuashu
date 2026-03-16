@@ -9,7 +9,8 @@
         <text class="section-more-text">更多避坑 ›</text>
       </view>
     </view>
-    <scroll-view class="pitfall-scroll" scroll-x="true">
+    <scroll-view class="pitfall-scroll" direction="horizontal">
+      <view class="pitfall-row">
       <view
         v-for="(item, idx) in articles"
         :key="idx"
@@ -25,6 +26,7 @@
           <text class="pitfall-meta-icon">🔥</text>
           <text class="pitfall-meta-text">{{ item.views }} 浏览</text>
         </view>
+      </view>
       </view>
     </scroll-view>
   </view>
@@ -52,9 +54,10 @@ const emit = defineEmits<{
 .section-more-text { font-size: 11px; color: #9ca3af; }
 
 /* Pitfall */
-.pitfall-scroll { padding: 0 20px; height: 160px; white-space: nowrap; direction: ltr; width: 100%; }
+.pitfall-scroll { padding: 0 20px; height: 160px; flex-direction: row; }
+.pitfall-row { flex-direction: row; align-items: flex-start; }
 
-.pitfall-card { display: inline-flex; flex-direction: column; background-color: #ffffff; border-width: 1px; border-style: solid; border-color: #f3f4f6; padding: 14px; border-radius: 16px; width: 150px; margin-right: 14px; vertical-align: top; }
+.pitfall-card { background-color: #ffffff; border-width: 1px; border-style: solid; border-color: #f3f4f6; padding: 14px; border-radius: 16px; width: 150px; margin-right: 14px; flex-shrink: 0; }
 .pitfall-icon-wrap { width: 32px; height: 32px; border-radius: 16px; background-color: #fef2f2; align-items: center; justify-content: center; margin-bottom: 10px; }
 .pitfall-icon { font-size: 14px; }
 .pitfall-title { font-size: 13px; font-weight: bold; color: #1f2937; margin-bottom: 4px; }

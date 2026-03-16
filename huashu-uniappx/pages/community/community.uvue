@@ -7,7 +7,7 @@
 
     <!-- Category Tabs -->
     <view class="category-bar">
-      <scroll-view class="category-scroll" scroll-x>
+      <scroll-view class="category-scroll" direction="horizontal">
         <view class="category-row">
           <view
             class="category-item"
@@ -25,13 +25,13 @@
           >
             <text class="category-text" :class="[activeCategoryId === cat.id ? 'category-text-active' : '']">{{ cat.name }}</text>
           </view>
-        </view>
+      </view>
       </scroll-view>
     </view>
 
     <!-- Sort Tabs -->
     <view class="tab-bar">
-      <scroll-view class="tab-scroll" scroll-x>
+      <scroll-view class="tab-scroll" direction="horizontal">
         <view class="tab-row">
           <view
             v-for="tab in sortTabs"
@@ -43,7 +43,7 @@
             <text class="tab-text" :class="[activeSortKey === tab.key ? 'tab-text-active' : '']">{{ tab.label }}</text>
             <view v-if="activeSortKey === tab.key" class="tab-indicator"></view>
           </view>
-        </view>
+      </view>
       </scroll-view>
     </view>
 
@@ -628,5 +628,11 @@ page { display: flex; flex-direction: column; height: 100%; }
 .comment-input { flex: 1; background-color: #f3f4f6; border-radius: 20px; padding: 8px 16px; font-size: 14px; color: #374151; margin-right: 8px; }
 .comment-send { background-color: #ec4899; padding: 8px 16px; border-radius: 16px; }
 .comment-send-text { font-size: 13px; color: #ffffff; font-weight: bold; }
+
+
+.category-scroll { flex-direction: row; }
+.category-item { flex-shrink: 0; flex-direction: column; }
+.tab-scroll { flex-direction: row; }
+.tab-item { flex-shrink: 0; flex-direction: row; }
 
 </style>
