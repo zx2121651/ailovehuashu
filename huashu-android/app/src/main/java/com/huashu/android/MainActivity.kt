@@ -14,6 +14,8 @@ import androidx.navigation.compose.rememberNavController
 import com.huashu.android.core.ui.theme.HuashuAndroidTheme
 import com.huashu.android.feature.home.HomeScreen
 import com.huashu.android.feature.chat_booster.ChatBoosterScreen
+import com.huashu.android.feature.onboarding.WelcomeScreen
+import com.huashu.android.feature.onboarding.GenderSelectionScreen
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -34,7 +36,23 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun HuashuNavGraph() {
     val navController = rememberNavController()
-    NavHost(navController = navController, startDestination = "home") {
+    NavHost(navController = navController, startDestination = "welcome") {
+        composable("welcome") {
+            WelcomeScreen(
+                onAgreeClick = { navController.navigate("gender_selection") },
+                onDisagreeClick = { /* Handle exit or info here if needed */ }
+            )
+        }
+        composable("gender_selection") {
+            GenderSelectionScreen(
+                onNextClick = { gender ->
+                    // Normally save gender preference here
+                    navController.navigate("home") {
+                        popUpTo("welcome") { inclusive = true }
+                    }
+                }
+            )
+        }
         composable("home") {
             HomeScreen(
                 onNavigateToChatBooster = { navController.navigate("chat_booster") }
