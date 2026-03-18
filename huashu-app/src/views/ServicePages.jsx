@@ -730,7 +730,8 @@ export default function ServicePages() {
             {/* 精选专题页面 */}
 
             {id === 'ai-tool' && data && (
-              <div className="h-[calc(100vh-120px)] flex flex-col bg-white rounded-3xl overflow-hidden shadow-sm border border-gray-100 mb-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
+              <div className="h-[calc(100vh-120px)] flex flex-col bg-white rounded-3xl overflow-hidden shadow-sm border border-gray-100 mb-8 animate-in fade-in slide-in-from-bottom-2 duration-300 relative">
+                <FloatingHearts isTriggered={showHeartEffect} onComplete={() => setShowHeartEffect(false)} />
                 <div className={`p-5 ${data.bg} border-b ${data.border} flex flex-col items-center justify-center relative overflow-hidden`}>
                    <div className="absolute inset-0 bg-white/40 backdrop-blur-sm"></div>
                    <div className="relative z-10 flex flex-col items-center">
@@ -768,38 +769,51 @@ export default function ServicePages() {
                    {data.suggestedChips && data.suggestedChips.length > 0 && (
                      <div className="flex flex-wrap gap-2 mt-4 ml-12">
                        {data.suggestedChips.map((chip, idx) => (
-                         <div key={idx} className="bg-white border border-gray-200 text-gray-600 text-[12px] px-3 py-1.5 rounded-full shadow-sm hover:bg-gray-50 cursor-pointer flex items-center active:scale-95 transition-transform">
+                         <div key={idx} onClick={() => {
+                           setIsTyping(true);
+                           setTimeout(() => { setIsTyping(false); setShowHeartEffect(true); }, 1500);
+                         }} className="bg-white border border-gray-200 text-gray-600 text-[12px] px-3 py-1.5 rounded-full shadow-sm hover:bg-gray-50 hover:border-pink-300 hover:text-pink-600 cursor-pointer flex items-center active:scale-95 transition-all duration-300">
                            <span className="mr-1.5 text-blue-500">👉</span> {chip}
                          </div>
                        ))}
                      </div>
                    )}
 
-                   <div className="flex w-full mt-2 space-x-3 max-w-[85%]">
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-400 to-pink-500 flex-shrink-0 flex items-center justify-center text-white shadow-sm border border-white">
-                        <Sparkles size={14} />
-                      </div>
-                      <div>
-                        <div className="bg-white p-3.5 rounded-2xl rounded-tl-sm shadow-sm border border-gray-100/80 text-[13px] text-gray-700 leading-relaxed">
-                          <div className="flex space-x-1.5 items-center mb-1">
-                            <div className="w-1.5 h-1.5 bg-pink-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-                            <div className="w-1.5 h-1.5 bg-pink-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-                            <div className="w-1.5 h-1.5 bg-pink-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
-                          </div>
-                          <span className="text-gray-400 text-xs">AI 正在飞速为你思考中...</span>
+                   {isTyping && (
+                     <div className="flex w-full mt-2 space-x-3 max-w-[85%] animate-fade-in-up">
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-400 to-pink-500 flex-shrink-0 flex items-center justify-center text-white shadow-sm border border-white">
+                          <Sparkles size={14} />
                         </div>
-                      </div>
-                   </div>
+                        <div>
+                          <div className="bg-white p-3.5 rounded-2xl rounded-tl-sm shadow-sm border border-gray-100/80 text-[13px] text-gray-700 leading-relaxed">
+                            <div className="flex space-x-1.5 items-center mb-1">
+                              <div className="w-1.5 h-1.5 bg-pink-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                              <div className="w-1.5 h-1.5 bg-pink-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                              <div className="w-1.5 h-1.5 bg-pink-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                            </div>
+                            <span className="text-gray-400 text-xs">AI 正在飞速为你思考中...</span>
+                          </div>
+                        </div>
+                     </div>
+                   )}
                 </div>
 
                 <div className="p-4 bg-white border-t border-gray-100">
                   <div className="bg-gray-100/80 rounded-[1.5rem] p-1.5 flex items-end shadow-inner border border-gray-200/50">
                     <textarea
+                      value={aiInputText}
+                      onChange={(e) => setAiInputText(e.target.value)}
                       className="flex-1 bg-transparent max-h-24 min-h-[40px] text-[13px] px-3 py-2.5 focus:outline-none resize-none placeholder-gray-400 text-gray-700"
                       placeholder="继续输入更多细节..."
                       rows="1"
                     ></textarea>
-                    <button className="w-9 h-9 flex-shrink-0 bg-gradient-to-r from-gray-900 to-black text-white rounded-full flex items-center justify-center shadow-md active:scale-95 transition-transform mb-0.5 mr-0.5">
+                    <button onClick={() => {
+                        setIsTyping(true);
+                        setTimeout(() => {
+                          setIsTyping(false);
+                          setShowHeartEffect(true);
+                        }, 1500);
+                      }} className="w-9 h-9 flex-shrink-0 bg-gradient-to-r from-gray-900 to-black text-white rounded-full flex items-center justify-center shadow-md active:scale-95 transition-transform mb-0.5 mr-0.5 hover:shadow-lg hover:shadow-pink-500/30">
                       <Send size={15} className="-ml-0.5" />
                     </button>
                   </div>

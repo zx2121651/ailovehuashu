@@ -25,17 +25,17 @@
 
       <view class="chips-container" v-if="chips.length > 0">
          <view class="chip-row">
-            <view class="chip-item" v-for="(chip, index) in chips" :key="index" @click="appStore.showToast('生成中...')">
+            <view class="chip-item" v-for="(chip, index) in chips" :key="index" @click="handleSend(20 + index * 5)">
                <text class="chip-icon">👉</text>
                <text class="chip-text">{{ chip }}</text>
             </view>
          </view>
       </view>
 
-      <view class="message ai-message">
+      <view class="message ai-message" v-if="isTyping">
         <view class="avatar ai-avatar">✨</view>
         <view class="bubble ai-bubble typing-bubble">
-          <text class="typing-text">AI 正在飞速思考中...</text>
+          <text class="typing-text">AI 正在飞速为你思考中...</text>
         </view>
       </view>
     </scroll-view>
@@ -43,10 +43,26 @@
     <view class="input-area">
       <view class="input-wrap">
         <input class="input" placeholder="继续输入更多细节..." />
-        <view class="send-btn" @click="appStore.showToast('生成中...')">
+        <view class="send-btn" @click="handleSend(-1)">
           <text class="send-icon">↑</text>
         </view>
       </view>
+    </view>
+
+    <!-- Heartbeat overlay -->
+    <view class="heart-overlay" v-if="showHeart">
+      <view class="heart-content animate-float">
+        <text class="heart-score">好感度 +{{ heartScore }}%</text>
+        <text class="heart-emoji">💖</text>
+      </view>
+
+      <!-- Random particles simulated with pure CSS/Absolute positioning -->
+      <text class="particle p1">❤️</text>
+      <text class="particle p2">❤️</text>
+      <text class="particle p3">❤️</text>
+      <text class="particle p4">❤️</text>
+      <text class="particle p5">❤️</text>
+      <text class="particle p6">❤️</text>
     </view>
   </view>
 </template>
@@ -67,6 +83,11 @@ const textColor = ref('#7e22ce')
 const iconBg = ref('#e9d5ff')
 const scrollToId = ref('msg-last')
 const chips = ref<string[]>([])
+const isTyping = ref(false)
+const showHeart = ref(false)
+const heartScore = ref(0)
+let timer: number = -1
+
 
 onLoad((options: any) => {
   if (options.title) title.value = decodeURIComponent(options.title)
@@ -82,6 +103,48 @@ onLoad((options: any) => {
     } catch(e) {}
   }
 })
+
+const handleSend = (target: number) => {
+  if (isTyping.value || showHeart.value) return
+  isTyping.value = true
+
+  // Use context string length to generate a deterministic score
+  let finalScore = target;
+  if (target === -1) {
+     finalScore = Math.min(100, Math.max(10, query.value.length * 3 + 15));
+  }
+
+  // Fake typing delay
+  setTimeout(() => {
+    isTyping.value = false
+    showHeartEffect(finalScore)
+  }, 1500)
+}
+
+const showHeartEffect = (targetScore: number) => {
+  showHeart.value = true
+  heartScore.value = 0
+
+  // Animate score 0 to targetScore
+  let currentScore = 0
+  timer = setInterval(() => {
+    const step = Math.max(1, Math.floor(targetScore / 10))
+    currentScore += step
+    if (currentScore >= targetScore) {
+      currentScore = targetScore
+      clearInterval(timer)
+    }
+    heartScore.value = currentScore
+  }, 40)
+
+  // Hide after 2.5s
+  setTimeout(() => {
+    showHeart.value = false
+    clearInterval(timer)
+    heartScore.value = 0
+  }, 2500)
+}
+
 </script>
 
 <style>
@@ -114,4 +177,19 @@ onLoad((options: any) => {
 .input { flex: 1; height: 36px; font-size: 14px; color: #1f2937; }
 .send-btn { width: 36px; height: 36px; border-radius: 18px; background-color: #111827; align-items: center; justify-content: center; margin-left: 8px; }
 .send-icon { color: white; font-weight: bold; font-size: 16px; margin-top: -2px; }
+
+.heart-overlay { position: absolute; left: 0; right: 0; top: 0; bottom: 0; background-color: rgba(255,255,255,0.7); z-index: 100; align-items: center; justify-content: center; }
+.heart-content { align-items: center; }
+.heart-score { font-size: 32px; font-weight: 900; color: #ec4899; margin-bottom: 8px; text-shadow: 0px 4px 10px rgba(236,72,153,0.3); }
+.heart-emoji { font-size: 48px; }
+
+/* In UniAppX natively, complex keyframes might be ignored depending on target (app vs web).
+We use simple transform/transition if possible, but for absolute fallback: */
+.particle { position: absolute; color: #ec4899; font-size: 24px; bottom: 30%; }
+.p1 { left: 20%; font-size: 16px; margin-bottom: 50px; }
+.p2 { left: 40%; font-size: 32px; margin-bottom: 80px; }
+.p3 { left: 60%; font-size: 20px; margin-bottom: 60px; }
+.p4 { left: 80%; font-size: 28px; margin-bottom: 120px; }
+.p5 { left: 30%; font-size: 22px; margin-bottom: 10px; }
+.p6 { left: 70%; font-size: 18px; margin-bottom: 90px; }
 </style>
