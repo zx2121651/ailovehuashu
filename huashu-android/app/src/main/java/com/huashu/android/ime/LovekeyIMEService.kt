@@ -10,6 +10,10 @@ import androidx.savedstate.SavedStateRegistry
 import androidx.savedstate.SavedStateRegistryController
 import androidx.savedstate.SavedStateRegistryOwner
 import androidx.savedstate.setViewTreeSavedStateRegistryOwner
+import com.huashu.android.ime.core.Rime
+import java.io.File
+import java.io.FileOutputStream
+import java.io.InputStream
 
 class LovekeyIMEService : InputMethodService(), LifecycleOwner, ViewModelStoreOwner, SavedStateRegistryOwner {
 
@@ -31,8 +35,42 @@ class LovekeyIMEService : InputMethodService(), LifecycleOwner, ViewModelStoreOw
         savedStateRegistryController.performRestore(null)
         lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_CREATE)
 
-        // Initialize LibPinyin-Android-2026 decoder here
-        // PinyinDecoder.init(this)
+        // Copy Rime assets to internal storage so the JNI engine can access them
+        copyRimeAssets()
+
+        // Initialize Rime Engine
+        try {
+            Rime.startup(this, false)
+            Rime.selectSchema("pinyin")
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    private fun copyRimeAssets() {
+        val destDir = File(filesDir, "rime")
+        if (!destDir.exists()) destDir.mkdirs()
+
+        try {
+            val assetsList = assets.list("rime") ?: return
+            for (file in assetsList) {
+                val destFile = File(destDir, file)
+                if (!destFile.exists()) {
+                    var input: InputStream? = null
+                    var out: FileOutputStream? = null
+                    try {
+                        input = assets.open("rime/$file")
+                        out = FileOutputStream(destFile)
+                        input.copyTo(out)
+                    } finally {
+                        input?.close()
+                        out?.close()
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 
     override fun onCreateInputView(): View {
@@ -42,7 +80,6 @@ class LovekeyIMEService : InputMethodService(), LifecycleOwner, ViewModelStoreOw
                 ViewGroup.LayoutParams.WRAP_CONTENT
             )
 
-            // Set up Compose required ViewTree owners
             setViewTreeLifecycleOwner(this@LovekeyIMEService)
             setViewTreeViewModelStoreOwner(this@LovekeyIMEService)
             setViewTreeSavedStateRegistryOwner(this@LovekeyIMEService)
@@ -59,7 +96,6 @@ class LovekeyIMEService : InputMethodService(), LifecycleOwner, ViewModelStoreOw
             }
         }
 
-        // Ensure lifecycle is started when view is created
         lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_START)
         lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_RESUME)
 
@@ -71,7 +107,8 @@ class LovekeyIMEService : InputMethodService(), LifecycleOwner, ViewModelStoreOw
         lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_DESTROY)
         store.clear()
 
-        // Cleanup LibPinyin-Android-2026 decoder here
-        // PinyinDecoder.release()
+        try {
+            Rime.destroy()
+        } catch (e: Exception) {}
     }
 }

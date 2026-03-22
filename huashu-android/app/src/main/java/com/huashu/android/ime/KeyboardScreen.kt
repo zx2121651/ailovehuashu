@@ -13,20 +13,48 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.huashu.android.core.ui.theme.HuashuAndroidTheme
+import com.huashu.android.ime.core.Rime
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @Composable
 fun KeyboardScreen(
     onCommitText: (String) -> Unit,
     onDelete: () -> Unit
 ) {
-    // Mock state for Pinyin composing text (would be provided by LibPinyin)
     var composingText by remember { mutableStateOf("") }
+    var candidates by remember { mutableStateOf<List<String>>(emptyList()) }
+    val scope = rememberCoroutineScope()
 
-    // Mock candidates from Pinyin decoder
-    val candidates = if (composingText.isNotEmpty()) {
-        listOf("我", "我们", "卧槽", "卧", "哇")
-    } else {
-        emptyList()
+    fun updateCandidates(text: String) {
+        scope.launch(Dispatchers.IO) {
+            try {
+                if (text.isEmpty()) {
+                    Rime.processKey(android.view.KeyEvent.KEYCODE_ESCAPE, 0)
+                    withContext(Dispatchers.Main) { candidates = emptyList() }
+                    return@launch
+                }
+
+                // Clear previous session
+                Rime.processKey(android.view.KeyEvent.KEYCODE_ESCAPE, 0)
+
+                // Process each char
+                for (char in text) {
+                    val code = char.code
+                    Rime.processKey(code, 0)
+                }
+
+                val context = Rime.getContext()
+                val rimeCandidates = context?.candidates?.map { it.text } ?: emptyList()
+
+                withContext(Dispatchers.Main) {
+                    candidates = rimeCandidates
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
     }
 
     HuashuAndroidTheme {
@@ -36,18 +64,17 @@ fun KeyboardScreen(
                 .background(Color(0xFFEFEFEF))
                 .padding(8.dp)
         ) {
-            // Header: Lovekey Smart Features or Candidates
             if (candidates.isNotEmpty() || composingText.isNotEmpty()) {
                 CandidateView(
                     composingText = composingText,
                     candidates = candidates,
                     onCandidateSelected = { candidate ->
                         onCommitText(candidate)
-                        composingText = "" // Reset composing text
+                        composingText = ""
+                        updateCandidates("")
                     }
                 )
             } else {
-                // Lovekey Feature Bar
                 LovekeyFeatureBar(onFeatureClick = { featureText ->
                     onCommitText(featureText)
                 })
@@ -55,43 +82,44 @@ fun KeyboardScreen(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Main Keyboard Keys (Mocked for simplicity)
+            // Main Keyboard Keys
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-                KeyboardKey("Q") { composingText += "q" }
-                KeyboardKey("W") { composingText += "w" }
-                KeyboardKey("E") { composingText += "e" }
-                KeyboardKey("R") { composingText += "r" }
-                KeyboardKey("T") { composingText += "t" }
-                KeyboardKey("Y") { composingText += "y" }
-                KeyboardKey("U") { composingText += "u" }
-                KeyboardKey("I") { composingText += "i" }
-                KeyboardKey("O") { composingText += "o" }
-                KeyboardKey("P") { composingText += "p" }
+                KeyboardKey("Q") { composingText += "q"; updateCandidates(composingText) }
+                KeyboardKey("W") { composingText += "w"; updateCandidates(composingText) }
+                KeyboardKey("E") { composingText += "e"; updateCandidates(composingText) }
+                KeyboardKey("R") { composingText += "r"; updateCandidates(composingText) }
+                KeyboardKey("T") { composingText += "t"; updateCandidates(composingText) }
+                KeyboardKey("Y") { composingText += "y"; updateCandidates(composingText) }
+                KeyboardKey("U") { composingText += "u"; updateCandidates(composingText) }
+                KeyboardKey("I") { composingText += "i"; updateCandidates(composingText) }
+                KeyboardKey("O") { composingText += "o"; updateCandidates(composingText) }
+                KeyboardKey("P") { composingText += "p"; updateCandidates(composingText) }
             }
             Spacer(modifier = Modifier.height(8.dp))
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-                KeyboardKey("A") { composingText += "a" }
-                KeyboardKey("S") { composingText += "s" }
-                KeyboardKey("D") { composingText += "d" }
-                KeyboardKey("F") { composingText += "f" }
-                KeyboardKey("G") { composingText += "g" }
-                KeyboardKey("H") { composingText += "h" }
-                KeyboardKey("J") { composingText += "j" }
-                KeyboardKey("K") { composingText += "k" }
-                KeyboardKey("L") { composingText += "l" }
+                KeyboardKey("A") { composingText += "a"; updateCandidates(composingText) }
+                KeyboardKey("S") { composingText += "s"; updateCandidates(composingText) }
+                KeyboardKey("D") { composingText += "d"; updateCandidates(composingText) }
+                KeyboardKey("F") { composingText += "f"; updateCandidates(composingText) }
+                KeyboardKey("G") { composingText += "g"; updateCandidates(composingText) }
+                KeyboardKey("H") { composingText += "h"; updateCandidates(composingText) }
+                KeyboardKey("J") { composingText += "j"; updateCandidates(composingText) }
+                KeyboardKey("K") { composingText += "k"; updateCandidates(composingText) }
+                KeyboardKey("L") { composingText += "l"; updateCandidates(composingText) }
             }
             Spacer(modifier = Modifier.height(8.dp))
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-                KeyboardKey("Z") { composingText += "z" }
-                KeyboardKey("X") { composingText += "x" }
-                KeyboardKey("C") { composingText += "c" }
-                KeyboardKey("V") { composingText += "v" }
-                KeyboardKey("B") { composingText += "b" }
-                KeyboardKey("N") { composingText += "n" }
-                KeyboardKey("M") { composingText += "m" }
+                KeyboardKey("Z") { composingText += "z"; updateCandidates(composingText) }
+                KeyboardKey("X") { composingText += "x"; updateCandidates(composingText) }
+                KeyboardKey("C") { composingText += "c"; updateCandidates(composingText) }
+                KeyboardKey("V") { composingText += "v"; updateCandidates(composingText) }
+                KeyboardKey("B") { composingText += "b"; updateCandidates(composingText) }
+                KeyboardKey("N") { composingText += "n"; updateCandidates(composingText) }
+                KeyboardKey("M") { composingText += "m"; updateCandidates(composingText) }
                 KeyboardKey("DEL", color = Color(0xFFD3D3D3)) {
                     if (composingText.isNotEmpty()) {
                         composingText = composingText.dropLast(1)
+                        updateCandidates(composingText)
                     } else {
                         onDelete()
                     }
@@ -103,6 +131,7 @@ fun KeyboardScreen(
                     if (composingText.isNotEmpty() && candidates.isNotEmpty()) {
                         onCommitText(candidates.first())
                         composingText = ""
+                        updateCandidates("")
                     } else {
                         onCommitText(" ")
                     }
