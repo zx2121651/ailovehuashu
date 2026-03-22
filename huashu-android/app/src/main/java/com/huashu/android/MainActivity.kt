@@ -14,6 +14,8 @@ import androidx.navigation.compose.rememberNavController
 import com.huashu.android.core.ui.theme.HuashuAndroidTheme
 import com.huashu.android.feature.home.HomeScreen
 import com.huashu.android.feature.chat_booster.ChatBoosterScreen
+import com.huashu.android.feature.chat_booster.ScreenshotAnalyzerScreen
+import com.huashu.android.feature.chat_booster.ApologySimulatorScreen
 import com.huashu.android.feature.onboarding.WelcomeScreen
 import com.huashu.android.feature.onboarding.GenderSelectionScreen
 
@@ -55,11 +57,23 @@ fun HuashuNavGraph() {
         }
         composable("home") {
             HomeScreen(
-                onNavigateToChatBooster = { navController.navigate("chat_booster") }
+                onNavigateToChatBooster = { navController.navigate("chat_booster") },
+                onNavigateToScreenshotAnalyzer = { navController.navigate("screenshot_analyzer") },
+                onNavigateToApologySimulator = { navController.navigate("apology_simulator") }
             )
         }
         composable("chat_booster") {
             ChatBoosterScreen(
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+        composable("screenshot_analyzer") {
+            ScreenshotAnalyzerScreen(
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+        composable("apology_simulator") {
+            ApologySimulatorScreen(
                 onNavigateBack = { navController.popBackStack() }
             )
         }

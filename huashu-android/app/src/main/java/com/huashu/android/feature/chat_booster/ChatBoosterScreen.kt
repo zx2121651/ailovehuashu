@@ -179,7 +179,7 @@ fun ReplyCard(reply: ReplySuggestion) {
             // Reply Text
             Text(
                 text = reply.text,
-                style = TypeTokens.BodyLarge.copy(color = ColorTokens.TextPrimary)
+                style = TypeTokens.BodyMedium.copy(color = ColorTokens.TextPrimary)
             )
 
             Spacer(modifier = Modifier.height(DimenTokens.SpacingMedium))
@@ -231,7 +231,7 @@ fun ChatBoosterInputBar(
             shape = RoundedCornerShape(DimenTokens.CornerMedium),
             colors = TextFieldDefaults.outlinedTextFieldColors(
                 focusedBorderColor = ColorTokens.BrandPink,
-                unfocusedBorderColor = ColorTokens.BorderLight,
+                unfocusedBorderColor = Color.LightGray,
                 containerColor = ColorTokens.Background
             ),
             maxLines = 4

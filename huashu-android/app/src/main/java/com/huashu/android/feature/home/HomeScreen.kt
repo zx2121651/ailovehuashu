@@ -44,21 +44,23 @@ data class AbilityCardData(
 )
 
 val abilityCards = listOf(
-    AbilityCardData("chat_hero", "Chat Helper", "Smart replies", ColorTokens.GradientPinkOrange),
-    AbilityCardData("screenshot_helper", "Screenshot Analyzer", "Read her mind", ColorTokens.GradientBluePurple),
-    AbilityCardData("simulator", "Apology Simulator", "Say sorry right", ColorTokens.GradientGreenBlue),
-    AbilityCardData("icebreaker", "Icebreaker", "Never run out of words", ColorTokens.GradientSunset),
-    AbilityCardData("identity_card", "Identity Card", "Your chat persona", ColorTokens.GradientPurplePink),
-    AbilityCardData("love_classroom", "Dating Class", "Daily tips", ColorTokens.GradientPinkOrange),
-    AbilityCardData("coach", "Love Coach", "1-on-1 advice", ColorTokens.GradientBluePurple),
-    AbilityCardData("progress", "Progress Bar", "Check your status", ColorTokens.GradientGreenBlue),
-    AbilityCardData("secret_book", "Secret Book", "Success cases", ColorTokens.GradientSunset),
-    AbilityCardData("decoder", "Decoder", "Understand subtext", ColorTokens.GradientPurplePink)
+    AbilityCardData("chat_hero", "聊天神器", "输入对方发的话", ColorTokens.GradientPinkOrange),
+    AbilityCardData("screenshot_helper", "截图帮回", "一键识别对方想法", ColorTokens.GradientBluePurple),
+    AbilityCardData("simulator", "哄哄模拟器", "她生气了怎么办？", ColorTokens.GradientGreenBlue),
+    AbilityCardData("icebreaker", "冷场救星", "不知道聊什么看这里", ColorTokens.GradientSunset),
+    AbilityCardData("identity_card", "聊天身份卡", "测测你的聊天人格", ColorTokens.GradientPurplePink),
+    AbilityCardData("love_classroom", "恋爱课堂", "每日脱单干货", ColorTokens.GradientPinkOrange),
+    AbilityCardData("coach", "恋爱军师", "1对1情感指导", ColorTokens.GradientBluePurple),
+    AbilityCardData("progress", "关系进度条", "测算你们的进度", ColorTokens.GradientGreenBlue),
+    AbilityCardData("secret_book", "脱单秘籍", "海量案例库", ColorTokens.GradientSunset),
+    AbilityCardData("decoder", "关系解码器", "Ta的潜台词是什么", ColorTokens.GradientPurplePink)
 )
 
 @Composable
 fun HomeScreen(
-    onNavigateToChatBooster: () -> Unit
+    onNavigateToChatBooster: () -> Unit,
+    onNavigateToScreenshotAnalyzer: () -> Unit,
+    onNavigateToApologySimulator: () -> Unit
 ) {
     var isMaleMode by remember { mutableStateOf(true) }
 
@@ -88,8 +90,10 @@ fun HomeScreen(
                     subtitle = card.subtitle,
                     colors = card.colors,
                     onClick = {
-                        if (card.id == "chat_hero") {
-                            onNavigateToChatBooster()
+                        when (card.id) {
+                            "chat_hero" -> onNavigateToChatBooster()
+                            "screenshot_helper" -> onNavigateToScreenshotAnalyzer()
+                            "simulator" -> onNavigateToApologySimulator()
                         }
                     }
                 )
@@ -119,7 +123,7 @@ fun HomeHeader(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "Lovekey",
+                text = "恋爱键盘",
                 style = TypeTokens.HeadlineLarge,
                 color = ColorTokens.TextPrimary
             )
@@ -129,7 +133,7 @@ fun HomeHeader(
         }
         Spacer(modifier = Modifier.height(DimenTokens.SpacingSmall))
         Text(
-            text = "Your Dating Assistant",
+            text = "高情商聊天回复神器",
             style = TypeTokens.BodyMedium.copy(fontWeight = FontWeight.Medium),
             color = ColorTokens.TextSecondary
         )
@@ -162,7 +166,7 @@ fun GenderToggle(
             contentAlignment = Alignment.Center
         ) {
             Text(
-                text = "Male",
+                text = "男生",
                 style = TypeTokens.LabelSmall.copy(fontWeight = FontWeight.Bold),
                 color = if (isMaleMode) activeText else inactiveText
             )
@@ -177,7 +181,7 @@ fun GenderToggle(
             contentAlignment = Alignment.Center
         ) {
             Text(
-                text = "Female",
+                text = "女生",
                 style = TypeTokens.LabelSmall.copy(fontWeight = FontWeight.Bold),
                 color = if (!isMaleMode) activeText else inactiveText
             )
