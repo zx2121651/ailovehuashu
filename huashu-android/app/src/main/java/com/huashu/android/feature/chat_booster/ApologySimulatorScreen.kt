@@ -4,32 +4,31 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.huashu.android.core.ui.theme.ColorTokens
 import com.huashu.android.core.ui.theme.DimenTokens
 import com.huashu.android.core.ui.theme.TypeTokens
 
 @Composable
 fun ApologySimulatorScreen(
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
+    viewModel: ApologySimulatorViewModel = viewModel()
 ) {
-    var inputText by remember { mutableStateOf("") }
-
-    val messages = remember { mutableStateListOf(
-        Message("你知不知道错哪了？", isAi = true),
-        Message("我知道错了，下次不敢了...", isAi = false),
-        Message("就这？没诚意！", isAi = true)
-    ) }
+    val uiState by viewModel.uiState.collectAsState()
 
     Column(
         modifier = Modifier
@@ -40,29 +39,29 @@ fun ApologySimulatorScreen(
         ApologyTopBar(onNavigateBack)
 
         // Anger Meter
-        AngerMeter(level = 80)
+        AngerMeter(level = uiState.angerLevel)
 
         // Chat Section
         LazyColumn(
             modifier = Modifier.weight(1f),
             contentPadding = PaddingValues(DimenTokens.SpacingMedium)
         ) {
-            items(messages.size) { index ->
-                ChatBubble(message = messages[index])
+            items(uiState.messages) { message ->
+                ChatBubble(message = message)
                 Spacer(modifier = Modifier.height(16.dp))
+            }
+            if (uiState.isAiThinking) {
+                item {
+                    Text("TA正在输入...", style = TypeTokens.BodyMedium, color = Color.Gray, modifier = Modifier.padding(8.dp))
+                }
             }
         }
 
         // Bottom Input
         ApologyInputBar(
-            inputText = inputText,
-            onTextChange = { inputText = it },
-            onSend = {
-                if (inputText.isNotBlank()) {
-                    messages.add(Message(inputText, isAi = false))
-                    inputText = ""
-                }
-            }
+            inputText = uiState.inputText,
+            onTextChange = viewModel::onInputTextChanged,
+            onSend = viewModel::sendMessage
         )
     }
 }
@@ -189,10 +188,11 @@ fun ApologyInputBar(inputText: String, onTextChange: (String) -> Unit, onSend: (
             placeholder = { Text("输入你的回复，试着哄好TA...") },
             modifier = Modifier.weight(1f),
             shape = RoundedCornerShape(24.dp),
-            colors = TextFieldDefaults.outlinedTextFieldColors(
+            colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = Color(0xFFFF6B9D),
                 unfocusedBorderColor = Color.LightGray,
-                containerColor = Color(0xFFF2ECED)
+                focusedContainerColor = Color(0xFFF2ECED),
+                unfocusedContainerColor = Color(0xFFF2ECED)
             )
         )
         Spacer(modifier = Modifier.width(8.dp))

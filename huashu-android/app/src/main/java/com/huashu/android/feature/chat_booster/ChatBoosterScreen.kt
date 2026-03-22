@@ -29,18 +29,17 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.huashu.android.core.ui.theme.ColorTokens
 import com.huashu.android.core.ui.theme.DimenTokens
 import com.huashu.android.core.ui.theme.TypeTokens
@@ -49,11 +48,10 @@ data class ReplySuggestion(val id: Int, val tone: String, val toneColor: Color, 
 
 @Composable
 fun ChatBoosterScreen(
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
+    viewModel: ChatBoosterViewModel = viewModel()
 ) {
-    var replies by remember { mutableStateOf<List<ReplySuggestion>>(emptyList()) }
-    var isLoading by remember { mutableStateOf(false) }
-    var inputText by remember { mutableStateOf("") }
+    val uiState by viewModel.uiState.collectAsState()
 
     Column(
         modifier = Modifier
@@ -69,7 +67,7 @@ fun ChatBoosterScreen(
                 .weight(1f)
                 .fillMaxWidth()
         ) {
-            if (replies.isEmpty() && !isLoading) {
+            if (uiState.replies.isEmpty() && !uiState.isLoading) {
                 // Empty State
                 Column(
                     modifier = Modifier.align(Alignment.Center),
@@ -81,6 +79,14 @@ fun ChatBoosterScreen(
                         textAlign = androidx.compose.ui.text.style.TextAlign.Center
                     )
                 }
+            } else if (uiState.isLoading) {
+                // Loading State
+                Column(
+                    modifier = Modifier.align(Alignment.Center),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text("Generating reply...", style = TypeTokens.BodyMedium)
+                }
             } else {
                 // Suggestions List
                 LazyColumn(
@@ -88,7 +94,7 @@ fun ChatBoosterScreen(
                     verticalArrangement = Arrangement.spacedBy(DimenTokens.SpacingMedium),
                     modifier = Modifier.fillMaxSize()
                 ) {
-                    items(replies) { reply ->
+                    items(uiState.replies) { reply ->
                         ReplyCard(reply = reply)
                     }
                 }
@@ -97,21 +103,9 @@ fun ChatBoosterScreen(
 
         // Bottom Input Area
         ChatBoosterInputBar(
-            inputText = inputText,
-            onTextChange = { inputText = it },
-            onGenerate = {
-                if (inputText.isNotBlank()) {
-                    isLoading = true
-                    // Mock generating delay
-                    replies = listOf(
-                        ReplySuggestion(1, "Humorous", Color(0xFF64B5F6), "Working late again? If your boss keeps this up, I might have to stage a rescue mission!"),
-                        ReplySuggestion(2, "Caring", Color(0xFF81C784), "Don't work too hard! Make sure you take a break and get something good to eat. We can catch up when you're free."),
-                        ReplySuggestion(3, "Witty", Color(0xFFBA68C8), "Is your middle name 'Overtime'? Because you're always working! Let me know when you escape.")
-                    )
-                    isLoading = false
-                    inputText = ""
-                }
-            }
+            inputText = uiState.inputText,
+            onTextChange = viewModel::onInputTextChanged,
+            onGenerate = viewModel::generateReply
         )
     }
 }
@@ -233,6 +227,7 @@ fun ChatBoosterInputBar(
                 focusedBorderColor = ColorTokens.BrandPink,
                 unfocusedBorderColor = Color.LightGray,
                 containerColor = ColorTokens.Background
+
             ),
             maxLines = 4
         )
