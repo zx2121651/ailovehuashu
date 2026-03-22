@@ -60,7 +60,9 @@ val abilityCards = listOf(
 fun HomeScreen(
     onNavigateToChatBooster: () -> Unit,
     onNavigateToScreenshotAnalyzer: () -> Unit,
-    onNavigateToApologySimulator: () -> Unit
+    onNavigateToApologySimulator: () -> Unit,
+    onNavigateToIcebreaker: () -> Unit,
+    onNavigateToIdentityCard: () -> Unit
 ) {
     var isMaleMode by remember { mutableStateOf(true) }
 
@@ -94,6 +96,8 @@ fun HomeScreen(
                             "chat_hero" -> onNavigateToChatBooster()
                             "screenshot_helper" -> onNavigateToScreenshotAnalyzer()
                             "simulator" -> onNavigateToApologySimulator()
+                            "icebreaker" -> onNavigateToIcebreaker()
+                            "identity_card" -> onNavigateToIdentityCard()
                         }
                     }
                 )
