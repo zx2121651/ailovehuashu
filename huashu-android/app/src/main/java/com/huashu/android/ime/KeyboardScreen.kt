@@ -2,16 +2,18 @@ package com.huashu.android.ime
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.outlined.Face
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
@@ -23,6 +25,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.huashu.android.core.ui.theme.HuashuAndroidTheme
 import com.huashu.android.ime.core.Rime
 import kotlinx.coroutines.Dispatchers
@@ -36,12 +39,15 @@ enum class KeyboardMode {
 @Composable
 fun KeyboardScreen(
     onCommitText: (String) -> Unit,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
+    viewModel: LovekeyImeViewModel = viewModel()
 ) {
     var composingText by remember { mutableStateOf("") }
     var candidates by remember { mutableStateOf<List<String>>(emptyList()) }
     var currentMode by remember { mutableStateOf(KeyboardMode.ALPHABET) }
     var isShifted by remember { mutableStateOf(false) }
+
+    val uiState by viewModel.uiState.collectAsState()
 
     val scope = rememberCoroutineScope()
 
@@ -80,8 +86,30 @@ fun KeyboardScreen(
                 .background(Color(0xFFF0EDF1)) // Soft warm grey background
                 .padding(bottom = 8.dp)
         ) {
-            // Top Bar: Candidates or Features
-            if (candidates.isNotEmpty() || composingText.isNotEmpty()) {
+            // Top Bar: Candidates, Smart Replies, or Features
+            if (uiState.isFetchingSmartReplies) {
+                // Loading Smart Replies State
+                Row(
+                    modifier = Modifier.fillMaxWidth().background(Color.White).padding(12.dp),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    CircularProgressIndicator(modifier = Modifier.size(20.dp), color = Color(0xFFFF4D8C), strokeWidth = 2.dp)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("AI 恋爱导师正在思考中...", fontSize = 14.sp, color = Color.Gray)
+                }
+            } else if (uiState.smartReplies.isNotEmpty()) {
+                // Display Smart Replies (Full sentences from huashu-backend)
+                SmartReplyView(
+                    replies = uiState.smartReplies,
+                    onReplySelected = { replyText ->
+                        onCommitText(replyText)
+                        viewModel.clearSmartReplies()
+                    },
+                    onClose = { viewModel.clearSmartReplies() }
+                )
+            } else if (candidates.isNotEmpty() || composingText.isNotEmpty()) {
+                // Pinyin Candidates
                 CandidateView(
                     composingText = composingText,
                     candidates = candidates,
@@ -93,9 +121,16 @@ fun KeyboardScreen(
                     }
                 )
             } else {
-                LovekeyFeatureBar(onFeatureClick = { featureText ->
-                    onCommitText(featureText)
-                })
+                // Default Feature Bar
+                LovekeyFeatureBar(
+                    onSmartReplyClick = {
+                        // Request huashu-backend for high EQ replies
+                        viewModel.fetchSmartReplies()
+                    },
+                    onFeatureClick = { featureText ->
+                        onCommitText(featureText)
+                    }
+                )
             }
 
             Spacer(modifier = Modifier.height(6.dp))
@@ -148,6 +183,53 @@ fun KeyboardScreen(
         }
     }
 }
+
+@Composable
+fun SmartReplyView(replies: List<SmartReply>, onReplySelected: (String) -> Unit, onClose: () -> Unit) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Color.White)
+            .padding(vertical = 8.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text("✨ AI 高情商回复推荐", color = Color(0xFFFF4D8C), fontSize = 12.sp, fontWeight = FontWeight.Bold)
+            Icon(Icons.Default.Clear, contentDescription = "Close", tint = Color.Gray, modifier = Modifier.size(16.dp).clickable { onClose() })
+        }
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState())
+                .padding(horizontal = 8.dp)
+        ) {
+            replies.forEach { reply ->
+                Column(
+                    modifier = Modifier
+                        .padding(horizontal = 4.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(Color(0xFFFFF0F5))
+                        .clickable { onReplySelected(reply.text) }
+                        .padding(12.dp)
+                        .widthIn(max = 240.dp)
+                ) {
+                    Text(reply.text, fontSize = 15.sp, color = Color(0xFF1E1E1E), maxLines = 3)
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        reply.tags.forEach { tag ->
+                            Text(tag, fontSize = 10.sp, color = Color(0xFFFF4D8C), modifier = Modifier.background(Color.White, RoundedCornerShape(4.dp)).padding(horizontal = 4.dp, vertical = 2.dp))
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
 
 @Composable
 fun AlphabeticKeyboardLayout(
@@ -315,14 +397,17 @@ fun CandidateView(composingText: String, candidates: List<String>, onCandidateSe
 }
 
 @Composable
-fun LovekeyFeatureBar(onFeatureClick: (String) -> Unit) {
+fun LovekeyFeatureBar(onSmartReplyClick: () -> Unit, onFeatureClick: (String) -> Unit) {
     LazyRow(
         modifier = Modifier.fillMaxWidth().background(Color.White).padding(vertical = 8.dp, horizontal = 4.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         contentPadding = PaddingValues(horizontal = 4.dp)
     ) {
-        item { FeatureChip("✨ 截图帮回", Color(0xFFFF4D8C), Color(0xFFFFF0F5)) { onFeatureClick("[截图帮回]") } }
-        item { FeatureChip("💡 冷场救星", Color(0xFF9E70FF), Color(0xFFF3EFFF)) { onFeatureClick("[冷场话题]") } }
+        item {
+            // The prominent "Smart Reply" button calling the backend API logic
+            FeatureChip("✨ 帮我回 (智能)", Color.White, Color(0xFFFF4D8C)) { onSmartReplyClick() }
+        }
+        item { FeatureChip("💡 找话题", Color(0xFF9E70FF), Color(0xFFF3EFFF)) { onFeatureClick("周末有什么计划吗？") } }
         item { FeatureChip("🎁 哄哄模拟器", Color(0xFF00C6FF), Color(0xFFE5F8FF)) { onFeatureClick("[哄哄模拟器]") } }
     }
 }
