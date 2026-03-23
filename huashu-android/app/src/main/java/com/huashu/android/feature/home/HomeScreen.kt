@@ -1,7 +1,9 @@
 package com.huashu.android.feature.home
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -10,12 +12,22 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -46,15 +58,25 @@ val abilityCards = listOf(
 
 @Composable
 fun HomeScreen(
-    onNavigateToChatBooster: () -> Unit
+    onNavigateToChatBooster: () -> Unit,
+    onNavigateToScreenshotAnalyzer: () -> Unit,
+    onNavigateToApologySimulator: () -> Unit,
+    onNavigateToIcebreaker: () -> Unit,
+    onNavigateToIdentityCard: () -> Unit
 ) {
+    var isMaleMode by remember { mutableStateOf(true) }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(ColorTokens.Background)
+            .statusBarsPadding()
     ) {
-        // Top Bar / Header
-        HomeHeader()
+        // Top Bar / Header with Toggle
+        HomeHeader(
+            isMaleMode = isMaleMode,
+            onToggleMode = { isMaleMode = it }
+        )
 
         // 10-Grid Content
         LazyVerticalGrid(
@@ -70,10 +92,12 @@ fun HomeScreen(
                     subtitle = card.subtitle,
                     colors = card.colors,
                     onClick = {
-                        if (card.id == "chat_hero") {
-                            onNavigateToChatBooster()
-                        } else {
-                            // Navigate to other features
+                        when (card.id) {
+                            "chat_hero" -> onNavigateToChatBooster()
+                            "screenshot_helper" -> onNavigateToScreenshotAnalyzer()
+                            "simulator" -> onNavigateToApologySimulator()
+                            "icebreaker" -> onNavigateToIcebreaker()
+                            "identity_card" -> onNavigateToIdentityCard()
                         }
                     }
                 )
@@ -83,12 +107,15 @@ fun HomeScreen(
 }
 
 @Composable
-fun HomeHeader() {
+fun HomeHeader(
+    isMaleMode: Boolean,
+    onToggleMode: (Boolean) -> Unit
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(
-                top = 48.dp, // Assuming status bar inset approx
+                top = DimenTokens.SpacingSmall,
                 start = DimenTokens.SpacingMedium,
                 end = DimenTokens.SpacingMedium,
                 bottom = DimenTokens.SpacingSmall
@@ -97,14 +124,16 @@ fun HomeHeader() {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
                 text = "恋爱键盘",
                 style = TypeTokens.HeadlineLarge,
                 color = ColorTokens.TextPrimary
             )
-            // Optional: Premium button or Profile icon could go here
+
+            // Gender Toggle
+            GenderToggle(isMaleMode = isMaleMode, onToggle = onToggleMode)
         }
         Spacer(modifier = Modifier.height(DimenTokens.SpacingSmall))
         Text(
@@ -112,5 +141,54 @@ fun HomeHeader() {
             style = TypeTokens.BodyMedium.copy(fontWeight = FontWeight.Medium),
             color = ColorTokens.TextSecondary
         )
+    }
+}
+
+@Composable
+fun GenderToggle(
+    isMaleMode: Boolean,
+    onToggle: (Boolean) -> Unit
+) {
+    val activeBg = ColorTokens.BrandPink
+    val inactiveBg = ColorTokens.SurfaceWhite
+    val activeText = ColorTokens.TextWhite
+    val inactiveText = ColorTokens.TextSecondary
+
+    Row(
+        modifier = Modifier
+            .clip(RoundedCornerShape(DimenTokens.CornerPill))
+            .background(ColorTokens.SurfaceWhite)
+            .padding(2.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .clip(RoundedCornerShape(DimenTokens.CornerPill))
+                .background(if (isMaleMode) activeBg else inactiveBg)
+                .clickable { onToggle(true) }
+                .padding(horizontal = 16.dp, vertical = 6.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "男生",
+                style = TypeTokens.LabelSmall.copy(fontWeight = FontWeight.Bold),
+                color = if (isMaleMode) activeText else inactiveText
+            )
+        }
+
+        Box(
+            modifier = Modifier
+                .clip(RoundedCornerShape(DimenTokens.CornerPill))
+                .background(if (!isMaleMode) activeBg else inactiveBg)
+                .clickable { onToggle(false) }
+                .padding(horizontal = 16.dp, vertical = 6.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "女生",
+                style = TypeTokens.LabelSmall.copy(fontWeight = FontWeight.Bold),
+                color = if (!isMaleMode) activeText else inactiveText
+            )
+        }
     }
 }
