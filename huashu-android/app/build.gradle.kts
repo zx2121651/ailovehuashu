@@ -60,6 +60,13 @@ dependencies {
     implementation("androidx.compose.material3:material3")
     implementation("androidx.navigation:navigation-compose:2.7.7")
     implementation("io.coil-kt:coil-compose:2.5.0")
+    // IME Service Compose requirements
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
+    implementation("androidx.savedstate:savedstate-ktx:1.2.1")
+
+    // Hypothetical LibPinyin-Android-2026 integration
+    // implementation("com.github.libpinyin:libpinyin-android-2026:1.0.0")
+
 
     // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
