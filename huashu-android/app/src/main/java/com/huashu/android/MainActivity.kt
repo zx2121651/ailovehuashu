@@ -20,6 +20,7 @@ import com.huashu.android.feature.chat_booster.IcebreakerScreen
 import com.huashu.android.feature.chat_booster.IdentityCardScreen
 import com.huashu.android.feature.onboarding.WelcomeScreen
 import com.huashu.android.feature.onboarding.GenderSelectionScreen
+import com.huashu.android.feature.onboarding.KeyboardSetupScreen
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -49,8 +50,15 @@ fun HuashuNavGraph() {
         }
         composable("gender_selection") {
             GenderSelectionScreen(
-                onNextClick = { gender ->
+                onNextClick = { _ ->
                     // Normally save gender preference here
+                    navController.navigate("keyboard_setup")
+                }
+            )
+        }
+        composable("keyboard_setup") {
+            KeyboardSetupScreen(
+                onNextClick = {
                     navController.navigate("home") {
                         popUpTo("welcome") { inclusive = true }
                     }
