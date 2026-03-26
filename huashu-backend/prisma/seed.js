@@ -401,14 +401,99 @@ async function main() {
   });
   console.log('系统设置初始化完成: 排序标签');
 
-  console.log('数据库初始化全部完成！');
-}
 
-main()
-  .catch((e) => {
-    console.error('初始化失败:', e);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
+
+
+
+  // ========== 11. 初始化互动剧本小说数据 ==========
+  console.log('开始初始化互动剧本...');
+  const story = await prisma.interactiveStory.upsert({
+    where: { id: 1 },
+    update: {},
+    create: {
+      id: 1,
+      title: '初恋的夏天 - 模拟约会',
+      description: '回到那个充满阳光的午后，你是否能把握住机会，让她成为你的初恋？这不仅是一个故事，更是约会技巧的实战演练。',
+      coverImage: 'https://images.unsplash.com/photo-1517457373958-b7bdd4587205?q=80&w=800&auto=format&fit=crop',
+      category: '校园纯爱',
+      authorName: '官方团队',
+      difficulty: 2,
+      isPremium: false,
+      pointsRequired: 0,
+      status: 'ACTIVE'
+    }
   });
+
+  // 删除旧节点避免冲突
+  await prisma.storyNode.deleteMany({ where: { storyId: story.id } });
+
+  const node1 = await prisma.storyNode.create({
+    data: {
+      storyId: story.id,
+      name: '开场：咖啡馆的偶遇',
+      content: '午后的阳光透过咖啡馆的玻璃窗洒在她的侧脸上。她正看着一本书，面前的焦糖玛奇朵还冒着热气。你深吸一口气，走了过去。',
+      speakerName: '旁白',
+      imageUrl: 'https://images.unsplash.com/photo-1497935586351-b67a49e012bf?q=80&w=800&auto=format&fit=crop',
+      isEnd: false
+    }
+  });
+
+  const node2_good = await prisma.storyNode.create({
+    data: {
+      storyId: story.id,
+      name: '进展：成功搭讪',
+      content: '“这本书我也很喜欢，不过我觉得男主的决定太傻了。”她抬起头，眼睛里闪过一丝惊喜：“你也看东野圭吾？太巧了，快坐！”',
+      speakerName: '林夏',
+      imageUrl: 'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?q=80&w=800&auto=format&fit=crop',
+      isEnd: false
+    }
+  });
+
+  const node2_bad = await prisma.storyNode.create({
+    data: {
+      storyId: story.id,
+      name: '进展：尴尬的开场',
+      content: '“美女，可以加个微信吗？”她微微皱眉，把书合上：“抱歉，我男朋友去洗手间了，马上回来。”气氛瞬间降至冰点。',
+      speakerName: '林夏',
+      imageUrl: 'https://images.unsplash.com/photo-1518049362265-d5b2a6467637?q=80&w=800&auto=format&fit=crop',
+      isEnd: true
+    }
+  });
+
+  const node3_end_good = await prisma.storyNode.create({
+    data: {
+      storyId: story.id,
+      name: '结局：完美收官',
+      content: '你们聊了一整个下午，从悬疑小说聊到喜欢的乐队。离开前，她主动拿出了手机：“如果不介意的话，扫个码？下次一起去看LIVE。”恭喜你，达成完美结局【心动的信号】！',
+      speakerName: '旁白',
+      isEnd: true
+    }
+  });
+
+  // 创建选项关系
+    await prisma.storyChoice.createMany({
+    data: [
+      {
+        nodeId: node1.id,
+        content: '观察她正在看的书，以此为话题切入',
+        nextNodeId: node2_good.id,
+        affectionChange: 15
+      },
+      {
+        nodeId: node1.id,
+        content: '直接走上去要微信，展示自信',
+        nextNodeId: node2_bad.id,
+        affectionChange: -20
+      },
+      {
+        nodeId: node2_good.id,
+        content: '顺着小说话题，展示你幽默的一面，并在高潮时提议加微信',
+        nextNodeId: node3_end_good.id,
+        affectionChange: 25
+      }
+    ]
+  });
+  console.log('互动剧本小说初始化完成');
+
+}
+main().catch((e) => { console.error("初始化失败:", e); process.exit(1); }).finally(async () => { await prisma.$disconnect(); });
