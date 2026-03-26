@@ -17,6 +17,7 @@ const favoriteRoutes = require('./routes/favoriteRoutes');
 const uploadRoutes = require('./routes/uploadRoutes');
 const floatScriptRoutes = require('./routes/floatScripts');
 const storyRoutes = require('./routes/storyRoutes');
+const paymentRoutes = require('./routes/paymentRoutes');
 const path = require('path');
 
 const app = express();
@@ -49,6 +50,7 @@ app.use('/api/v1', favoriteRoutes);
 app.use('/api/v1/upload', uploadRoutes);
 app.use('/api/v1/float-scripts', floatScriptRoutes);
 app.use('/api/v1', storyRoutes);
+app.use('/api/v1/payment', paymentRoutes);
 
 // Admin Routes
 app.use('/api/v1/admin', adminRoutes);
