@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.huashu.keyboard">
+
+    <application>
+        <!-- 声明输入法服务，要求 BIND_INPUT_METHOD 权限防止恶意绑定 -->
+        <service
+            android:name="com.huashu.keyboard.HuashuIME"
+            android:permission="android.permission.BIND_INPUT_METHOD"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.view.InputMethod" />
+            </intent-filter>
+            <!-- 关联配置 res/xml/method.xml -->
+            <meta-data
+                android:name="android.view.im"
+                android:resource="@xml/method" />
+        </service>
+    </application>
+
+</manifest>

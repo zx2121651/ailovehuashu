@@ -160,6 +160,8 @@ const toggleFloatWindow = (e: any) => {
 }
 
 const goToSystemSettings = () => {
+  appStore.showToast('请在系统列表中勾选恋爱话术键盘');
+  // openIMESettings(); // 需要在真机编译时引入插件
   appStore.showToast('正在跳转系统设置...')
   // 在实际的原生插件开发中，这里会调用：
   // plus.android.importClass("android.provider.Settings");
