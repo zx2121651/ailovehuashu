@@ -68,7 +68,7 @@ model Feedback {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  user User @relation(fields: [userId], references: [id])
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Notification {
@@ -95,8 +95,9 @@ model Order {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  user        User            @relation(fields: [userId], references: [id])
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   commissions CommissionLog[]
+  @@index([userId, status])
 }
 
 model User {
@@ -117,7 +118,7 @@ model User {
   // 分销系统字段
   inviteCode  String? @unique
   inviterId   String?
-  inviter     User?   @relation("UserInvites", fields: [inviterId], references: [id])
+  inviter     User?   @relation("UserInvites", fields: [inviterId], references: [id], onDelete: Cascade)
   invitees    User[]  @relation("UserInvites")
   balance     Float   @default(0)
   totalEarned Float   @default(0)
@@ -140,6 +141,8 @@ model User {
   postLikes     PostLike[]
   favorites     Favorite[]
   reports       Report[]
+  @@index([inviteCode])
+  @@index([openId])
 }
 
 model Favorite {
@@ -149,7 +152,7 @@ model Favorite {
 
   // Relations
   userId String
-  user   User   @relation(fields: [userId], references: [id])
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
 
@@ -175,18 +178,25 @@ model Post {
 
   // Relations
   userId String
-  user   User   @relation(fields: [userId], references: [id])
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   categoryId Int?
-  category   Category? @relation(fields: [categoryId], references: [id])
+  category   Category? @relation(fields: [categoryId], references: [id], onDelete: Cascade)
 
   likedBy         PostLike[]
   reports         Report[]
   comments        Comment[]  @relation("PostComments")
-  acceptedComment Comment?   @relation("AcceptedPostComment", fields: [acceptedCommentId], references: [id])
+  acceptedComment Comment?   @relation("AcceptedPostComment", fields: [acceptedCommentId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([categoryId, likes(sort: Desc)])
+  @@index([categoryId, isFeatured, createdAt(sort: Desc)])
+  @@index([status, categoryId, createdAt(sort: Desc)])
+  @@index([status, isUrgent, resolved])
+  @@index([status, categoryId])
+  @@index([userId])
 }
 
 model FloatScript {
@@ -208,7 +218,7 @@ model Report {
 
   // Relations
   reporterId String
-  reporter   User   @relation(fields: [reporterId], references: [id])
+  reporter   User   @relation(fields: [reporterId], references: [id], onDelete: Cascade)
 
   postId Int
   post   Post @relation(fields: [postId], references: [id], onDelete: Cascade)
@@ -220,12 +230,12 @@ model Report {
   @@index([reporterId])
 }
 
-model PostLike {
+// Dummy to not break {
   id Int @id @default(autoincrement())
 
   // Relations
   userId String
-  user   User   @relation(fields: [userId], references: [id])
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   postId Int
   post   Post @relation(fields: [postId], references: [id], onDelete: Cascade)
@@ -238,9 +248,9 @@ model PostLike {
 model CommissionLog {
   id         Int      @id @default(autoincrement())
   userId     String
-  user       User     @relation(fields: [userId], references: [id])
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   orderId    String
-  order      Order    @relation(fields: [orderId], references: [id])
+  order      Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
   fromUserId String // 产生佣金的下级用户ID
   level      Int // 1, 2, 3 级
   amount     Float
@@ -250,7 +260,7 @@ model CommissionLog {
 model Withdrawal {
   id          Int      @id @default(autoincrement())
   userId      String
-  user        User     @relation(fields: [userId], references: [id])
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   amount      Float
   status      String   @default("PENDING") // PENDING, APPROVED, REJECTED
   accountInfo Json // 提现账号信息，如 { type: 'alipay', account: 'xxx', name: 'xxx' }
@@ -308,10 +318,11 @@ model Script {
 
   // Relations
   categoryId Int
-  category   Category @relation(fields: [categoryId], references: [id])
+  category   Category   @relation(fields: [categoryId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  @@index([categoryId, likes(sort: Desc)])
 }
 
 model Article {
@@ -337,7 +348,7 @@ model Contribution {
 
   // Relations
   userId String
-  user   User   @relation(fields: [userId], references: [id])
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -364,6 +375,9 @@ model Course {
   lessons       Json? // Store array of lesson objects { title, duration, free }
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+
+  @@index([userId, status])
+  @@index([createdAt])
 }
 
 model Comment {
@@ -376,7 +390,7 @@ model Comment {
 
   // Relations
   userId String
-  user   User   @relation(fields: [userId], references: [id])
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   // Post relation (when targetType is POST)
   postId         Int?
@@ -399,7 +413,7 @@ model CommentLike {
 
   // Relations
   userId String
-  user   User   @relation(fields: [userId], references: [id])
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   commentId Int
   comment   Comment @relation(fields: [commentId], references: [id], onDelete: Cascade)
