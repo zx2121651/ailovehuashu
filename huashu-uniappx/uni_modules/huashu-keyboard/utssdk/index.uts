@@ -1,0 +1,13 @@
+export function openIMESettings(): void {
+    // 仅在 Android 环境下可用
+    // import android.provider.Settings;
+    // import android.content.Intent;
+
+    // UTS 原生调用跳转到系统输入法设置页面，引导用户勾选我们的键盘
+    const intent = new Intent(Settings.ACTION_INPUT_METHOD_SETTINGS);
+    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+    const context = UTSAndroid.getAppContext();
+    if (context != null) {
+        context.startActivity(intent);
+    }
+}
