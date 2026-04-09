@@ -1,3 +1,4 @@
+const auth = require('../middleware/auth');
 const express = require('express');
 const router = express.Router();
 const paymentController = require('../controllers/paymentController');
@@ -7,3 +8,5 @@ const paymentController = require('../controllers/paymentController');
 router.post('/wechat/webhook', paymentController.wechatPayWebhook);
 
 module.exports = router;
+// 微信支付 V3 统一下单接口 (获取 prepay_id)
+router.post('/wechat/unified-order', auth, paymentController.createUnifiedOrder);
