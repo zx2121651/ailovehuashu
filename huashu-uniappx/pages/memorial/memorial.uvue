@@ -1,0 +1,163 @@
+<template>
+  <view class="container flex-col bg-gray-50 h-full relative fade-in">
+    <!-- Header -->
+    <view class="header-bar bg-white px-4 py-3 border-b border-gray-100 flex-row items-center justify-between z-20">
+      <view class="p-2" @click="goBack">
+        <text class="text-xl text-gray-800">‹</text>
+      </view>
+      <text class="text-base font-bold text-gray-800">恋爱纪念日</text>
+      <view class="header-right"></view>
+    </view>
+
+    <scroll-view class="flex-1" scroll-y>
+      <!-- 恋爱天数主卡片 -->
+      <view class="days-card mx-4 mt-4 rounded-3xl p-6 animate-fade-in-up relative overflow-hidden">
+        <view class="days-blur"></view>
+        <view class="z-10 relative items-center flex-col">
+          <text class="text-white text-sm opacity-90">我们在一起已经</text>
+          <view class="flex-row items-baseline mt-2">
+            <text class="days-num font-extrabold text-white">{{ saved ? savedDays : '--' }}</text>
+            <text class="text-white text-sm ml-2">天</text>
+          </view>
+          <text v-if="saved" class="text-white text-xs mt-2 opacity-80">始于 {{ savedStart }}</text>
+          <text v-else class="text-white text-xs mt-2 opacity-80">设置你们的恋爱开始日期</text>
+        </view>
+      </view>
+
+      <!-- 下一个纪念日 -->
+      <view v-if="saved" class="bg-white mx-4 mt-4 rounded-2xl p-4 shadow-sm border border-gray-50 flex-row items-center justify-between animate-fade-in-up delay-100">
+        <view class="flex-row items-center">
+          <view class="anni-icon bg-pink-50 rounded-full items-center justify-center mr-3">
+            <text class="text-base">🎂</text>
+          </view>
+          <view class="flex-col">
+            <text class="text-sm font-bold text-gray-800">下一个纪念日</text>
+            <text class="text-xs text-gray-400 mt-0_5">恋爱周年</text>
+          </view>
+        </view>
+        <view class="items-end flex-col">
+          <text class="text-lg font-extrabold text-pink-500">{{ savedNext }} 天后</text>
+        </view>
+      </view>
+
+      <!-- 设置/修改日期 -->
+      <view class="bg-white mx-4 mt-4 rounded-2xl p-4 shadow-sm border border-gray-50 animate-fade-in-up delay-200">
+        <text class="text-sm font-bold text-gray-800 mb-3">{{ saved ? '修改开始日期' : '设置开始日期' }}</text>
+        <picker mode="date" :value="startDate" @change="onDateChange">
+          <view class="date-picker bg-gray-50 rounded-xl p-3 flex-row items-center justify-between border border-gray-100">
+            <text :class="['text-sm', startDate ? 'text-gray-800' : 'text-gray-400']">{{ startDate || '请选择日期' }}</text>
+            <text class="text-gray-400 text-sm">📅</text>
+          </view>
+        </picker>
+        <view class="save-btn bg-gradient-pink rounded-full mt-4 py-3 items-center tap-press" @click="save">
+          <text class="text-white text-sm font-bold">保存纪念日</text>
+        </view>
+      </view>
+
+      <!-- 小贴士 -->
+      <view class="bg-orange-50 mx-4 mt-4 mb-6 rounded-2xl p-4 border border-orange-100 animate-fade-in-up delay-300">
+        <text class="text-xs text-orange-600 leading-relaxed">💡 纪念日会同步到你的专属档案，恋爱天数可在社区个人主页展示。</text>
+      </view>
+    </scroll-view>
+  </view>
+</template>
+
+<script setup lang="uts">
+import { ref } from 'vue'
+import { onLoad } from '@dcloudio/uni-app'
+import { useAppStore } from '../../store/app.uts'
+import { getMemorial, saveMemorial } from '../../services/api.uts'
+
+const appStore = useAppStore
+
+const startDate = ref('')
+const saved = ref(false)
+const savedStart = ref('')
+const savedDays = ref(0)
+const savedNext = ref(0)
+
+const calcDays = (dateStr: string): number => {
+  const start = new Date(dateStr).getTime()
+  return Math.max(0, Math.floor((Date.now() - start) / 86400000))
+}
+
+const nextAnniversary = (dateStr: string): number => {
+  const parts = dateStr.split('-')
+  if (parts.length < 3) return 0
+  const month = parseInt(parts[1]) - 1
+  const day = parseInt(parts[2])
+  const now = new Date()
+  let next = new Date(now.getFullYear(), month, day)
+  if (next.getTime() <= now.getTime()) {
+    next = new Date(now.getFullYear() + 1, month, day)
+  }
+  return Math.ceil((next.getTime() - now.getTime()) / 86400000)
+}
+
+onLoad(async () => {
+  try {
+    const res = await getMemorial()
+    if (res && res.startDate) {
+      startDate.value = res.startDate
+      savedStart.value = res.startDate
+      savedDays.value = res.days ?? calcDays(res.startDate)
+      savedNext.value = res.nextAnniversary ?? nextAnniversary(res.startDate)
+      saved.value = true
+    }
+  } catch (e) {
+    console.error('获取纪念日失败', e)
+  }
+})
+
+const onDateChange = (e: any) => {
+  startDate.value = e.detail.value
+}
+
+const save = async () => {
+  if (startDate.value === '') {
+    appStore.showToast('请选择开始日期')
+    return
+  }
+  try {
+    const res = await saveMemorial(startDate.value)
+    savedStart.value = startDate.value
+    savedDays.value = (res && res.days != null) ? res.days : calcDays(startDate.value)
+    savedNext.value = nextAnniversary(startDate.value)
+    saved.value = true
+    appStore.showToast('保存成功')
+  } catch (e) {
+    // 后端不可用时本地展示
+    savedStart.value = startDate.value
+    savedDays.value = calcDays(startDate.value)
+    savedNext.value = nextAnniversary(startDate.value)
+    saved.value = true
+    appStore.showToast('已保存（本地）')
+  }
+}
+
+const goBack = () => {
+  uni.navigateBack({ delta: 1 })
+}
+</script>
+
+<style>
+.container { flex: 1; }
+.header-bar { height: 50px; }
+.header-right { width: 32px; }
+
+.days-card { background-image: linear-gradient(to bottom right, #ec4899, #f43f5e); box-shadow: 0 8px 24px -4px rgba(244,63,94,0.35); }
+.days-blur { position: absolute; right: -24px; top: -24px; width: 120px; height: 120px; background-color: rgba(255,255,255,0.12); border-radius: 60px; }
+.days-num { font-size: 56px; line-height: 1.1; }
+
+.anni-icon { width: 40px; height: 40px; }
+.date-picker { }
+.save-btn { }
+
+/* 本页补充的工具类 */
+.mx-4 { margin-left: 16px; margin-right: 16px; }
+.mt-0_5 { margin-top: 2px; }
+.mb-6 { margin-bottom: 24px; }
+.items-baseline { align-items: baseline; }
+.border-gray-50 { border-color: #f9fafb; }
+.border-orange-100 { border-color: #ffedd5; }
+</style>

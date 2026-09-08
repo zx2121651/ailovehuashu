@@ -67,6 +67,60 @@
             </view>
           </view>
 
+          <!-- 语境分析卡片（情绪阶梯 + 多风格方案），对标心动恋聊 -->
+          <view v-if="msg.type === 'context'" class="suggestions-bubble bg-white p-4 rounded-2xl rounded-tl-none shadow-sm border border-gray-100 flex-col w-full">
+
+            <!-- 情绪阶梯 -->
+            <view v-if="msg.ladder && msg.ladder.length > 0" class="ladder-wrap mb-3">
+              <text class="text-xs font-bold text-pink-500 mb-2">🧗 情绪阶梯拆解</text>
+              <view v-for="(step, idx) in msg.ladder" :key="idx" class="ladder-step flex-row items-center mb-1_5">
+                <view class="ladder-dot bg-pink-500 rounded-full items-center justify-center mr-2">
+                  <text class="text-white ladder-dot-text font-bold">{{ idx + 1 }}</text>
+                </view>
+                <text class="text-xs text-gray-600 flex-1">{{ step }}</text>
+              </view>
+            </view>
+
+            <!-- 分析 -->
+            <view v-if="msg.analysis" class="analysis-box bg-purple-50 rounded-xl p-3 mb-3">
+              <text class="text-xs text-purple-600 leading-relaxed">💡 {{ msg.analysis }}</text>
+            </view>
+
+            <!-- 个性化提示 -->
+            <view v-if="msg.personalized" class="analysis-box bg-pink-50 rounded-xl p-3 mb-3">
+              <text class="text-xs text-pink-600 leading-relaxed">🧬 {{ msg.personalized }}</text>
+            </view>
+
+            <!-- 多风格方案 -->
+            <view v-for="(sug, idx) in msg.suggestions" :key="idx" :class="['sug-item p-3_5 rounded-xl border relative mb-3', getSugStyle(sug.color).bg, getSugStyle(sug.color).border]">
+              <view :class="['sug-badge absolute -top-2_5 left-3 px-2_5 py-0_5 rounded-full shadow-sm flex-row items-center', getSugStyle(sug.color).badgeBg]">
+                <text class="text-white text-xs font-bold">{{ sug.label }}</text>
+              </view>
+              <text class="mt-2 text-sm text-gray-800 leading-relaxed">{{ sug.text }}</text>
+
+              <view class="flex-row justify-end mt-2">
+                <view :class="['copy-btn px-2 py-1 rounded-md flex-row items-center mr-2', getSugStyle(sug.color).btnBg]" @click="copySug(msg.id + idx, sug.text)">
+                  <text :class="['text-xs font-bold mr-1', getSugStyle(sug.color).text]">{{ copiedId === msg.id + idx ? '✔' : '📋' }}</text>
+                  <text :class="['text-xs font-bold', getSugStyle(sug.color).text]">复制</text>
+                </view>
+                <view class="copy-btn px-2 py-1 rounded-md flex-row items-center bg-gray-100" @click="openKeyboard(sug.text)">
+                  <text class="text-xs font-bold mr-1 text-gray-600">⌨️</text>
+                  <text class="text-xs font-bold text-gray-600">上屏</text>
+                </view>
+              </view>
+            </view>
+
+            <view class="flex-row items-center mt-1 pt-2 border-t border-gray-50">
+              <view class="flex-row items-center mr-4" @click="regenerate(msg.id)">
+                <text class="text-gray-400 text-xs mr-1">🔄</text>
+                <text class="text-gray-400 text-xs">换一换</text>
+              </view>
+              <text class="text-gray-300 mr-4">|</text>
+              <text class="text-gray-400 text-sm mr-3" @click="appStore.showToast('感谢反馈！')">👍</text>
+              <text class="text-gray-400 text-sm" @click="appStore.showToast('我们会继续努力优化')">👎</text>
+            </view>
+          </view>
+
         </view>
 
         <!-- User Avatar -->
@@ -92,13 +146,23 @@
 
     <!-- Bottom Input Area -->
     <view class="input-area absolute bottom-0 w-full bg-gray-50 z-30 pb-safe">
+      <!-- 语境阶段选择（对标心动恋聊） -->
+      <scroll-view class="chips-row px-3 pb-1_5" direction="horizontal" :show-scrollbar="false">
+        <view class="flex-row" style="flex-direction: row; align-items: flex-start;">
+          <view v-for="(stage, idx) in stages" :key="idx"
+            :class="['chip-btn px-3 py-1_5 rounded-full mr-2 flex-row items-center', contextStage === stage ? 'bg-pink-500 border border-pink-500' : 'bg-white border border-gray-100']"
+            style="flex-shrink: 0;" @click="contextStage = stage">
+            <text :class="['text-xs whitespace-nowrap', contextStage === stage ? 'text-white font-bold' : 'text-gray-600']">{{ stage }}</text>
+          </view>
+        </view>
+      </scroll-view>
+
       <!-- Quick Chips -->
       <scroll-view class="chips-row px-3 pb-2 pt-1" direction="horizontal" :show-scrollbar="false">
         <view class="flex-row pb-1" style="flex-direction: row; align-items: flex-start;">
           <view v-for="(chip, idx) in chips" :key="idx" class="chip-btn bg-white px-3 py-1_5 rounded-full shadow-sm border border-gray-100 mr-2 flex-row items-center" style="flex-shrink: 0;" @click="setInput(chip)">
             <text class="text-gray-600 text-xs whitespace-nowrap">{{ chip }}</text>
           </view>
-        </view>
         </view>
       </scroll-view>
 
@@ -122,7 +186,7 @@
 <script setup lang="uts">
 import { ref, reactive, nextTick } from 'vue'
 import { useAppStore } from '../../store/app.uts'
-import { chatWithAI } from '../../services/api.uts'
+import { generateContextReply } from '../../services/api.uts'
 
 const appStore = useAppStore
 
@@ -132,6 +196,10 @@ const copiedId = ref('')
 const scrollTargetId = ref('')
 
 const chips = ['帮我幽默回复', '高情商拒绝', '怎么自然邀约', '帮我写个晚安']
+const stages = ['暧昧期', '热恋期', '闹别扭', '普通朋友', '表白前']
+const contextStage = ref('暧昧期')
+// 最近一次语境请求，用于「换一换」重新生成
+let lastContext = ''
 
 type Suggestion = {
   label: string
@@ -146,6 +214,9 @@ type ChatMessage = {
   content: string
   time: string
   suggestions?: Suggestion[]
+  ladder?: string[]
+  analysis?: string
+  personalized?: string
 }
 
 const chatMessages = reactive<ChatMessage[]>([
@@ -188,6 +259,7 @@ const handleSend = async () => {
   if (chatInput.value.trim() === '') return
 
   const inputStr = chatInput.value
+  lastContext = inputStr
   const newUserMsg: ChatMessage = {
     id: 'user_' + Date.now(),
     role: 'user',
@@ -202,15 +274,23 @@ const handleSend = async () => {
   scrollToBottom()
 
   try {
-    const aiResponse = await chatWithAI(inputStr)
+    const res = await generateContextReply({
+      context: inputStr,
+      stage: contextStage.value,
+      style: 'all',
+      count: 4
+    } as Record<string, any>)
 
-    // API returns text or standard data. Adapt format:
-    let newAiMsg: ChatMessage = {
-        id: 'ai_' + Date.now(),
-        role: 'ai',
-        type: 'text', // Assuming text by default from true AI
-        content: aiResponse || '...',
-        time: '刚刚'
+    const newAiMsg: ChatMessage = {
+      id: 'ai_' + Date.now(),
+      role: 'ai',
+      type: 'context',
+      content: '',
+      ladder: res.emotionLadder || [],
+      analysis: res.analysis || '',
+      personalized: res.personalized || '',
+      suggestions: res.suggestions || [],
+      time: '刚刚'
     }
     chatMessages.push(newAiMsg)
   } catch (e) {
@@ -229,12 +309,66 @@ const handleSend = async () => {
   }
 }
 
-// 颜色映射逻辑
+// 换一换：基于最近一次语境重新生成
+const regenerate = async (msgId: string) => {
+  if (isAiTyping.value) return
+  if (lastContext === '') {
+    appStore.showToast('请先粘贴对方说的话')
+    return
+  }
+  isAiTyping.value = true
+  scrollToBottom()
+  try {
+    const res = await generateContextReply({
+      context: lastContext,
+      stage: contextStage.value,
+      style: 'all',
+      count: 4
+    } as Record<string, any>)
+
+    const idx = chatMessages.findIndex(m => m.id === msgId)
+    const newMsg: ChatMessage = {
+      id: 'ai_' + Date.now(),
+      role: 'ai',
+      type: 'context',
+      content: '',
+      ladder: res.emotionLadder || [],
+      analysis: res.analysis || '',
+      personalized: res.personalized || '',
+      suggestions: res.suggestions || [],
+      time: '刚刚'
+    }
+    if (idx > -1) {
+      chatMessages.splice(idx, 1, newMsg)
+    } else {
+      chatMessages.push(newMsg)
+    }
+  } catch (e) {
+    appStore.showToast('生成失败，请稍后重试')
+  } finally {
+    isAiTyping.value = false
+    scrollToBottom()
+  }
+}
+
+// 唤起话术键盘（App 内 IME 插件）；小程序端复制后提示切换键盘
+const openKeyboard = (text: string) => {
+  uni.setClipboardData({
+    data: text,
+    success: () => {
+      appStore.showToast('已复制，切换「话术键盘」即可上屏')
+    }
+  })
+}
+
+// 颜色映射逻辑（与后端 5 种风格色对齐）
 const getSugStyle = (color: string) => {
   const map: Record<string, Record<string, string>> = {
     blue: { bg: 'bg-blue-50', border: 'border-blue-100', badgeBg: 'bg-blue-500', text: 'text-blue-600', btnBg: 'bg-blue-100' },
     purple: { bg: 'bg-purple-50', border: 'border-purple-100', badgeBg: 'bg-purple-500', text: 'text-purple-600', btnBg: 'bg-purple-100' },
-    pink: { bg: 'bg-pink-50', border: 'border-pink-100', badgeBg: 'bg-pink-500', text: 'text-pink-600', btnBg: 'bg-pink-100' }
+    pink: { bg: 'bg-pink-50', border: 'border-pink-100', badgeBg: 'bg-pink-500', text: 'text-pink-600', btnBg: 'bg-pink-100' },
+    red: { bg: 'bg-red-50', border: 'border-red-100', badgeBg: 'bg-red-500', text: 'text-red-600', btnBg: 'bg-red-100' },
+    green: { bg: 'bg-green-50', border: 'border-green-100', badgeBg: 'bg-green-500', text: 'text-green-600', btnBg: 'bg-green-100' }
   }
   return map[color] || map['blue']
 }
@@ -312,7 +446,7 @@ const getSugStyle = (color: string) => {
 
 .shadow-sm { box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); }
 .shadow-md { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
-.shadow-pink-200 { box-shadow: 0 4px 6px -1px rgba(24bc, 72, 153, 0.2); }
+.shadow-pink-200 { box-shadow: 0 4px 6px -1px rgba(236, 72, 153, 0.2); }
 
 .w-9 { width: 36px; }
 .h-9 { height: 36px; }
@@ -351,4 +485,29 @@ const getSugStyle = (color: string) => {
 .bg-pink-100 { background-color: #fce7f3; }
 .border-pink-100 { border-color: #fce7f3; border-width: 1px; border-style: solid; }
 .text-pink-600 { color: #db2777; }
+
+/* red / green 方案色系（后端多风格池） */
+.bg-red-50 { background-color: #fef2f2; }
+.bg-red-100 { background-color: #fee2e2; }
+.bg-red-500 { background-color: #ef4444; }
+.border-red-100 { border-color: #fee2e2; border-width: 1px; border-style: solid; }
+.text-red-600 { color: #dc2626; }
+
+.bg-green-50 { background-color: #f0fdf4; }
+.bg-green-100 { background-color: #dcfce7; }
+.border-green-100 { border-color: #dcfce7; border-width: 1px; border-style: solid; }
+.text-green-600 { color: #16a34a; }
+
+.bg-gray-100 { background-color: #f3f4f6; }
+.border-pink-500 { border-color: #ec4899; border-width: 1px; border-style: solid; }
+
+.mb-1_5 { margin-bottom: 6px; }
+.pb-1_5 { padding-bottom: 6px; }
+
+/* 情绪阶梯 */
+.ladder-wrap { flex-direction: column; }
+.ladder-step { flex-direction: row; }
+.ladder-dot { width: 18px; height: 18px; }
+.ladder-dot-text { font-size: 10px; }
+.analysis-box { }
 </style>

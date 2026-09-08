@@ -227,6 +227,20 @@
       }
     },
     {
+      "path": "pages/dress-up/dress-up",
+      "style": {
+        "navigationBarTitleText": "装扮中心",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/memorial/memorial",
+      "style": {
+        "navigationBarTitleText": "恋爱纪念日",
+        "navigationStyle": "custom"
+      }
+    },
+    {
       "path": "pages/topic/topic",
       "style": {
         "navigationBarTitleText": "必看专题",

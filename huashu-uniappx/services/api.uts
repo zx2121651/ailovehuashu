@@ -152,6 +152,46 @@ export async function chatWithAI(prompt: string): Promise<any> {
     return res.data
 }
 
+// 语境粘贴生成回复（多风格 + 情绪阶梯 + 阶段适配），对标心动恋聊/恋爱键盘
+export async function generateContextReply(payload: Record<string, any>): Promise<any> {
+    const res = await request<any>({
+        url: '/ai/context-reply',
+        method: 'POST',
+        data: payload
+    })
+    return res.data
+}
+
+// 装扮中心（头像框/徽章/虚拟礼物）
+export async function getSkins(): Promise<any> {
+    const res = await request<any>({ url: '/life/skins' })
+    return res.data || { list: [], owned: [] }
+}
+
+export async function purchaseSkin(skinId: string): Promise<any> {
+    const res = await request<any>({
+        url: '/life/skins/purchase',
+        method: 'POST',
+        data: { skinId }
+    })
+    return res.data
+}
+
+// 纪念日 / 恋爱天数（对标恋爱记）
+export async function getMemorial(): Promise<any> {
+    const res = await request<any>({ url: '/life/memorial' })
+    return res.data
+}
+
+export async function saveMemorial(startDate: string): Promise<any> {
+    const res = await request<any>({
+        url: '/life/memorial/save',
+        method: 'POST',
+        data: { startDate }
+    })
+    return res.data
+}
+
 // Community API
 export async function getPostCategories(): Promise<any[]> {
     const res = await request<any>({ url: '/posts/categories' })

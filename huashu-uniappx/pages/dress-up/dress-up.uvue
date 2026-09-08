@@ -1,0 +1,177 @@
+<template>
+  <view class="container flex-col bg-gray-50 h-full relative fade-in">
+    <!-- Header -->
+    <view class="header-bar bg-white px-4 py-3 border-b border-gray-100 flex-row items-center justify-between z-20">
+      <view class="p-2" @click="goBack">
+        <text class="text-xl text-gray-800">‹</text>
+      </view>
+      <text class="text-base font-bold text-gray-800">装扮中心</text>
+      <view class="points-badge bg-orange-50 rounded-full px-3 py-1 flex-row items-center border border-orange-100">
+        <text class="text-orange-500 text-xs mr-1">⚡</text>
+        <text class="text-orange-600 text-xs font-bold">{{ points }}</text>
+      </view>
+    </view>
+
+    <!-- Tab 切换 -->
+    <view class="tabs-row bg-white px-4 flex-row border-b border-gray-100">
+      <view v-for="(tab, idx) in tabs" :key="idx" class="tab-item flex-1 items-center py-3" @click="activeTab = tab.key">
+        <text :class="['text-sm', activeTab === tab.key ? 'text-pink-500 font-bold' : 'text-gray-500']">{{ tab.label }}</text>
+        <view :class="['tab-line mt-1 rounded-full', activeTab === tab.key ? 'bg-pink-500' : 'bg-transparent']"></view>
+      </view>
+    </view>
+
+    <scroll-view class="flex-1 px-4 py-4" scroll-y>
+      <!-- 装扮卡片网格 -->
+      <view class="flex-row flex-wrap justify-between">
+        <view v-for="skin in filteredList" :key="skin.id" class="skin-card bg-white rounded-2xl p-4 mb-4 border border-gray-50 shadow-sm items-center flex-col animate-fade-in-up">
+          <!-- 预览区 -->
+          <view class="skin-preview rounded-xl items-center justify-center mb-3 relative" :style="{ backgroundColor: skin.previewBg || '#fdf2f8' }">
+            <text class="text-3xl">{{ skin.icon || (skin.kind === 'frame' ? '🖼️' : skin.kind === 'badge' ? '🏅' : '🎁') }}</text>
+            <view v-if="skin.vipOnly" class="vip-tag absolute rounded-full bg-gradient-gold px-2 py-0_5">
+              <text class="text-white vip-tag-text font-bold">VIP</text>
+            </view>
+          </view>
+
+          <text class="text-sm font-bold text-gray-800">{{ skin.name }}</text>
+          <text class="text-xs text-gray-400 mt-1">{{ skin.kind === 'frame' ? '头像框' : skin.kind === 'badge' ? '徽章' : '虚拟礼物' }}</text>
+
+          <!-- 购买按钮 -->
+          <view v-if="isOwned(skin.id)" class="buy-btn owned-btn rounded-full mt-3 py-2 items-center w-full">
+            <text class="text-gray-400 text-xs font-bold">已拥有</text>
+          </view>
+          <view v-else class="buy-btn bg-gradient-pink rounded-full mt-3 py-2 items-center w-full tap-press" @click="buy(skin)">
+            <text class="text-white text-xs font-bold">{{ skin.type === 'free' ? '免费领取' : (skin.vipOnly ? 'VIP 专属' : skin.price + ' 积分') }}</text>
+          </view>
+        </view>
+      </view>
+
+      <view v-if="filteredList.length === 0" class="items-center mt-6">
+        <text class="text-gray-400 text-sm">该分类下暂无装扮</text>
+      </view>
+    </scroll-view>
+  </view>
+</template>
+
+<script setup lang="uts">
+import { ref, computed } from 'vue'
+import { onLoad } from '@dcloudio/uni-app'
+import { useAppStore } from '../../store/app.uts'
+import { getSkins, purchaseSkin, getUserProfile } from '../../services/api.uts'
+
+const appStore = useAppStore
+
+type Skin = {
+  id: string
+  kind: string
+  name: string
+  price: number
+  type: string
+  vipOnly?: boolean
+  icon?: string
+  previewBg?: string
+}
+
+const tabs = [
+  { key: 'frame', label: '头像框' },
+  { key: 'badge', label: '徽章' },
+  { key: 'gift', label: '虚拟礼物' }
+]
+const activeTab = ref('frame')
+
+const list = ref<Skin[]>([])
+const owned = ref<string[]>([])
+const points = ref(0)
+const isVip = ref(false)
+
+const filteredList = computed(() => {
+  return list.value.filter(s => s.kind === activeTab.value)
+})
+
+const isOwned = (id: string): boolean => {
+  return owned.value.indexOf(id) > -1
+}
+
+onLoad(async () => {
+  try {
+    const res = await getSkins()
+    list.value = res.list || []
+    owned.value = res.owned || []
+  } catch (e) {
+    // 本地演示数据
+    list.value = [
+      { id: 'frame_pink', kind: 'frame', name: '初恋粉框', price: 0, type: 'free', previewBg: '#fdf2f8' },
+      { id: 'frame_grad', kind: 'frame', name: '心动渐变框', price: 1500, type: 'points', vipOnly: true, previewBg: '#faf5ff' },
+      { id: 'frame_gold', kind: 'frame', name: '鎏金岁月框', price: 2000, type: 'points', previewBg: '#fefce8' },
+      { id: 'badge_egg', kind: 'badge', name: '萌新彩蛋', price: 0, type: 'free', previewBg: '#f0fdf4' },
+      { id: 'badge_sweet', kind: 'badge', name: '甜言蜜语', price: 300, type: 'points', previewBg: '#fdf2f8' },
+      { id: 'badge_god', kind: 'badge', name: '情圣', price: 0, type: 'vip', vipOnly: true, previewBg: '#fefce8' },
+      { id: 'gift_rose', kind: 'gift', name: '心动玫瑰', price: 99, type: 'points', previewBg: '#fff1f2' },
+      { id: 'gift_ring', kind: 'gift', name: '永恒钻戒', price: 999, type: 'points', previewBg: '#eff6ff' }
+    ]
+    owned.value = ['frame_pink', 'badge_egg']
+  }
+  try {
+    const profile = await getUserProfile()
+    if (profile) {
+      points.value = profile.points || 0
+      isVip.value = profile.isVip || false
+    }
+  } catch (e) {
+    console.error('获取用户信息失败', e)
+  }
+})
+
+const buy = async (skin: Skin) => {
+  if (skin.vipOnly && !isVip.value) {
+    appStore.showVipModal = true
+    return
+  }
+  if (skin.type === 'points' && points.value < skin.price) {
+    appStore.showToast(`积分不足，还差 ${skin.price - points.value}`)
+    return
+  }
+  try {
+    const res = await purchaseSkin(skin.id)
+    if (res && res.ok !== false) {
+      appStore.showToast(res.message || '购买成功')
+      owned.value.push(skin.id)
+      if (skin.type === 'points') {
+        points.value = points.value - skin.price
+      }
+    } else {
+      appStore.showToast((res && res.message) || '购买失败')
+    }
+  } catch (e) {
+    appStore.showToast('购买失败，请稍后重试')
+  }
+}
+
+const goBack = () => {
+  uni.navigateBack({ delta: 1 })
+}
+</script>
+
+<style>
+.container { flex: 1; }
+.header-bar { height: 50px; }
+.points-badge { }
+
+.tab-item { }
+.tab-line { width: 24px; height: 3px; }
+
+.skin-card { width: 48%; }
+.skin-preview { width: 100%; height: 88px; }
+.vip-tag { top: 6px; right: 6px; }
+.vip-tag-text { font-size: 9px; }
+.buy-btn { }
+.owned-btn { background-color: #f3f4f6; }
+
+.bg-gradient-gold { background-image: linear-gradient(to right, #f59e0b, #d97706); }
+
+/* 本页补充的工具类 */
+.py-0_5 { padding-top: 2px; padding-bottom: 2px; }
+.text-3xl { font-size: 30px; }
+.border-orange-100 { border-color: #ffedd5; }
+.border-gray-50 { border-color: #f9fafb; }
+.bg-transparent { background-color: transparent; }
+</style>

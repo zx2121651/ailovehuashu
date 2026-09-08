@@ -118,6 +118,40 @@
         </view>
       </view>
 
+      <!-- 情感增值（恋爱测评/装扮中心/纪念日） -->
+      <view class="menu-grid bg-white rounded-2xl shadow-sm p-4 mb-4 border border-gray-50">
+        <view class="flex-row items-center mb-4">
+          <text class="text-rose-500 mr-2">💗</text>
+          <text class="text-sm font-bold text-gray-800">情感增值</text>
+        </view>
+        <view class="flex-row justify-between">
+          <view class="grid-item flex-col items-center flex-1" @click="handleMenuClick('恋爱评测')">
+            <view class="icon-box bg-pink-50 rounded-full p-3 mb-2 border border-pink-100">
+              <text class="text-lg">💖</text>
+            </view>
+            <text class="text-xs text-gray-600 font-medium">恋爱测评</text>
+          </view>
+          <view class="grid-item flex-col items-center flex-1" @click="handleMenuClick('装扮中心')">
+            <view class="icon-box bg-pink-50 rounded-full p-3 mb-2 border border-pink-100">
+              <text class="text-lg">🎀</text>
+            </view>
+            <text class="text-xs text-gray-600 font-medium">装扮中心</text>
+          </view>
+          <view class="grid-item flex-col items-center flex-1" @click="handleMenuClick('恋爱纪念日')">
+            <view class="icon-box bg-pink-50 rounded-full p-3 mb-2 border border-pink-100">
+              <text class="text-lg">📅</text>
+            </view>
+            <text class="text-xs text-gray-600 font-medium">纪念日</text>
+          </view>
+          <view class="grid-item flex-col items-center flex-1" @click="handleMenuClick('悬浮助手')">
+            <view class="icon-box bg-pink-50 rounded-full p-3 mb-2 border border-pink-100">
+              <text class="text-lg">🚀</text>
+            </view>
+            <text class="text-xs text-gray-600 font-medium">悬浮助手</text>
+          </view>
+        </view>
+      </view>
+
       <!-- 底部列表 -->
       <view class="list-menu bg-white rounded-2xl shadow-sm p-2 border border-gray-50">
         <view class="list-item flex-row justify-between items-center p-3 border-b border-gray-50" @click="handleMenuClick('每日盲盒')">
@@ -224,9 +258,7 @@ const contentMenus = [
 ]
 
 const serviceMenus = [
-  { icon: '🚀', label: '悬浮助手' },
   { icon: '🎁', label: '分销中心' },
-  { icon: '💖', label: '恋爱评测' },
   { icon: '💡', label: '帮助反馈' }
 ]
 
@@ -293,6 +325,12 @@ const handleMenuClick = (label: string) => {
       break
     case '恋爱评测':
       uni.navigateTo({ url: '/pages/assessment/assessment' })
+      break
+    case '装扮中心':
+      uni.navigateTo({ url: '/pages/dress-up/dress-up' })
+      break
+    case '恋爱纪念日':
+      uni.navigateTo({ url: '/pages/memorial/memorial' })
       break
     case '话术定制':
       uni.navigateTo({ url: '/pages/custom/custom' })
