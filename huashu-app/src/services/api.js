@@ -435,5 +435,8 @@ export async function saveMemorial(startDate) {
   try {
     const data = await request('/life/memorial/save', { method: 'POST', body: JSON.stringify({ startDate }) });
     return data.data;
-  } catch (e) { return { ok: true, startDate, days: 0 }; }
+  } catch (e) {
+    const days = Math.max(0, Math.floor((Date.now() - new Date(startDate).getTime()) / 86400000));
+    return { ok: true, startDate, days };
+  }
 }

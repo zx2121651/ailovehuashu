@@ -92,7 +92,7 @@ export default function LovePalette() {
             <div className="flex items-center justify-between mb-4">
               <span className="text-[12px] text-gray-500 font-medium">第 {qIndex + 1} / {questions.length} 题</span>
               <div className="flex-1 mx-3 h-1.5 bg-gray-200 rounded-full overflow-hidden">
-                <div className="h-full bg-gradient-to-r from-pink-400 to-rose-500 rounded-full transition-all duration-500" style={{ width: `${((qIndex + (qIndex === questions.length ? 0 : 1)) / questions.length) * 100}%` }} />
+                <div className="h-full bg-gradient-to-r from-pink-400 to-rose-500 rounded-full transition-all duration-500" style={{ width: `${((qIndex + 1) / questions.length) * 100}%` }} />
               </div>
             </div>
             <div className="love-card rounded-3xl p-6 shadow-sm">

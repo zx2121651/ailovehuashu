@@ -13,6 +13,8 @@ export default function AI() {
 
   const [isAiTyping, setIsAiTyping] = useState(false);
   const chatEndRef = useRef(null);
+  // 记录最近一次生成所用的语境，「换一换」在输入框清空后仍可重新生成
+  const lastContextRef = useRef('她刚对我说："我觉得我们还是做朋友比较好" 怎么回？？在线等急！');
   const [chatMessages, setChatMessages] = useState([
     { id: 'msg1', role: 'ai', type: 'text', content: '嗨！我是你的专属恋爱导师。把TA的话粘贴给我，我会拆解情绪、给你多风格高情商回复，还能源源不断「换一换」！🥰', time: '10:24' },
     { id: 'msg2', role: 'user', type: 'text', content: '她刚对我说：“我觉得我们还是做朋友比较好” 怎么回？？在线等急！', time: '10:25' },
@@ -33,6 +35,7 @@ export default function AI() {
     if (!chatInput.trim()) return;
     const newUserMsg = { id: Date.now().toString(), role: 'user', type: 'text', content: chatInput, time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) };
     setChatMessages(prev => [...prev, newUserMsg]);
+    lastContextRef.current = chatInput;
     setAiState({ chatInput: '' });
     setIsAiTyping(true);
 
@@ -57,6 +60,37 @@ export default function AI() {
       setChatMessages(prev => [...prev, newAiMsg]);
     } catch (e) {
       setChatMessages(prev => [...prev, { id: (Date.now() + 1).toString(), role: 'ai', type: 'text', content: '抱歉，我暂时没想好，换个说法再说一次？', time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) }]);
+    }
+    setIsAiTyping(false);
+  };
+
+  // 换一换：基于最近语境重新生成一组方案（输入框为空也可用）
+  const regenerate = async () => {
+    const ctx = (chatInput.trim() || lastContextRef.current).trim();
+    if (!ctx) { showToast('先粘贴对方说的话，再来换风格'); return; }
+    if (isAiTyping) return;
+    setIsAiTyping(true);
+    try {
+      const res = await generateContextReply({
+        context: ctx,
+        stage: contextStage,
+        style: 'all',
+        personality: lovePalette?.type,
+        count: 4
+      });
+      const newAiMsg = {
+        id: (Date.now() + 1).toString(),
+        role: 'ai',
+        type: 'context',
+        ladder: res.emotionLadder || [],
+        analysis: res.analysis,
+        personalized: res.personalized,
+        suggestions: res.suggestions || [],
+        time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+      };
+      setChatMessages(prev => [...prev, newAiMsg]);
+    } catch (e) {
+      showToast('生成失败，请稍后再试');
     }
     setIsAiTyping(false);
   };
@@ -143,7 +177,7 @@ export default function AI() {
                   </div>
 
                   <div className="flex items-center space-x-3 mt-1 text-gray-400">
-                    <div className="flex items-center space-x-1 cursor-pointer hover:text-pink-500 transition-colors" onClick={handleSendChat}><RefreshCw size={14} /> <span className="text-[11px]">换一换</span></div>
+                    <div className="flex items-center space-x-1 cursor-pointer hover:text-pink-500 transition-colors" onClick={regenerate}><RefreshCw size={14} /> <span className="text-[11px]">换一换</span></div>
                     <div className="w-px h-3 bg-gray-300"></div>
                     <ThumbsUp size={14} className="cursor-pointer hover:text-pink-500" onClick={() => showToast('感谢反馈！')} />
                     <ThumbsDown size={14} className="cursor-pointer hover:text-gray-600" onClick={() => showToast('我们会继续努力优化')} />
@@ -227,7 +261,7 @@ export default function AI() {
                     </div>
                   )})}
                   <div className="flex items-center space-x-3 mt-2 text-gray-400">
-                    <div className="flex items-center space-x-1 cursor-pointer hover:text-pink-500 transition-colors" onClick={() => showToast('已生成新方案')}><RefreshCw size={14} /> <span className="text-[11px]">换一换</span></div>
+                    <div className="flex items-center space-x-1 cursor-pointer hover:text-pink-500 transition-colors" onClick={regenerate}><RefreshCw size={14} /> <span className="text-[11px]">换一换</span></div>
                     <div className="w-px h-3 bg-gray-300"></div>
                     <ThumbsUp size={14} className="cursor-pointer hover:text-pink-500" onClick={() => showToast('感谢反馈！')} />
                     <ThumbsDown size={14} className="cursor-pointer hover:text-gray-600" onClick={() => showToast('我们会继续努力优化')} />

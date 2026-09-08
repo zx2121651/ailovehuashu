@@ -5,12 +5,10 @@
  *  2) 装扮中心：头像框 / 徽章 / 虚拟礼物  (对标 Soul 情绪价值虚拟物品)
  *  3) 纪念日 / 恋爱天数  (对标 恋爱记 / 小恩爱)
  */
-const { PrismaClient } = require('@prisma/client');
-
-// 后端服务优先读写 DB；若 DB 未就绪则优雅降级为内存/mock，保证联调可用
+// 复用全局共享 Prisma 实例；DB 未就绪时优雅降级为 mock，保证联调可用
 let prisma = null;
 try {
-  prisma = new PrismaClient();
+  prisma = require('../utils/prisma');
 } catch (e) {
   prisma = null;
 }
@@ -43,7 +41,7 @@ const SOURCE_QUESTIONS = [
   { id: 5, q: '朋友送了个难题让你在恋爱中做选择，你更倾向？', options: [{ v: 'a', t: '怎么让彼此都舒服' }, { v: 'b', t: '怎么显得从容有魅力' }, { v: 'c', t: '怎么快速推进关系' }] }
 ];
 
-exports.submitAssessment = (req, res) => {
+exports.submitAssessment = async (req, res) => {
   const { answers = [] } = req.body; // [{id, v:'a'|'b'|'c'}]
   if (!Array.isArray(answers) || answers.length === 0) {
     return res.status(400).json({ code: 400, message: '请先完成测评题目' });
@@ -61,12 +59,13 @@ exports.submitAssessment = (req, res) => {
   const result = LOVERS.find(l => l.type === type);
 
   const aiSuggestion = { type: result.type, style: result.style, opening: result.opening };
-  // 尝试持久化到 User.lovePalette
-  const userId = req.user?.id;
+  // 持久化到 User.lovePalette（auth 中间件注入的是 req.user.userId）
+  const userId = req.user?.userId;
   let saved = false;
   if (prisma && userId) {
     try {
-      prisma.user.update({ where: { id: userId }, data: { lovePalette: JSON.stringify(result) } }).then(() => { saved = true; }).catch(() => {});
+      await prisma.user.update({ where: { id: userId }, data: { lovePalette: JSON.stringify(result) } });
+      saved = true;
     } catch (e) {}
   }
 
@@ -87,78 +86,126 @@ const SKINS = [
   { id: 'badge_god', kind: 'badge', name: '情圣', price: null, badge: true, type: 'vip', vipOnly: true, css: 'bg-gradient-to-tr from-amber-400 to-yellow-500' }
 ];
 
-exports.getSkins = (req, res) => {
-  const owned = req.user ? (tryGetOwnedSkins(req.user.id)) : [];
-  res.json({ code: 200, data: { list: SKINS, owned } });
-};
+const DEFAULT_OWNED = ['frame_pink', 'badge_egg']; // 默认赠送基础款
 
-exports.purchaseSkin = (req, res) => {
-  const { skinId } = req.body;
-  const skin = SKINS.find(s => s.id === skinId);
-  if (!skin) return res.status(400).json({ code: 400, message: '装扮不存在' });
-  const userId = req.user?.id;
-  const owned = userId ? tryGetOwnedSkins(userId) : [];
-  if (owned.includes(skinId)) return res.json({ code: 200, data: { ok: true, owned: true, message: '已拥有' } });
-  if (skin.type === 'vip' && !req.user?.isVip) return res.json({ code: 403, data: { ok: false, message: '该装扮为会员专属' } });
-  // 积分购买
-  if (skin.type === 'points' && req.user && (req.user.points || 0) < skin.price) {
-    return res.json({ code: 402, data: { ok: false, message: '积分不足' } });
-  }
-  const newOwned = [...owned, skinId];
-  if (prisma && userId) {
-    try {
-      prisma.user.update({ where: { id: userId }, data: { ownedSkins: newOwned } }).catch(() => {});
-    } catch (e) {}
-  }
-  res.json({ code: 200, data: { ok: true, owned: newOwned, message: '购买成功' } });
-};
-
-function tryGetOwnedSkins(userId) {
-  if (!prisma || !userId) return ['frame_pink', 'badge_egg']; // 默认赠送基础款
+// 读取用户已拥有装扮（DB 存的是 JSON 字符串，需异步查询）
+async function getOwnedSkins(userId) {
+  if (!prisma || !userId) return DEFAULT_OWNED;
   try {
-    return JSON.parse(prisma.memory && prisma.memory.owned || '[]') || [];
+    const user = await prisma.user.findUnique({ where: { id: userId }, select: { ownedSkins: true } });
+    const owned = user?.ownedSkins ? JSON.parse(user.ownedSkins) : null;
+    return Array.isArray(owned) && owned.length ? owned : DEFAULT_OWNED;
   } catch (e) {
-    return ['frame_pink', 'badge_egg'];
+    return DEFAULT_OWNED;
   }
 }
 
+async function persistOwned(userId, owned) {
+  if (!prisma || !userId) return;
+  try { await prisma.user.update({ where: { id: userId }, data: { ownedSkins: JSON.stringify(owned) } }); } catch (e) {}
+}
+
+function isVipUser(user) {
+  return !!(user?.vipExpireAt && new Date(user.vipExpireAt).getTime() > Date.now());
+}
+
+exports.getSkins = async (req, res) => {
+  const owned = await getOwnedSkins(req.user?.userId);
+  res.json({ code: 200, data: { list: SKINS, owned } });
+};
+
+exports.purchaseSkin = async (req, res) => {
+  const { skinId } = req.body;
+  const skin = SKINS.find(s => s.id === skinId);
+  if (!skin) return res.status(400).json({ code: 400, message: '装扮不存在' });
+  const userId = req.user?.userId;
+  const owned = await getOwnedSkins(userId);
+  if (owned.includes(skinId)) return res.json({ code: 200, data: { ok: true, owned, message: '已拥有' } });
+
+  if (skin.type === 'free') {
+    const newOwned = [...owned, skinId];
+    await persistOwned(userId, newOwned);
+    return res.json({ code: 200, data: { ok: true, owned: newOwned, message: '已添加' } });
+  }
+
+  // DB 不可用（降级演示模式）：直接放行，前端本地兜底
+  if (!prisma || !userId) {
+    return res.json({ code: 200, data: { ok: true, owned: [...owned, skinId], message: '购买成功' } });
+  }
+
+  const user = await prisma.user.findUnique({ where: { id: userId } }).catch(() => null);
+  if (skin.vipOnly && !isVipUser(user)) {
+    return res.json({ code: 403, data: { ok: false, message: '该装扮为会员专属' } });
+  }
+  // 积分购买：校验并扣减
+  if (skin.type === 'points' && (user?.points || 0) < skin.price) {
+    return res.json({ code: 402, data: { ok: false, message: '积分不足' } });
+  }
+
+  const newOwned = [...owned, skinId];
+  try {
+    await prisma.user.update({
+      where: { id: userId },
+      data: {
+        ownedSkins: JSON.stringify(newOwned),
+        ...(skin.type === 'points' ? { points: { decrement: skin.price } } : {})
+      }
+    });
+  } catch (e) {}
+  res.json({ code: 200, data: { ok: true, owned: newOwned, message: '购买成功' } });
+};
+
 /* ---------------- 虚拟礼物 ---------------- */
 
-exports.sendGift = (req, res) => {
+exports.sendGift = async (req, res) => {
   const { to, giftId = 'gift_rose' } = req.body;
   const gifts = { gift_rose: { name: '心动玫瑰', points: 20 }, gift_beer: { name: '快乐啤酒', points: 30 }, gift_ring: { name: '订婚戒指', points: 200 } };
   const g = gifts[giftId] || gifts.gift_rose;
-  // 扣积分 + 发送（演示即返回成功）
+  const userId = req.user?.userId;
+
+  // 校验并扣减积分（DB 不可用时跳过，演示模式直接成功）
+  if (prisma && userId) {
+    try {
+      const user = await prisma.user.findUnique({ where: { id: userId } });
+      if ((user?.points || 0) < g.points) {
+        return res.json({ code: 402, data: { ok: false, message: '积分不足' } });
+      }
+      await prisma.user.update({ where: { id: userId }, data: { points: { decrement: g.points } } });
+    } catch (e) {}
+  }
   res.json({ code: 200, data: { ok: true, to, ...g, message: `已送出「${g.name}」` } });
 };
 
 /* ---------------- 纪念日 / 恋爱天数 ---------------- */
 
-exports.getMemorial = (req, res) => {
-  const userId = req.user?.id;
+exports.getMemorial = async (req, res) => {
+  const userId = req.user?.userId;
   let start = null;
   if (prisma && userId) {
     try {
-      prisma.user.findUnique({ where: { id: userId } }).then(u => { if (u && u.loveStartDate) start = u.loveStartDate; }).catch(() => {});
+      const user = await prisma.user.findUnique({ where: { id: userId } });
+      if (user && user.loveStartDate) start = user.loveStartDate;
     } catch (e) {}
   }
   const startStr = start || dateOnly(new Date(new Date().setDate(new Date().getDate() - 120))); // 默认 120 天前演示
   res.json({ code: 200, data: { startDate: startStr, days: calcDays(startStr), nextAnniversary: nextAnniversaryDays(startStr) } });
 };
 
-exports.saveMemorial = (req, res) => {
+exports.saveMemorial = async (req, res) => {
   const { startDate } = req.body;
-  const userId = req.user?.id;
+  if (!startDate) return res.status(400).json({ code: 400, message: '请选择开始日期' });
+  const userId = req.user?.userId;
   let saved = false;
-  if (prisma && userId && startDate) {
+  if (prisma && userId) {
     try {
-      prisma.user.update({ where: { id: userId }, data: { loveStartDate: startDate } }).then(() => { saved = true; }).catch(() => {});
+      await prisma.user.update({ where: { id: userId }, data: { loveStartDate: startDate } });
+      saved = true;
     } catch (e) {}
   }
-  res.json({ code: 200, data: { ok: true, saved, startDate, days: calcDays(startDate) } });
+  res.json({ code: 200, data: { ok: true, saved, startDate, days: calcDays(startDate), nextAnniversary: nextAnniversaryDays(startDate) } });
 };
 
-/* ---- 工具 ----
+/* ---- 工具 ---- */
 function dateOnly(d) { return d.toISOString().split('T')[0]; }
 function calcDays(start) { return Math.max(0, Math.floor((Date.now() - new Date(start).getTime()) / 86400000)); }
 function nextAnniversaryDays(start) {
@@ -167,4 +214,3 @@ function nextAnniversaryDays(start) {
   if (a.getTime() <= now.getTime()) a.setFullYear(now.getFullYear() + 1);
   return Math.ceil((a.getTime() - now.getTime()) / 86400000);
 }
-*/

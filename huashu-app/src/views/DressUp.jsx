@@ -4,7 +4,7 @@ import * as api from '../services/api';
 import { ChevronLeft, Crown, Check, Sparkles, Gift } from 'lucide-react';
 
 export default function DressUp() {
-  const { setActiveTab, userProfile, decor, setDecor, showToast, setShowVipModal } = useContext(AppContext);
+  const { setActiveTab, userProfile, setUserProfile, decor, setDecor, showToast, setShowVipModal } = useContext(AppContext);
   const [tab, setTab] = useState('frame'); // frame | badge | gift
   const [data, setData] = useState({ list: [], owned: [] });
 
@@ -23,6 +23,10 @@ export default function DressUp() {
     if (res && res.ok !== false) {
       showToast(res.message || '购买成功');
       setData(prev => ({ ...prev, owned: res.owned || [...prev.owned, skin.id] }));
+      // 本地同步扣减积分，保持与后端一致
+      if (skin.type === 'points') {
+        setUserProfile(prev => ({ ...prev, points: Math.max(0, (prev.points || 0) - skin.price) }));
+      }
     } else {
       showToast((res && res.message) || '购买失败');
     }
@@ -36,13 +40,12 @@ export default function DressUp() {
   const renderItem = (skin, kind) => {
     const owned = data.owned.includes(skin.id);
     const active = kind === 'frame' ? decor.frame === skin.id : decor.badge === skin.id;
-    const isUsed = !skin.badge && decor.frame === skin.id;
 
     return (
       <div key={skin.id} className={`relative love-card rounded-2xl p-4 shadow-sm border transition-all card-lift ${active ? 'border-pink-400 ring-2 ring-pink-200' : 'border-gray-100'}`}>
         {skin.kind === 'frame' ? (
           <div className={`w-16 h-16 rounded-full ${skin.css} flex items-center justify-center mx-auto mb-3 mt-1`}>
-            <img src={userProfile.avatar} className={`w-13 h-13 ${skin.id.includes('grad') ? '' : ''} rounded-full object-cover`} style={{ width: 'calc(100% - 6px)', height: 'calc(100% - 6px)' }} alt="" />
+            <img src={userProfile.avatar} className="rounded-full object-cover" style={{ width: 'calc(100% - 6px)', height: 'calc(100% - 6px)' }} alt="" />
           </div>
         ) : (
           <div className={`w-14 h-14 ${skin.css} rounded-full flex items-center justify-center text-white text-xl font-extrabold mx-auto mb-3 mt-1 shadow-sm`}>爱</div>
@@ -117,7 +120,10 @@ export default function DressUp() {
                   </div>
                 </div>
                 <button onClick={async () => {
+                    if ((userProfile.points || 0) < g.p) { showToast(`积分不足，还差 ${g.p - (userProfile.points || 0)}`); return; }
                     const res = await api.sendGift('TA', g.id);
+                    if (res && res.ok === false) { showToast(res.message || '赠送失败'); return; }
+                    setUserProfile(prev => ({ ...prev, points: Math.max(0, (prev.points || 0) - g.p) }));
                     showToast(res.message || `已送出「${g.n}」`);
                   }} className="bg-gradient-to-r from-pink-500 to-rose-500 text-white px-4 py-1.5 rounded-full text-[12px] font-bold shadow-md shadow-pink-300/40 active:scale-95 transition-transform">
                   {g.p} 积分 送出
