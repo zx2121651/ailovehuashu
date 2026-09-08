@@ -241,7 +241,7 @@ exports.simulateOrderWithCommission = async (req, res) => {
             continue;
           }
 
-          const commissionAmount = amount * RATES[level];
+          const commissionAmount = amount * (RATES[level] || 0);
 
           // 给上级增加余额和总收益
           await tx.user.update({

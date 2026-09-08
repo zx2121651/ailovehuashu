@@ -1,5 +1,4 @@
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
+const prisma = require('../utils/prisma');
 
 // 获取剧本列表
 exports.getStories = async (req, res) => {
@@ -31,7 +30,6 @@ exports.getStories = async (req, res) => {
     if (error.message === 'INSUFFICIENT_POINTS') {
        return res.status(403).json({ success: false, message: '积分不足' });
     }
-    console.error('getStoryProgress Error:', error);
     console.error('getStories Error:', error);
     res.status(500).json({ success: false, message: '获取剧本列表失败' });
   }
