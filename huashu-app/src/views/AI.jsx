@@ -1,20 +1,24 @@
 import React, { useState, useRef, useEffect, useContext } from 'react';
 import { AppContext } from '../context/AppContext';
 import ScrollableRow from '../components/common/ScrollableRow';
-import {  ChevronLeft, MoreHorizontal, Sparkles, CheckCircle2, Copy, RefreshCw, ThumbsUp, ThumbsDown, Loader2, Mic, Smile, Send, PlusCircle , Heart } from 'lucide-react';
+import { generateContextReply } from '../services/api';
+import {  ChevronLeft, MoreHorizontal, Sparkles, CheckCircle2, Copy, RefreshCw, ThumbsUp, ThumbsDown, Loader2, Mic, Smile, Send, PlusCircle , Heart, Keyboard, Zap } from 'lucide-react';
+
+const STAGES = ['暧昧期', '热恋期', '闹别扭', '普通朋友', '表白前'];
 
 export default function AI() {
-  const { aiState, setAiState, setActiveTab, showToast, handleCopy, copiedId } = useContext(AppContext);
+  const { aiState, setAiState, setActiveTab, showToast, handleCopy, copiedId, lovePalette } = useContext(AppContext);
   const { chatInput } = aiState;
+  const [contextStage, setContextStage] = useState('暧昧期');
 
   const [isAiTyping, setIsAiTyping] = useState(false);
   const chatEndRef = useRef(null);
   const [chatMessages, setChatMessages] = useState([
-    { id: 'msg1', role: 'ai', type: 'text', content: '嗨！我是你的专属恋爱导师。不知道怎么回消息？把TA的话发给我，我帮你生成高情商回复方案！🥰', time: '10:24' },
+    { id: 'msg1', role: 'ai', type: 'text', content: '嗨！我是你的专属恋爱导师。把TA的话粘贴给我，我会拆解情绪、给你多风格高情商回复，还能源源不断「换一换」！🥰', time: '10:24' },
     { id: 'msg2', role: 'user', type: 'text', content: '她刚对我说：“我觉得我们还是做朋友比较好” 怎么回？？在线等急！', time: '10:25' },
-    { id: 'msg3', role: 'ai', type: 'suggestions', content: '为你生成以下高情商方案：', suggestions: [
-      { label: '方案A：以退为进 (推荐)', text: '好啊，那作为朋友，周末请我喝杯奶茶不过分吧？', color: 'blue' },
-      { label: '方案B：幽默化解', text: '其实我也这么想，做恋人容易吵架，做朋友我就可以理直气壮地蹭你饭了。', color: 'purple' }
+    { id: 'msg3', role: 'ai', type: 'context', ladder: ['共情回应：让TA觉得被懂', '价值赋能：给到安全感与期待', '试探拉升：自然递进关系'], analysis: '对方说“我觉得我们还是做朋友比较好”，可能是想测试你的反应边界。先接住情绪，再留有回旋余地。', suggestions: [
+      { label: '方案A · 高情商', text: '好啊，那作为朋友，周末请我喝杯奶茶不过分吧？', color: 'blue', key: '高情商' },
+      { label: '方案B · 幽默接梗', text: '其实我也这么想，做恋人容易吵架，做朋友我就可以理直气壮地蹭你饭了。', color: 'purple', key: '幽默接梗' }
     ], time: '10:25' }
   ]);
 
@@ -25,25 +29,43 @@ export default function AI() {
 
   }, [chatMessages, isAiTyping]);
 
-  const handleSendChat = () => {
+  const handleSendChat = async () => {
     if (!chatInput.trim()) return;
     const newUserMsg = { id: Date.now().toString(), role: 'user', type: 'text', content: chatInput, time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) };
     setChatMessages(prev => [...prev, newUserMsg]);
     setAiState({ chatInput: '' });
     setIsAiTyping(true);
 
-    setTimeout(() => {
-      const isGreeting = chatInput.includes('你好') || chatInput.includes('哈喽');
-      const newAiMsg = isGreeting
-        ? { id: (Date.now() + 1).toString(), role: 'ai', type: 'text', content: '你好呀！遇到什么情感难题了吗？发给我，我来帮你参谋参谋~', time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) }
-        : { id: (Date.now() + 1).toString(), role: 'ai', type: 'suggestions', content: '为你量身定制的高情商回复：', suggestions: [
-            { label: '方案A：拉扯反转', text: `我觉得你说的很有道理，不过在这件事上，我可能有不一样的看法。`, color: 'blue' },
-            { label: '方案B：幽默风趣', text: '哈哈，被你发现了，那还不赶紧奖励我一朵小红花？', color: 'purple' }
-          ], time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) };
-
+    try {
+      const res = await generateContextReply({
+        context: chatInput,
+        stage: contextStage,
+        style: 'all',
+        personality: lovePalette?.type,
+        count: 4
+      });
+      const newAiMsg = {
+        id: (Date.now() + 1).toString(),
+        role: 'ai',
+        type: 'context',
+        ladder: res.emotionLadder || [],
+        analysis: res.analysis,
+        personalized: res.personalized,
+        suggestions: res.suggestions || [],
+        time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+      };
       setChatMessages(prev => [...prev, newAiMsg]);
-      setIsAiTyping(false);
-    }, 1500);
+    } catch (e) {
+      setChatMessages(prev => [...prev, { id: (Date.now() + 1).toString(), role: 'ai', type: 'text', content: '抱歉，我暂时没想好，换个说法再说一次？', time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) }]);
+    }
+    setIsAiTyping(false);
+  };
+
+  const openKeyboard = () => showToast('网页端可用「复制」后唤起输入法；在 App 内可直接唤起话术键盘上屏');
+
+  const copyAll = (msg) => {
+    const chosen = msg.suggestions && msg.suggestions.find(s => s.recommended) || (msg.suggestions && msg.suggestions[0]);
+    if (chosen) handleCopy(msg.id + '_all', chosen.text);
   };
 
   return (
@@ -73,6 +95,62 @@ export default function AI() {
                   {msg.content}
                 </div>
               )}
+              {msg.type === 'context' && (
+                <div className="love-card p-4 rounded-2xl rounded-tl-none shadow-sm border border-transparent/50 text-sm text-gray-800 space-y-3.5">
+                  <div className="flex items-center justify-between">
+                    <p className="flex items-center text-[12px] font-bold text-pink-500"><Zap size={13} className="mr-1"/> 情绪阶梯拆解</p>
+                    <button onClick={() => copyAll(msg)} className="text-[11px] flex items-center font-bold text-pink-500 hover:opacity-70">
+                      <Keyboard size={12} className="mr-1"/>一键复制 & 唤起</button>
+                  </div>
+                  <ol className="space-y-1.5">
+                    {(msg.ladder || []).map((step, i) => (
+                      <li key={i} className="flex items-start text-[12px] text-gray-600">
+                        <span className="w-5 h-5 rounded-full bg-pink-100 text-pink-500 text-[11px] font-bold flex items-center justify-center shrink-0 mr-2 mt-0.5">{i + 1}</span>
+                        {step}
+                      </li>
+                    ))}
+                  </ol>
+
+                  <p className="text-[12px] leading-relaxed text-gray-500 border-t border-gray-50 pt-2.5">{msg.analysis}</p>
+
+                  {msg.personalized && (
+                    <p className="flex items-start text-[12px] bg-purple-50/70 text-purple-600 rounded-xl px-3 py-2"><Sparkles size={12} className="mr-1.5 mt-0.5 shrink-0"/> {msg.personalized}</p>
+                  )}
+
+                  <div className="space-y-2.5">
+                    {(msg.suggestions || []).map((sug, idx) => {
+                      const colorMap = {
+                        blue: { bg: 'bg-blue-50/50', border: 'border-blue-100', badgeBg: 'bg-blue-500', text: 'text-blue-600', btnBg: 'bg-blue-100/50', btnHover: 'hover:bg-blue-200' },
+                        green: { bg: 'bg-green-50/50', border: 'border-green-100', badgeBg: 'bg-green-500', text: 'text-green-600', btnBg: 'bg-green-100/50', btnHover: 'hover:bg-green-200' },
+                        pink: { bg: 'bg-pink-50/50', border: 'border-pink-100', badgeBg: 'bg-pink-500', text: 'text-pink-600', btnBg: 'bg-pink-100/50', btnHover: 'hover:bg-pink-200' },
+                        yellow: { bg: 'bg-yellow-50/50', border: 'border-yellow-100', badgeBg: 'bg-yellow-500', text: 'text-yellow-600', btnBg: 'bg-yellow-100/50', btnHover: 'hover:bg-yellow-200' },
+                        red: { bg: 'bg-red-50/50', border: 'border-red-100', badgeBg: 'bg-red-500', text: 'text-red-600', btnBg: 'bg-red-100/50', btnHover: 'hover:bg-red-200' },
+                        purple: { bg: 'bg-purple-50/50', border: 'border-purple-100', badgeBg: 'bg-purple-500', text: 'text-purple-600', btnBg: 'bg-purple-100/50', btnHover: 'hover:bg-purple-200' }
+                      };
+                      const colors = colorMap[sug.color] || colorMap.blue;
+                      return (
+                        <div key={idx} className={`${colors.bg} p-3 rounded-xl border ${colors.border} relative group animate-fade-in-up`} style={{ animationDelay: `${idx * 60}ms` }}>
+                          <span className={`absolute -top-2.5 left-3 ${colors.badgeBg} text-white text-[10px] px-2.5 py-0.5 rounded-full font-bold shadow-sm`}>{sug.label}</span>
+                          <p className="mt-2 text-[13px] text-gray-800 leading-relaxed">{sug.text}</p>
+                          <div className="flex justify-end mt-2">
+                            <button onClick={() => handleCopy(msg.id + idx, sug.text)} className={`text-[11px] flex items-center ${colors.text} font-bold ${colors.btnBg} px-2 py-1 rounded-md ${colors.btnHover} transition-colors`}>
+                              {copiedId === msg.id + idx ? <CheckCircle2 size={12} className="mr-1 text-green-500"/> : <Copy size={12} className="mr-1" />} 复制
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  <div className="flex items-center space-x-3 mt-1 text-gray-400">
+                    <div className="flex items-center space-x-1 cursor-pointer hover:text-pink-500 transition-colors" onClick={handleSendChat}><RefreshCw size={14} /> <span className="text-[11px]">换一换</span></div>
+                    <div className="w-px h-3 bg-gray-300"></div>
+                    <ThumbsUp size={14} className="cursor-pointer hover:text-pink-500" onClick={() => showToast('感谢反馈！')} />
+                    <ThumbsDown size={14} className="cursor-pointer hover:text-gray-600" onClick={() => showToast('我们会继续努力优化')} />
+                  </div>
+                </div>
+              )}
+
               {msg.type === 'suggestions' && (
                 <div className="love-card p-4 rounded-2xl rounded-tl-none shadow-sm border border-transparent/50 text-sm text-gray-800 space-y-4">
                   <p className="font-bold text-gray-900 border-b border-gray-50 pb-2">{msg.content}</p>
@@ -169,6 +247,14 @@ export default function AI() {
       </div>
 
       <div className="absolute bottom-20 w-full bg-[#F4F5F7] z-40">
+        <div className="flex items-center px-4 pt-1.5 pb-1">
+          <span className="text-[10px] text-gray-400 font-bold shrink-0 mr-2">当前阶段</span>
+          <ScrollableRow className="flex space-x-2 flex-1">
+            {STAGES.map((stage, idx) => (
+              <span key={idx} onClick={() => setContextStage(stage)} className={`text-[12px] px-3 py-1.5 rounded-full border whitespace-nowrap cursor-pointer transition-all font-medium ${contextStage === stage ? 'bg-pink-500 text-white border-pink-500 shadow-sm shadow-pink-200' : 'love-card text-gray-600 border-transparent active:bg-pink-50 active:text-pink-500'}`}>{stage}</span>
+            ))}
+          </ScrollableRow>
+        </div>
         <ScrollableRow className="flex px-3 pb-2 space-x-2">
           {['帮我幽默回复', '高情商拒绝', '怎么自然邀约', '帮我写个晚安'].map((chip, idx) => (
             <span key={idx} onClick={() => setAiState({ chatInput: chip })} className="love-card text-gray-600 text-[12px] px-3 py-1.5 rounded-full shadow-sm border border-transparent whitespace-nowrap cursor-pointer active:bg-pink-50 active:text-pink-500 transition-colors">{chip}</span>

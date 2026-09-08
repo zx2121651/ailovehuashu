@@ -154,6 +154,31 @@ export const AppProvider = ({ children }) => {
     chatInput: ''
   });
 
+  // ===== 情感增值全局状态（恋爱画像/装扮/纪念日）=====
+  const [lovePalette, setLovePalette] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('lovePalette') || 'null'); } catch (e) { return null; }
+  });
+  const persistLovePalette = (p) => {
+    setLovePalette(p);
+    try { p ? localStorage.setItem('lovePalette', JSON.stringify(p)) : localStorage.removeItem('lovePalette'); } catch (e) {}
+  };
+
+  const [decor, setDecor] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('decor') || '{"frame":"frame_pink","badge":null}'); } catch (e) { return { frame: 'frame_pink', badge: null }; }
+  });
+  const persistDecor = (d) => {
+    setDecor(d);
+    try { localStorage.setItem('decor', JSON.stringify(d)); } catch (e) {}
+  };
+
+  const [memorial, setMemorial] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('memorial') || 'null'); } catch (e) { return null; }
+  });
+  const persistMemorial = (m) => {
+    setMemorial(m);
+    try { m ? localStorage.setItem('memorial', JSON.stringify(m)) : localStorage.removeItem('memorial'); } catch (e) {}
+  };
+
   const showToast = (msg) => {
     setToastMsg(msg);
     setTimeout(() => setToastMsg(''), 2000);
@@ -240,7 +265,10 @@ export const AppProvider = ({ children }) => {
     userProfile, setUserProfile,
     discoverState, setDiscoverState,
     aiState, setAiState,
-    showBlindBoxModal, setShowBlindBoxModal
+    showBlindBoxModal, setShowBlindBoxModal,
+    lovePalette, setLovePalette: persistLovePalette,
+    decor, setDecor: persistDecor,
+    memorial, setMemorial: persistMemorial
   };
 
   return (

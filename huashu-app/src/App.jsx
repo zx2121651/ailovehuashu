@@ -4,6 +4,9 @@ import NavItem from './components/common/NavItem';
 import HomeView from './views/Home';
 import DiscoverView from './views/Discover';
 import AIView from './views/AI';
+import LovePalette from './views/LovePalette';
+import DressUp from './views/DressUp';
+import Memorial from './views/Memorial';
 import FavoritesView from './views/Favorites';
 import ProfileView from './views/Profile';
 import VipModal from './components/modals/VipModal';
@@ -65,6 +68,9 @@ function MainApp() {
                   {activeTab === 'distributor_withdraw' && <Withdrawal />}
                   {activeTab === 'story' && <StoryList />}
                   {activeTab === 'story_play' && <StoryPlay />}
+                  {activeTab === 'love_palette' && <LovePalette />}
+                  {activeTab === 'dress_up' && <DressUp />}
+                  {activeTab === 'memorial' && <Memorial />}
                 </motion.div>
               </AnimatePresence>
             </div>

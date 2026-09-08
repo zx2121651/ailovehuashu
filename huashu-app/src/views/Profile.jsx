@@ -3,25 +3,36 @@ import { AppContext } from '../context/AppContext';
 import ProfileListItem from '../components/common/ProfileListItem';
 import EditProfileModal from '../components/modals/EditProfileModal';
 import PointsDrawer from '../components/modals/PointsDrawer';
-import { Copy, Settings, Zap, Target, ChevronRight, Crown, BookOpen, History, Edit3, MessageSquareText, FileText, Sparkles, Heart, Gift, PenTool, Headset, Award, HelpCircle, ShieldCheck, Smartphone, Download, Keyboard, UserPlus } from 'lucide-react';
+import { Copy, Settings, Zap, Target, ChevronRight, Crown, BookOpen, History, Edit3, MessageSquareText, FileText, Sparkles, Heart, Gift, PenTool, Headset, Award, HelpCircle, ShieldCheck, Smartphone, Download, Keyboard, UserPlus, Palette, CalendarHeart } from 'lucide-react';
 
 export default function Profile() {
   const {
     setActiveTab, favoriteIds, setShowSettings, setShowVipModal,
     setActiveServicePage, handleCopy, showToast,
-    userProfile, setUserProfile, setShowBlindBoxModal
+    userProfile, setUserProfile, setShowBlindBoxModal, decor, setDecor, lovePalette
   } = useContext(AppContext);
 
+  // 下划线仅为保留语义清晰；实际状态名保持原样
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
   const [isPointsDrawerOpen, setIsPointsDrawerOpen] = useState(false);
+
+  const FRAME_CLASS = {
+    frame_pink: 'border-2 border-pink-400 shadow-[0_0_12px_rgba(244,114,182,.5)]',
+    frame_gold: 'border-2 border-amber-400 shadow-[0_0_12px_rgba(251,191,36,.5)]',
+    frame_grad: 'p-[3px] bg-gradient-to-tr from-pink-500 via-rose-400 to-amber-400 shadow-[0_0_16px_rgba(236,72,153,.45)]'
+  };
+  const BADGE_CLASS = { badge_egg: 'bg-emerald-400', badge_sweet: 'bg-pink-400', badge_god: 'bg-gradient-to-tr from-amber-400 to-yellow-500' };
 
   return (
     <div className="h-full flex flex-col bg-transparent animate-in fade-in duration-300 relative">
       <div className="bg-gradient-to-b from-pink-200/40 to-[#F5F7FA] px-5 pt-10 pb-2 relative z-10">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4 cursor-pointer group" onClick={() => setIsEditProfileOpen(true)}>
-            <div className="w-[68px] h-[68px] love-card p-1 rounded-full shadow-md relative overflow-hidden group-hover:scale-105 transition-transform">
+            <div className={`w-[68px] h-[68px] love-card p-1 rounded-full shadow-md relative overflow-hidden group-hover:scale-105 transition-transform ${FRAME_CLASS[decor?.frame] || ''}`}>
               <img src={userProfile.avatar} className="w-full h-full rounded-full object-cover" alt="User" />
+              {decor?.badge && (
+                <span className={`absolute -bottom-0.5 -right-0.5 ${BADGE_CLASS[decor.badge] || 'bg-pink-400'} w-6 h-6 rounded-full flex items-center justify-center text-[11px] text-white font-bold border-2 border-white shadow-sm animate-pop`}>爱</span>
+              )}
               <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-full">
                 <Edit3 size={16} className="text-white" />
               </div>
@@ -131,6 +142,22 @@ export default function Profile() {
               <div key={i} onClick={() => item.id === 'distributor' ? setActiveTab('distributor') : setActiveServicePage({ id: item.id })} className="flex flex-col items-center justify-center cursor-pointer active:opacity-70 transition-opacity">
                 <div className="bg-transparent p-2.5 rounded-full mb-1.5 border border-transparent/80">{item.icon}</div>
                 <span className="text-[11px] text-gray-600 font-medium">{item.label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="love-card rounded-[1.25rem] shadow-sm p-4 mb-4 border border-gray-50">
+          <h3 className="text-[13px] font-bold text-gray-800 mb-3 flex items-center"><Palette size={16} className="text-purple-500 mr-1.5" /> 情感增值</h3>
+          <div className="grid grid-cols-3 gap-4">
+            {[
+              { id: 'love_palette', icon: <Heart size={20} className="text-pink-500" />, label: '恋爱测评', tag: lovePalette ? `·${lovePalette.type}` : '' },
+              { id: 'dress_up', icon: <Sparkles size={20} className="text-amber-500" />, label: '装扮中心' },
+              { id: 'memorial', icon: <CalendarHeart size={20} className="text-orange-500" />, label: '纪念日' }
+            ].map((item, i) => (
+              <div key={i} onClick={() => setActiveTab(item.id)} className="flex flex-col items-center justify-center cursor-pointer active:opacity-70 transition-opacity">
+                <div className="bg-transparent p-2.5 rounded-full mb-1.5 border border-transparent/80">{item.icon}</div>
+                <span className="text-[11px] text-gray-600 font-medium">{item.label}{item.tag && <span className="text-pink-500 text-[10px]">{item.tag}</span>}</span>
               </div>
             ))}
           </div>

@@ -114,6 +114,33 @@ export async function chatWithAI(prompt) {
   return data.data;
 }
 
+// 语境粘贴生成（多风格）+ 情绪阶梯 + 个性化
+export async function generateContextReply(payload) {
+  try {
+    const data = await request('/ai/context-reply', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+    return data.data;
+  } catch (error) {
+    console.warn('Backend unavailable, mock context reply:', error);
+    const picked = (payload.context || '').slice(0, 12);
+    const styles = [
+      { key: '高情商', color: 'blue', label: '方案A · 高情商', text: `${picked}…你这句话让我对你又多了一层新的认识，遇见你真的很特别。` },
+      { key: '幽默接梗', color: 'purple', label: '方案B · 幽默接梗', text: `哈哈被你句话说到了，小本本记下了。下次见面你得请我喝奶茶。` },
+      { key: '直球勇', color: 'red', label: '方案C · 直球勇', text: `说认真的，我挺喜欢和你聊天，缺一个继续聊下去的机会，你会给吗？` },
+      { key: '撒娇软化', color: 'pink', label: '方案D · 撒娇软化', text: `哼，你还学会套路我啦！不过这句话我先收藏了~` }
+    ];
+    return {
+      emotionLadder: ['共情回应：让TA觉得被懂', '价值赋能：给到安全感与期待', '试探拉升：自然递进关系'],
+      analysis: `对方说“${picked || '这句话'}”，先接住情绪，再递进关系。`,
+      styleUsed: payload.style || 'all',
+      personalized: payload.personality ? `结合你的「${payload.personality}」画像，优先使用匹配风格。` : '',
+      suggestions: styles.slice(0, payload.count || 4)
+    };
+  }
+}
+
 export async function reportPost(postId, reportData) {
   const data = await request(`/posts/${postId}/report`, {
     method: 'POST',
@@ -325,4 +352,88 @@ export async function exchangeVip(pointsToUse, daysToGet) {
     body: JSON.stringify({ pointsToUse, daysToGet }),
   });
   return data;
+}
+
+// ==========================================
+// 生活方式 / 情感增值（恋爱人格·装扮·礼物·纪念日）
+// ==========================================
+
+// 恋爱人格测评：获取问卷
+export async function getAssessmentQuestions() {
+  try {
+    const data = await request('/life/assessment/questions');
+    return data.data || [];
+  } catch (e) { return []; }
+}
+
+// 恋爱人格测评：提交结果
+export async function submitAssessment(answers) {
+  try {
+    const data = await request('/life/assessment/submit', {
+      method: 'POST',
+      body: JSON.stringify({ answers }),
+    });
+    return data.data;
+  } catch (e) {
+    const a = answers.filter(x => x.v === 'a').length;
+    const b = answers.filter(x => x.v === 'b').length;
+    const c = answers.filter(x => x.v === 'c').length;
+    return c >= Math.max(a, b)
+      ? { type: '阳光行动派', emoji: '🌞', traits: ['主动', '真诚', '直接'], style: '直球勇', desc: '你热情直接，最擅长把心动变成行动。', opening: '第一眼就被你吸引了，周末有空的话想约你喝杯咖啡。' }
+      : (b >= a
+        ? { type: '理性推拉大师', emoji: '♟️', traits: ['策略', '幽默', '推拉'], style: '幽默接梗', desc: '你擅长制造张弛有度的聊天节奏。', opening: '通常我不会轻易加人，但你这条动态挺特别。' }
+        : { type: '浪漫画家', emoji: '🎨', traits: ['共情', '细腻', '浪漫'], style: '暖心情话', desc: '你有敏锐的情绪雷达，适合用走心情话升温。', opening: '嗨，我猜你今天心情不错——因为遇见好天气的人眼里会有光。' });
+  }
+}
+
+// 装扮中心：获取装扮列表与已拥有
+export async function getSkins() {
+  try {
+    const data = await request('/life/skins');
+    return data.data || { list: [], owned: [] };
+  } catch (e) {
+    return {
+      list: [
+        { id: 'frame_pink', kind: 'frame', name: '初恋粉框', price: 0, type: 'free', css: 'border-2 border-pink-400 shadow-[0_0_12px_rgba(244,114,182,.5)]' },
+        { id: 'frame_grad', kind: 'frame', name: '心动渐变框', price: 1500, type: 'points', vipOnly: true, css: 'p-[3px] bg-gradient-to-tr from-pink-500 to-amber-400 rounded-full' },
+        { id: 'badge_sweet', kind: 'badge', name: '甜言蜜语', price: 300, type: 'points', css: 'bg-pink-400' },
+        { id: 'badge_god', kind: 'badge', name: '情圣', price: null, type: 'vip', vipOnly: true, css: 'bg-gradient-to-tr from-amber-400 to-yellow-500' }
+      ],
+      owned: ['frame_pink']
+    };
+  }
+}
+
+export async function purchaseSkin(skinId) {
+  try {
+    const data = await request('/life/skins/purchase', { method: 'POST', body: JSON.stringify({ skinId }) });
+    return data.data;
+  } catch (e) { return { ok: true, owned: [] }; }
+}
+
+// 虚拟礼物
+export async function sendGift(to, giftId) {
+  try {
+    const data = await request('/life/gifts/send', { method: 'POST', body: JSON.stringify({ to, giftId }) });
+    return data.data;
+  } catch (e) { return { ok: true, name: '心动玫瑰' }; }
+}
+
+// 纪念日 / 恋爱天数
+export async function getMemorial() {
+  try {
+    const data = await request('/life/memorial');
+    return data.data;
+  } catch (e) {
+    const start = new Date(); start.setDate(start.getDate() - 120);
+    const startStr = start.toISOString().split('T')[0];
+    return { startDate: startStr, days: 120, nextAnniversary: 245 };
+  }
+}
+
+export async function saveMemorial(startDate) {
+  try {
+    const data = await request('/life/memorial/save', { method: 'POST', body: JSON.stringify({ startDate }) });
+    return data.data;
+  } catch (e) { return { ok: true, startDate, days: 0 }; }
 }

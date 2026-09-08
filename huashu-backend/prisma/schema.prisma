@@ -127,7 +127,14 @@ model User {
   continuousSignDays Int       @default(0)
   vipExpireAt        DateTime? // 增加 VIP 过期时间字段，方便积分兑换
 
-  createdAt     DateTime        @default(now())
+  // ===== 生活方式/情感增值（恋爱人格·装扮·纪念日）=====
+  lovePalette   String?  // 恋爱人格画像 JSON（type/tags/desc/style）
+  loveStartDate String?  // 纪念日（恋爱开始日期 yyyy-mm-dd）
+  ownedSkins    String?  // 已拥有的装扮 id 数组 JSON
+  avatarFrame   String?  // 当前启用的头像框 id
+  activeBadge   String?  // 当前展示的徽章 id
+
+  createdAt     DateTime    @default(now())
   updatedAt     DateTime        @updatedAt
   contributions Contribution[]
   feedbacks     Feedback[]
