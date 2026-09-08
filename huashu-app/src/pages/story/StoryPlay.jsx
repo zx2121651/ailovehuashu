@@ -1,15 +1,18 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useContext } from 'react';
+import { AppContext } from '../../context/AppContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, RefreshCw } from 'lucide-react';
 
 /**
  * 互动剧本体验页 (WeChat Simulator / 微信聊天模拟器风格)
  * 极致本土化、高代入感、实用主义
+ * 注：本项目为 SPA 内部 tab 导航（无 <Router> 包裹），故不走 react-router 的
+ * useParams/useNavigate，改为从 AppContext 读取 StoryList 传入的 id 并回退到「故事列表」。
  */
 export default function StoryPlay() {
-  const { id } = useParams();
-  const navigate = useNavigate();
+  const { activeParams, setActiveTab } = useContext(AppContext);
+  const id = activeParams?.id;
+  const goBack = () => setActiveTab('story'); // 返回「故事列表」页
 
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -82,7 +85,7 @@ export default function StoryPlay() {
   }, [id]);
 
   if (loading) return <div className="h-screen flex items-center justify-center bg-[#F3F3F3] text-gray-500">加载聊天记录中...</div>;
-  if (error) return <div className="h-screen flex flex-col items-center justify-center bg-[#F3F3F3] p-6 text-center"><p className="text-red-500 mb-4">{error}</p><button onClick={() => navigate(-1)} className="px-6 py-2 bg-[#07C160] text-white rounded-md">返回列表</button></div>;
+  if (error) return <div className="h-screen flex flex-col items-center justify-center bg-[#F3F3F3] p-6 text-center"><p className="text-red-500 mb-4">{error}</p><button onClick={goBack} className="px-6 py-2 bg-[#07C160] text-white rounded-md">返回列表</button></div>;
   if (!data) return null;
 
   const { story, progress, currentNode } = data;
@@ -96,7 +99,7 @@ export default function StoryPlay() {
 
       {/* 1. 顶部导航栏 (标准微信白底风格) */}
       <div className="flex items-center justify-between px-4 py-3 bg-white border-b border-gray-200 shrink-0 shadow-sm z-20">
-        <button onClick={() => navigate(-1)} className="p-2 -ml-2 text-[#1a1c1c] active:bg-gray-100 rounded-full transition-colors">
+        <button onClick={goBack} className="p-2 -ml-2 text-[#1a1c1c] active:bg-gray-100 rounded-full transition-colors">
           <ArrowLeft className="w-6 h-6" />
         </button>
 
@@ -175,7 +178,7 @@ export default function StoryPlay() {
                   <button onClick={handleReset} className="w-full flex items-center justify-center bg-[#07C160] active:bg-[#06ad56] text-white font-medium py-3 rounded-lg transition-colors">
                     <RefreshCw className="w-4 h-4 mr-2" /> 重新模拟
                   </button>
-                  <button onClick={() => navigate(-1)} className="w-full bg-gray-100 active:bg-gray-200 text-gray-700 font-medium py-3 rounded-lg transition-colors">
+                  <button onClick={goBack} className="w-full bg-gray-100 active:bg-gray-200 text-gray-700 font-medium py-3 rounded-lg transition-colors">
                     返回上一页
                   </button>
                 </div>
