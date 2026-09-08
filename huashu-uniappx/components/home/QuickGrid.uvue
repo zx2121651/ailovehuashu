@@ -3,10 +3,13 @@
     <view
       v-for="(item, idx) in categories"
       :key="idx"
-      class="quick-item"
+      class="quick-item tap-press"
       @click="handleClick(item.catId)"
     >
-      <view class="quick-icon-wrap" :style="{ backgroundColor: item.bg }">
+      <view
+        class="quick-icon-wrap animate-float"
+        :style="{ backgroundColor: item.bg, animationDelay: (idx * 0.15) + 's' }"
+      >
         <text class="quick-icon-text">{{ item.icon }}</text>
       </view>
       <text class="quick-label">{{ item.label }}</text>

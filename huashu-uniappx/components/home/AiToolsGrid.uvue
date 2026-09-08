@@ -15,7 +15,7 @@
         <view
           v-for="(tool, idx) in tools"
           :key="idx"
-          class="ai-tool-card"
+          class="ai-tool-card tap-press"
           :style="{ backgroundColor: tool.bg, borderColor: tool.borderColor }"
           @click="$emit('open-ai-tool', tool)"
         >
@@ -37,7 +37,7 @@
           <text class="challenge-badge-icon">🎯</text>
           <text class="challenge-badge-text">每日心动测验</text>
         </view>
-        <view class="challenge-heart-decor">
+        <view class="challenge-heart-decor animate-float">
           <text class="heart-decor-text">❤️</text>
         </view>
         <text class="challenge-title">情商挑战：送命题怎么回？ ✨</text>
@@ -45,15 +45,15 @@
           <text class="challenge-question">女生突然对你说："我好像发烧到39度了，好难受..." 你该怎么回？</text>
         </view>
         <view class="challenge-options">
-          <view class="challenge-option" @click="$emit('show-toast', '太直男了！扣10分！正确做法请看解析')">
+          <view class="challenge-option tap-press" @click="$emit('show-toast', '太直男了！扣10分！正确做法请看解析')">
             <text class="challenge-option-text">A. "多喝热水，吃药了吗？快去休息吧。"</text>
           </view>
-          <view class="challenge-option" @click="$emit('show-toast', '高情商！加10分！')">
+          <view class="challenge-option tap-press" @click="$emit('show-toast', '高情商！加10分！')">
             <text class="challenge-option-text">B. "开门，我在楼下带了药和粥。"</text>
           </view>
         </view>
         <view class="challenge-footer">
-          <view class="challenge-ai-link" @click="$emit('open-ai', '女生说她发烧到39度了，除了说多喝热水，我该怎么高情商回复并表现出关心？')">
+          <view class="challenge-ai-link tap-press" @click="$emit('open-ai', '女生说她发烧到39度了，除了说多喝热水，我该怎么高情商回复并表现出关心？')">
             <text class="challenge-ai-text">让 AI 导师给出更多满分回答 ›</text>
           </view>
         </view>

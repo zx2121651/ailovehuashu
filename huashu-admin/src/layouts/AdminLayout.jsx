@@ -136,10 +136,14 @@ const AdminLayout = () => {
 
                 {/* 菜单项 */}
                 <ul className={`space-y-1 transition-all duration-300 ease-in-out origin-top overflow-hidden ${collapsedGroups[group.name] ? 'max-h-0 opacity-0' : 'max-h-[500px] opacity-100'}`}>
-                  {group.items.map((item) => {
+                  {group.items.map((item, i) => {
                     const isActive = location.pathname.startsWith(item.path);
                     return (
-                      <li key={item.name}>
+                      <li
+                        key={item.name}
+                        className="animate-fade-in-left"
+                        style={{ animationDelay: `${i * 30}ms` }}
+                      >
                         <NavLink
                           to={item.path}
                           onClick={() => {
@@ -148,7 +152,7 @@ const AdminLayout = () => {
                           className={({ isActive }) =>
                             `flex items-center px-4 py-3 rounded-2xl transition-all duration-300 group relative overflow-hidden ${
                               isActive
-                                ? 'bg-gradient-to-r from-indigo-500 to-blue-600 text-white shadow-lg shadow-indigo-500/25 font-semibold translate-x-1'
+                                ? 'bg-gradient-to-r from-indigo-500 to-blue-600 text-white shadow-lg shadow-indigo-500/25 font-semibold animate-scale-in'
                                 : 'text-slate-500 hover:bg-indigo-50/80 hover:text-indigo-700 hover:translate-x-1 font-medium'
                             }`
                           }
@@ -233,7 +237,7 @@ const AdminLayout = () => {
         {/* 滚动内容区 */}
         <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-indigo-100 hover:scrollbar-thumb-indigo-200 scrollbar-track-transparent bg-slate-50/50">
           <div className="p-4 sm:p-8 min-h-full">
-            <div className="max-w-[1600px] mx-auto pb-12 animate-in fade-in duration-500">
+            <div className="max-w-[1600px] mx-auto pb-12 stagger-enter">
               <Outlet />
             </div>
           </div>

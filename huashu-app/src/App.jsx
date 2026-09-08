@@ -21,6 +21,7 @@ import MyTeam from './views/distributor/MyTeam';
 import Withdrawal from './views/distributor/Withdrawal';
 import Login from './views/Login';
 import { Home, MessageCircle, Sparkles, Star, User, Rss } from 'lucide-react';
+import { AnimatePresence, motion } from 'framer-motion';
 import './App.css';
 
 function MainApp() {
@@ -45,18 +46,28 @@ function MainApp() {
         ) : (
           <>
             <div className="flex-1 overflow-hidden relative love-card" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', overflowY: 'auto' }}>
-          {activeTab === 'home' && <HomeView />}
-          {activeTab === 'discover' && <DiscoverView />}
-          {activeTab === 'community' && <Community />}
-          {activeTab === 'ai' && <AIView />}
-          {activeTab === 'favorites' && <FavoritesView />}
-          {activeTab === 'profile' && <ProfileView />}
-          {activeTab === 'distributor' && <DistributorCenter />}
-          {activeTab === 'distributor_team' && <MyTeam />}
-          {activeTab === 'distributor_withdraw' && <Withdrawal />}
-          {activeTab === 'story' && <StoryList />}
-          {activeTab === 'story_play' && <StoryPlay />}
-        </div>
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={activeTab}
+                  initial={{ opacity: 0, y: 14, scale: .99 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -10, scale: .99 }}
+                  transition={{ duration: .28, ease: [0.16, 1, 0.3, 1] }}
+                >
+                  {activeTab === 'home' && <HomeView />}
+                  {activeTab === 'discover' && <DiscoverView />}
+                  {activeTab === 'community' && <Community />}
+                  {activeTab === 'ai' && <AIView />}
+                  {activeTab === 'favorites' && <FavoritesView />}
+                  {activeTab === 'profile' && <ProfileView />}
+                  {activeTab === 'distributor' && <DistributorCenter />}
+                  {activeTab === 'distributor_team' && <MyTeam />}
+                  {activeTab === 'distributor_withdraw' && <Withdrawal />}
+                  {activeTab === 'story' && <StoryList />}
+                  {activeTab === 'story_play' && <StoryPlay />}
+                </motion.div>
+              </AnimatePresence>
+            </div>
 
             <div className="absolute bottom-0 w-full nav-bottom-glass pb-safe pt-2.5 px-5 pb-6 z-30 shadow-[0_-10px_20px_-10px_rgba(0,0,0,0.05)]">
               <div className="flex justify-between items-center mt-1.5 relative">
@@ -70,8 +81,9 @@ function MainApp() {
 
             {/* Floating AI Button (moved from nav to bottom-right to fit 5 tabs) */}
             {activeTab !== 'ai' && activeTab !== 'community' && (
-              <div onClick={() => setActiveTab('ai')} className="fixed bottom-[105px] right-5 w-14 h-14 bg-gradient-to-tr from-pink-400 to-rose-400 rounded-full flex items-center justify-center text-white shadow-lg shadow-pink-400/40 cursor-pointer active:scale-95 transition-transform z-40 border-2 border-white">
-                 <Sparkles size={24} className="animate-pulse" />
+              <div onClick={() => setActiveTab('ai')} className="fixed bottom-[105px] right-5 w-14 h-14 bg-gradient-to-tr from-pink-400 to-rose-400 rounded-full flex items-center justify-center text-white shadow-lg shadow-pink-400/40 cursor-pointer active:scale-95 transition-transform z-40 border-2 border-white animate-float">
+                 <span className="absolute inset-0 rounded-full animate-glow-spin pointer-events-none" style={{background:'conic-gradient(from 0deg, transparent 0 70%, rgba(255,255,255,.5) 90%, transparent 100%)', filter:'blur(2px)'}}></span>
+                 <Sparkles size={24} className="animate-pulse drop-shadow" />
               </div>
             )}
 

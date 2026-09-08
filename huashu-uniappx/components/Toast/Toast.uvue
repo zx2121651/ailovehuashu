@@ -1,6 +1,6 @@
 <template>
   <view v-if="visible" class="toast-overlay" :class="[fadeOut ? 'fade-out' : 'fade-in']">
-    <view class="toast-box shadow-lg">
+    <view class="toast-box shadow-lg animate-pop">
       <text class="toast-text">{{ message }}</text>
     </view>
   </view>

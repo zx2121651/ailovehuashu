@@ -161,7 +161,7 @@ export default function Home() {
               setActiveTab('discover');
               setDiscoverState(prev => ({ ...prev, activeCategory: item.catId, searchQuery: '' }));
             }
-          }} className="flex flex-col items-center justify-center love-card p-3 rounded-2xl shadow-sm cursor-pointer active:scale-95 transition-transform">
+          }} className="flex flex-col items-center justify-center love-card p-3 rounded-2xl shadow-sm cursor-pointer active:scale-95 transition-transform animate-pop" style={{ animationDelay: `${idx * 40}ms` }}>
             <div className="bg-transparent p-2 rounded-full mb-1.5">{item.icon}</div>
             <span className="text-[11px] font-bold text-gray-700">{item.label}</span>
           </div>
@@ -356,8 +356,10 @@ export default function Home() {
           <span className="text-[10px] bg-red-50 text-pink-500 px-2 py-1 rounded-md font-bold flex items-center border border-red-100"><Flame size={12} className="mr-1 fill-current" /> 全网热搜</span>
         </div>
         <div className="space-y-3.5">
-          {topScripts.map((script) => (
-            <ScriptCard key={script.id} script={script} copiedId={copiedId} onCopy={handleCopy} isFavorite={favoriteIds.includes(script.id)} onToggleFav={() => toggleFavorite(script.id)} onShowMore={() => setRepliesDrawerScript(script)} />
+          {topScripts.map((script, idx) => (
+            <div key={script.id} className="stagger-item" style={{ animationDelay: `${idx * 70}ms` }}>
+              <ScriptCard script={script} copiedId={copiedId} onCopy={handleCopy} isFavorite={favoriteIds.includes(script.id)} onToggleFav={() => toggleFavorite(script.id)} onShowMore={() => setRepliesDrawerScript(script)} />
+            </div>
           ))}
         </div>
       </div>

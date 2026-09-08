@@ -4,14 +4,14 @@
       <view class="daily-blur-circle"></view>
       <view class="daily-left">
         <view class="daily-badge">
-          <text class="daily-badge-icon">📅</text>
+          <text class="daily-badge-icon animate-float">📅</text>
           <text class="daily-badge-text">每日灵感 · 今日</text>
         </view>
         <text class="daily-quote">"真正的吸引不是刻意讨好，而是展示你独特的生活态度。"</text>
       </view>
       <view class="daily-right">
-        <view class="sign-btn" @click="$emit('sign-in')">
-          <text class="sign-btn-icon">✅</text>
+        <view class="sign-btn tap-press" @click="$emit('sign-in')">
+          <text class="sign-btn-icon animate-heartbeat">✅</text>
           <text class="sign-btn-text">签到领积分</text>
         </view>
         <text class="sign-streak">已连续签到 3 天</text>

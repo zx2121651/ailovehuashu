@@ -10,8 +10,33 @@ import {
   Tooltip, ResponsiveContainer, BarChart, Bar, Legend, PieChart, Pie, Cell
 } from 'recharts';
 
+// 数字从 0 累加动画
+const useCountUp = (target) => {
+  const [value, setValue] = useState(0);
+  useEffect(() => {
+    if (typeof target !== 'number' || target <= 0) { setValue(target || 0); return undefined; }
+    let raf;
+    const start = performance.now();
+    const duration = 800;
+    const tick = (now) => {
+      const p = Math.min((now - start) / duration, 1);
+      const eased = 1 - Math.pow(1 - p, 3);
+      setValue(Math.round(target * eased));
+      if (p < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [target]);
+  return value;
+};
+
+const CountUp = ({ value }) => {
+  const display = useCountUp(value);
+  return <>{display.toLocaleString()}</>;
+};
+
 const StatCard = ({ title, value, icon, gradientFrom, gradientTo, iconColor }) => (
-  <div className="relative overflow-hidden bg-white rounded-3xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] hover:-translate-y-1 transition-all duration-300 group">
+  <div className="relative overflow-hidden bg-white rounded-3xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all duration-300 card-lift group">
     {/* Background Gradient Blob */}
     <div className={`absolute -right-6 -top-6 w-32 h-32 rounded-full bg-gradient-to-br ${gradientFrom} ${gradientTo} opacity-20 group-hover:opacity-40 blur-2xl transition-opacity duration-500`}></div>
 
@@ -19,7 +44,7 @@ const StatCard = ({ title, value, icon, gradientFrom, gradientTo, iconColor }) =
       <div>
         <p className="text-sm font-bold text-slate-500 mb-1 tracking-wide">{title}</p>
         <h3 className="text-3xl font-black text-slate-800 tracking-tight group-hover:text-indigo-900 transition-colors">
-          {typeof value === 'number' ? value.toLocaleString() : value}
+          {typeof value === 'number' ? <CountUp value={value} /> : value}
         </h3>
 
         {/* Trend Indicator (Mocked for visual enhancement) */}
@@ -111,7 +136,7 @@ const Dashboard = () => {
         <p className="text-slate-500 font-medium mb-8 max-w-sm text-center">{error}</p>
         <button
           onClick={() => window.location.reload()}
-          className="px-6 py-3 bg-slate-800 text-white rounded-2xl font-bold hover:bg-slate-900 transition-colors shadow-lg shadow-slate-800/20 flex items-center"
+          className="px-6 py-3 bg-slate-800 text-white rounded-2xl font-bold hover:bg-slate-900 transition-colors shadow-lg shadow-slate-800/20 flex items-center btn-press"
         >
           <RefreshCw size={18} className="mr-2" />
           重新加载数据
@@ -137,7 +162,7 @@ const Dashboard = () => {
           <p className="text-indigo-200/80 font-medium max-w-lg">实时监控全站运营数据，洞察业务增长趋势。所有关键指标一览无余。</p>
         </div>
 
-        <button className="relative z-10 flex items-center px-6 py-3 bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 rounded-2xl font-bold transition-all duration-300 active:scale-95 group">
+        <button className="relative z-10 flex items-center px-6 py-3 bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 rounded-2xl font-bold transition-all duration-300 active:scale-95 btn-press group">
           <RefreshCw size={18} className="mr-2 group-hover:rotate-180 transition-transform duration-700" />
           刷新数据
         </button>
@@ -145,37 +170,45 @@ const Dashboard = () => {
 
       {/* Top Stat Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatCard
-          title="总注册用户"
-          value={stats?.totalUsers || 0}
-          icon={<Users />}
-          gradientFrom="from-blue-100" gradientTo="to-indigo-100" iconColor="text-blue-600"
-        />
-        <StatCard
-          title="总话术数量"
-          value={stats?.totalScripts || 0}
-          icon={<FileText />}
-          gradientFrom="from-emerald-100" gradientTo="to-teal-100" iconColor="text-emerald-600"
-        />
-        <StatCard
-          title="待审核内容"
-          value={stats?.pendingContributions || 0}
-          icon={<MessageSquare />}
-          gradientFrom="from-amber-100" gradientTo="to-orange-100" iconColor="text-amber-600"
-        />
-        <StatCard
-          title="系统健康状态"
-          value="优良"
-          icon={<Activity />}
-          gradientFrom="from-purple-100" gradientTo="to-pink-100" iconColor="text-purple-600"
-        />
+        <div className="animate-pop" style={{ animationDelay: '0ms' }}>
+          <StatCard
+            title="总注册用户"
+            value={stats?.totalUsers || 0}
+            icon={<Users />}
+            gradientFrom="from-blue-100" gradientTo="to-indigo-100" iconColor="text-blue-600"
+          />
+        </div>
+        <div className="animate-pop" style={{ animationDelay: '90ms' }}>
+          <StatCard
+            title="总话术数量"
+            value={stats?.totalScripts || 0}
+            icon={<FileText />}
+            gradientFrom="from-emerald-100" gradientTo="to-teal-100" iconColor="text-emerald-600"
+          />
+        </div>
+        <div className="animate-pop" style={{ animationDelay: '180ms' }}>
+          <StatCard
+            title="待审核内容"
+            value={stats?.pendingContributions || 0}
+            icon={<MessageSquare />}
+            gradientFrom="from-amber-100" gradientTo="to-orange-100" iconColor="text-amber-600"
+          />
+        </div>
+        <div className="animate-pop" style={{ animationDelay: '270ms' }}>
+          <StatCard
+            title="系统健康状态"
+            value="优良"
+            icon={<Activity />}
+            gradientFrom="from-purple-100" gradientTo="to-pink-100" iconColor="text-purple-600"
+          />
+        </div>
       </div>
 
       {/* Main Charts Area */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
         {/* Large Chart: User Growth Area */}
-        <div className="lg:col-span-2 bg-white rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 p-8 hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-shadow">
+        <div className="lg:col-span-2 bg-white rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 p-8 hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-shadow stagger-item" style={{ animationDelay: '120ms' }}>
           <div className="flex justify-between items-center mb-8">
             <div>
               <h3 className="text-xl font-black text-slate-800 tracking-tight flex items-center">
@@ -214,7 +247,7 @@ const Dashboard = () => {
         </div>
 
         {/* Medium Chart: Category Pie */}
-        <div className="bg-white rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 p-8 hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-shadow flex flex-col">
+        <div className="bg-white rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 p-8 hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-shadow flex flex-col stagger-item" style={{ animationDelay: '240ms' }}>
           <div className="mb-4">
             <h3 className="text-xl font-black text-slate-800 tracking-tight">话术库分布</h3>
             <p className="text-sm font-medium text-slate-400 mt-1">核心品类占比概览</p>

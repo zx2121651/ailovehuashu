@@ -3,10 +3,13 @@ import { Heart, Copy, CheckCircle2, ChevronRight, Share2 } from 'lucide-react';
 
 export default function ScriptCard({ script, copiedId, onCopy, simple = false, isFavorite, onToggleFav, onShowMore, onShare }) {
   return (
-    <div className="love-card rounded-[1.25rem] p-4 shadow-sm border border-transparent relative group transition-all hover:shadow-md">
+    <div className="love-card rounded-[1.25rem] p-4 shadow-sm border border-transparent relative group transition-all hover:shadow-md card-lift overflow-hidden">
+      <span className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-transparent via-pink-400/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 overflow-hidden">
+        <span className="absolute inset-y-0 w-1/2 bg-white/70 blur-sm animate-shine" />
+      </span>
       <div className="absolute top-4 right-4 flex space-x-3 items-center">
         {onShare && <Share2 size={16} onClick={(e) => { e.stopPropagation(); onShare(script); }} className="text-gray-400 cursor-pointer hover:text-blue-500 transition-colors" />}
-        <Heart size={18} onClick={onToggleFav} className={`cursor-pointer transition-all active:scale-75 ${isFavorite ? 'fill-pink-500 text-pink-500 drop-shadow-sm' : 'text-gray-300 hover:text-pink-300'}`} />
+        <Heart key={isFavorite ? 'fav' : 'nofav'} size={18} onClick={onToggleFav} className={`cursor-pointer transition-all active:scale-75 ${isFavorite ? 'fill-pink-500 text-pink-500 drop-shadow-sm animate-pop' : 'text-gray-300 hover:text-pink-300'}`} />
       </div>
       <div className="flex items-start mb-3">
         <div className="w-7 h-7 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-xs shrink-0 mr-3 mt-0.5 shadow-sm">问</div>

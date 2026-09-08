@@ -79,7 +79,7 @@
     </scroll-view>
 
     <!-- Floating AI Button -->
-    <view class="fab-ai" @click="goToAI('')">
+    <view class="fab-ai animate-float tap-press" @click="goToAI('')">
       <text class="fab-ai-icon">✨</text>
       <text class="fab-ai-text">AI</text>
     </view>

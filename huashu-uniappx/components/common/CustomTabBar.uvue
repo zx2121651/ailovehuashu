@@ -1,16 +1,21 @@
 <template>
   <view class="custom-tab-bar">
     <view
-      class="tab-bar-item"
+      class="tab-bar-item tap-press"
       v-for="(item, index) in list"
       :key="index"
       @click="switchTab(item.pagePath, index)"
     >
       <image
         class="tab-bar-icon"
+        :class="current === index ? 'animate-pop' : ''"
         :src="current === index ? item.selectedIconPath : item.iconPath"
         mode="aspectFit"
       ></image>
+      <view
+        class="tab-bar-pill"
+        :class="current === index ? 'active animate-pop' : ''"
+      ></view>
       <text
         class="tab-bar-text"
         :class="current === index ? 'active-text' : ''"
@@ -93,6 +98,7 @@ const switchTab = (url: string, index: number) => {
   align-items: center;
   height: 55px;
   background-color: transparent;
+  position: relative;
 }
 
 .tab-bar-icon {
@@ -102,6 +108,21 @@ const switchTab = (url: string, index: number) => {
   background-color: transparent;
   border: none;
   box-shadow: none;
+}
+
+.tab-bar-pill {
+  position: absolute;
+  top: 6px;
+  width: 20px;
+  height: 3px;
+  border-radius: 2px;
+  background-color: transparent;
+  opacity: 0;
+}
+
+.tab-bar-pill.active {
+  opacity: 1;
+  background-image: linear-gradient(to right, #ec4899, #a855f7);
 }
 
 .tab-bar-text {
