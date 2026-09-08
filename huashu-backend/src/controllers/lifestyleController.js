@@ -110,8 +110,46 @@ function isVipUser(user) {
 }
 
 exports.getSkins = async (req, res) => {
-  const owned = await getOwnedSkins(req.user?.userId);
-  res.json({ code: 200, data: { list: SKINS, owned } });
+  const userId = req.user?.userId;
+  const owned = await getOwnedSkins(userId);
+  let active = { frame: null, badge: null };
+  if (prisma && userId) {
+    try {
+      const user = await prisma.user.findUnique({ where: { id: userId }, select: { avatarFrame: true, activeBadge: true } });
+      active = { frame: user?.avatarFrame || null, badge: user?.activeBadge || null };
+    } catch (e) {}
+  }
+  res.json({ code: 200, data: { list: SKINS, owned, active } });
+};
+
+// 启用装扮：把已拥有的头像框/徽章设为当前使用（落库 avatarFrame / activeBadge）
+exports.applySkin = async (req, res) => {
+  const { skinId } = req.body;
+  const skin = SKINS.find(s => s.id === skinId);
+  if (!skin) return res.status(400).json({ code: 400, message: '装扮不存在' });
+  if (skin.kind === 'gift') return res.json({ code: 400, data: { ok: false, message: '虚拟礼物无需启用' } });
+
+  const userId = req.user?.userId;
+  const owned = await getOwnedSkins(userId);
+  if (!owned.includes(skinId)) {
+    return res.json({ code: 403, data: { ok: false, message: '请先拥有该装扮' } });
+  }
+
+  let active = { frame: null, badge: null };
+  if (prisma && userId) {
+    try {
+      const user = await prisma.user.findUnique({ where: { id: userId }, select: { avatarFrame: true, activeBadge: true } });
+      active.frame = user?.avatarFrame || null;
+      active.badge = user?.activeBadge || null;
+      if (skin.kind === 'frame') active.frame = skinId;
+      else if (skin.kind === 'badge') active.badge = skinId;
+      await prisma.user.update({
+        where: { id: userId },
+        data: { avatarFrame: active.frame, activeBadge: active.badge }
+      });
+    } catch (e) {}
+  }
+  res.json({ code: 200, data: { ok: true, active, message: `已启用「${skin.name}」` } });
 };
 
 exports.purchaseSkin = async (req, res) => {

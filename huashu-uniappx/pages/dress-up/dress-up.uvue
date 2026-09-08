@@ -35,8 +35,12 @@
           <text class="text-sm font-bold text-gray-800">{{ skin.name }}</text>
           <text class="text-xs text-gray-400 mt-1">{{ skin.kind === 'frame' ? '头像框' : skin.kind === 'badge' ? '徽章' : '虚拟礼物' }}</text>
 
-          <!-- 购买按钮 -->
-          <view v-if="isOwned(skin.id)" class="buy-btn owned-btn rounded-full mt-3 py-2 items-center w-full">
+          <!-- 购买/启用按钮 -->
+          <view v-if="isOwned(skin.id) && (skin.kind === 'frame' || skin.kind === 'badge')"
+            class="buy-btn owned-btn rounded-full mt-3 py-2 items-center w-full tap-press" @click="apply(skin)">
+            <text :class="[isActive(skin.id) ? 'text-pink-500' : 'text-gray-400', 'text-xs font-bold']">{{ isActive(skin.id) ? '✔ 使用中' : '启用' }}</text>
+          </view>
+          <view v-else-if="isOwned(skin.id)" class="buy-btn owned-btn rounded-full mt-3 py-2 items-center w-full">
             <text class="text-gray-400 text-xs font-bold">已拥有</text>
           </view>
           <view v-else class="buy-btn bg-gradient-pink rounded-full mt-3 py-2 items-center w-full tap-press" @click="buy(skin)">
@@ -56,7 +60,7 @@
 import { ref, computed } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
 import { useAppStore } from '../../store/app.uts'
-import { getSkins, purchaseSkin, getUserProfile } from '../../services/api.uts'
+import { getSkins, purchaseSkin, applySkin, getUserProfile } from '../../services/api.uts'
 
 const appStore = useAppStore
 
@@ -80,6 +84,7 @@ const activeTab = ref('frame')
 
 const list = ref<Skin[]>([])
 const owned = ref<string[]>([])
+const active = ref<{ frame: string | null, badge: string | null }>({ frame: null, badge: null })
 const points = ref(0)
 const isVip = ref(false)
 
@@ -91,11 +96,48 @@ const isOwned = (id: string): boolean => {
   return owned.value.indexOf(id) > -1
 }
 
+const isActive = (id: string): boolean => {
+  const kind = list.value.find(s => s.id === id)?.kind
+  if (kind === 'badge') return active.value.badge === id
+  if (kind === 'frame') return active.value.frame === id
+  return false
+}
+
+const apply = async (skin: Skin) => {
+  try {
+    const res = await applySkin(skin.id)
+    if (res && res.ok !== false && res.active) {
+      // 后端未落库（demo 模式）时 active 可能为空，保留本地当前状态
+      const next = {
+        frame: res.active.frame || active.value.frame,
+        badge: res.active.badge || active.value.badge
+      }
+      if (skin.kind === 'frame') next.frame = skin.id
+      else if (skin.kind === 'badge') next.badge = skin.id
+      active.value = next
+      appStore.setDecor({ frame: next.frame, badge: next.badge })
+      appStore.showToast(res.message || '已启用')
+    } else {
+      appStore.showToast((res && res.message) || '启用失败')
+    }
+  } catch (e) {
+    // 本地兜底：同一分类下互斥启用
+    if (skin.kind === 'frame') {
+      active.value = { frame: skin.id, badge: active.value.badge }
+    } else {
+      active.value = { frame: active.value.frame, badge: skin.id }
+    }
+    appStore.showToast(`已启用「${skin.name}」`)
+  }
+}
+
 onLoad(async () => {
   try {
     const res = await getSkins()
     list.value = res.list || []
     owned.value = res.owned || []
+    active.value = res.active || { frame: null, badge: null }
+    appStore.setDecor({ frame: active.value.frame, badge: active.value.badge })
   } catch (e) {
     // 本地演示数据
     list.value = [
@@ -109,6 +151,8 @@ onLoad(async () => {
       { id: 'gift_ring', kind: 'gift', name: '永恒钻戒', price: 999, type: 'points', previewBg: '#eff6ff' }
     ]
     owned.value = ['frame_pink', 'badge_egg']
+    active.value = { frame: 'frame_pink', badge: 'badge_egg' }
+    appStore.setDecor({ frame: 'frame_pink', badge: 'badge_egg' })
   }
   try {
     const profile = await getUserProfile()
@@ -138,6 +182,13 @@ const buy = async (skin: Skin) => {
       if (skin.type === 'points') {
         points.value = points.value - skin.price
       }
+      // 头像框/徽章购买成功后自动启用
+      if (skin.kind === 'frame') {
+        active.value = { frame: skin.id, badge: active.value.badge }
+      } else if (skin.kind === 'badge') {
+        active.value = { frame: active.value.frame, badge: skin.id }
+      }
+      appStore.setDecor({ frame: active.value.frame, badge: active.value.badge })
     } else {
       appStore.showToast((res && res.message) || '购买失败')
     }

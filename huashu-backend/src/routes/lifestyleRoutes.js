@@ -10,6 +10,7 @@ router.post('/assessment/submit', auth, lifestyle.submitAssessment);
 // 装扮中心（头像框/徽章 / 皮肤）
 router.get('/skins', auth, lifestyle.getSkins);
 router.post('/skins/purchase', auth, lifestyle.purchaseSkin);
+router.post('/skins/apply', auth, lifestyle.applySkin);
 
 // 虚拟礼物
 router.post('/gifts/send', auth, lifestyle.sendGift);

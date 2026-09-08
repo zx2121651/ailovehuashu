@@ -177,6 +177,16 @@ export async function purchaseSkin(skinId: string): Promise<any> {
     return res.data
 }
 
+// 启用装扮（头像框/徽章设为当前使用）
+export async function applySkin(skinId: string): Promise<any> {
+    const res = await request<any>({
+        url: '/life/skins/apply',
+        method: 'POST',
+        data: { skinId }
+    })
+    return res.data
+}
+
 // 纪念日 / 恋爱天数（对标恋爱记）
 export async function getMemorial(): Promise<any> {
     const res = await request<any>({ url: '/life/memorial' })
