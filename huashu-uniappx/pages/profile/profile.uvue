@@ -4,8 +4,18 @@
     <view class="header-section bg-gradient-to-b px-5 pt-12 pb-6 relative z-10">
       <view class="flex-row items-center justify-between mb-6">
         <view class="flex-row items-center" @click="handleEditProfile">
-          <view class="avatar-wrapper bg-white p-1 rounded-full shadow-md mr-4 relative">
-            <image class="avatar-img rounded-full" src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix&backgroundColor=fce7f3" mode="aspectFill"></image>
+          <!-- 头像（含已启用装扮：头像框 + 徽章） -->
+          <view class="mr-4 relative">
+            <view v-if="frameGrad" class="frame-grad rounded-full items-center justify-center"
+              :style="{ backgroundImage: frameGrad, width: '72px', height: '72px', padding: '3px' }">
+              <image class="avatar-img rounded-full" :src="userProfile.avatar" mode="aspectFill" style="width: 100%; height: 100%"></image>
+            </view>
+            <view v-else class="avatar-wrapper bg-white p-1 rounded-full shadow-md overflow-hidden" :style="frameStyle">
+              <image class="avatar-img rounded-full" :src="userProfile.avatar" mode="aspectFill"></image>
+            </view>
+            <view v-if="badgeStyle" class="badge-corner absolute rounded-full items-center justify-center" :style="badgeStyle">
+              <text class="badge-text font-bold">爱</text>
+            </view>
             <view class="edit-badge absolute bottom-0 right-0 bg-gray-800 rounded-full flex items-center justify-center border-2 border-white">
               <text class="text-white text-xs">✎</text>
             </view>
@@ -208,7 +218,7 @@
 </template>
 
 <script setup lang="uts">
-import { reactive, onMounted } from 'vue'
+import { reactive, computed, onMounted } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
 import { useAppStore } from '../../store/app.uts'
 import { getUserProfile } from '../../services/api.uts'
@@ -231,6 +241,34 @@ const userProfile = reactive({
   rank: '黄金导师',
   points: appStore.userInfo?.points || 1250,
   favoritesCount: 0
+})
+
+// 已启用装扮 → 头像框样式（与 Web 端 FRAME_CLASS 口径一致）
+const frameStyle = computed(() => {
+  const f = appStore.decor?.frame
+  if (f === 'frame_pink') {
+    return { border: '2px solid #f472b6', boxShadow: '0 0 12px rgba(244,114,182,0.5)' }
+  }
+  if (f === 'frame_gold') {
+    return { border: '2px solid #fbbf24', boxShadow: '0 0 12px rgba(251,191,36,0.5)' }
+  }
+  return null as Record<string, string> | null
+})
+
+// 渐变框走背景渐变 + 内边距方案
+const frameGrad = computed(() => {
+  return appStore.decor?.frame === 'frame_grad'
+    ? 'linear-gradient(to top right, #ec4899, #fb7185, #fbbf24)'
+    : ''
+})
+
+// 已启用徽章 → 角标样式
+const badgeStyle = computed(() => {
+  const b = appStore.decor?.badge
+  if (b === 'badge_egg') return { backgroundColor: '#34d399' }
+  if (b === 'badge_sweet') return { backgroundColor: '#f472b6' }
+  if (b === 'badge_god') return { backgroundImage: 'linear-gradient(to top right, #fbbf24, #f59e0b)' }
+  return null as Record<string, string> | null
 })
 
 onMounted(async () => {
@@ -380,6 +418,9 @@ page { display: flex; flex-direction: column; height: 100%; }
 .avatar-wrapper { width: 72px; height: 72px; }
 .avatar-img { width: 100%; height: 100%; }
 .edit-badge { width: 20px; height: 20px; }
+.badge-corner { width: 20px; height: 20px; right: -4px; top: -4px; border: 2px solid #ffffff; }
+.badge-text { font-size: 10px; color: #ffffff; }
+.frame-grad { box-shadow: 0 0 16px rgba(236, 72, 153, 0.45); }
 
 .id-badge { align-self: flex-start; }
 

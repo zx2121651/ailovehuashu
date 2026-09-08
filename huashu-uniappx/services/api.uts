@@ -187,6 +187,16 @@ export async function applySkin(skinId: string): Promise<any> {
     return res.data
 }
 
+// 赠送虚拟礼物（扣减积分）
+export async function sendGift(giftId: string, to?: string): Promise<any> {
+    const res = await request<any>({
+        url: '/life/gifts/send',
+        method: 'POST',
+        data: { giftId, to: to || 'TA' }
+    })
+    return res.data
+}
+
 // 纪念日 / 恋爱天数（对标恋爱记）
 export async function getMemorial(): Promise<any> {
     const res = await request<any>({ url: '/life/memorial' })

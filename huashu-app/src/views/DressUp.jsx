@@ -8,7 +8,15 @@ export default function DressUp() {
   const [tab, setTab] = useState('frame'); // frame | badge | gift
   const [data, setData] = useState({ list: [], owned: [] });
 
-  useEffect(() => { api.getSkins().then(d => { if (d) setData(d); }).catch(() => {}); }, []);
+  useEffect(() => {
+    api.getSkins().then(d => {
+      if (d) {
+        setData(d);
+        // 后端已启用的装扮同步到全局 decor
+        if (d.active) setDecor({ frame: d.active.frame, badge: d.active.badge });
+      }
+    }).catch(() => {});
+  }, []);
 
   const frames = data.list.filter(s => s.kind === 'frame');
   const badges = data.list.filter(s => s.kind === 'badge');
@@ -32,7 +40,19 @@ export default function DressUp() {
     }
   };
 
-  const apply = (skin, kind) => {
+  const apply = async (skin, kind) => {
+    try {
+      const res = await api.applySkin(skin.id);
+      if (res && res.ok !== false && res.active) {
+        const next = { frame: res.active.frame || decor.frame, badge: res.active.badge || decor.badge };
+        if (kind === 'frame') next.frame = skin.id;
+        else if (kind === 'badge') next.badge = skin.id;
+        setDecor(next);
+        showToast(res.message || `已使用「${skin.name}」`);
+        return;
+      }
+    } catch (e) {}
+    // 本地兜底（后端未落库 / 不可用）
     setDecor({ ...decor, frame: kind === 'frame' ? skin.id : decor.frame, badge: kind === 'badge' ? skin.id : decor.badge });
     showToast(`已使用「${skin.name}」`);
   };

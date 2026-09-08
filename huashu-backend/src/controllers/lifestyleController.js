@@ -83,7 +83,11 @@ const SKINS = [
     css: 'p-[3px] bg-gradient-to-tr from-pink-500 via-rose-400 to-amber-400 rounded-full shadow-[0_0_16px_rgba(236,72,153,.45)]' },
   { id: 'badge_egg', kind: 'badge', name: '恋爱新手', price: 0, badge: true, type: 'free', css: 'bg-emerald-400' },
   { id: 'badge_sweet', kind: 'badge', name: '甜言蜜语', price: 300, badge: true, type: 'points', css: 'bg-pink-400' },
-  { id: 'badge_god', kind: 'badge', name: '情圣', price: null, badge: true, type: 'vip', vipOnly: true, css: 'bg-gradient-to-tr from-amber-400 to-yellow-500' }
+  { id: 'badge_god', kind: 'badge', name: '情圣', price: null, badge: true, type: 'vip', vipOnly: true, css: 'bg-gradient-to-tr from-amber-400 to-yellow-500' },
+  // 虚拟礼物（不进入 owned，走 /gifts/send 直接送出扣积分）
+  { id: 'gift_rose', kind: 'gift', name: '心动玫瑰', price: 20, badge: false, type: 'gift', css: '' },
+  { id: 'gift_beer', kind: 'gift', name: '快乐啤酒', price: 30, badge: false, type: 'gift', css: '' },
+  { id: 'gift_ring', kind: 'gift', name: '订婚戒指', price: 200, badge: false, type: 'gift', css: '' }
 ];
 
 const DEFAULT_OWNED = ['frame_pink', 'badge_egg']; // 默认赠送基础款
@@ -156,6 +160,7 @@ exports.purchaseSkin = async (req, res) => {
   const { skinId } = req.body;
   const skin = SKINS.find(s => s.id === skinId);
   if (!skin) return res.status(400).json({ code: 400, message: '装扮不存在' });
+  if (skin.kind === 'gift') return res.json({ code: 400, data: { ok: false, message: '虚拟礼物请直接送出' } });
   const userId = req.user?.userId;
   const owned = await getOwnedSkins(userId);
   if (owned.includes(skinId)) return res.json({ code: 200, data: { ok: true, owned, message: '已拥有' } });

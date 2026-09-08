@@ -35,8 +35,11 @@
           <text class="text-sm font-bold text-gray-800">{{ skin.name }}</text>
           <text class="text-xs text-gray-400 mt-1">{{ skin.kind === 'frame' ? '头像框' : skin.kind === 'badge' ? '徽章' : '虚拟礼物' }}</text>
 
-          <!-- 购买/启用按钮 -->
-          <view v-if="isOwned(skin.id) && (skin.kind === 'frame' || skin.kind === 'badge')"
+          <!-- 购买/启用/送出按钮 -->
+          <view v-if="skin.kind === 'gift'" class="buy-btn bg-gradient-pink rounded-full mt-3 py-2 items-center w-full tap-press" @click="sendGift(skin)">
+            <text class="text-white text-xs font-bold">{{ skin.price }} 积分 送出</text>
+          </view>
+          <view v-else-if="isOwned(skin.id) && (skin.kind === 'frame' || skin.kind === 'badge')"
             class="buy-btn owned-btn rounded-full mt-3 py-2 items-center w-full tap-press" @click="apply(skin)">
             <text :class="[isActive(skin.id) ? 'text-pink-500' : 'text-gray-400', 'text-xs font-bold']">{{ isActive(skin.id) ? '✔ 使用中' : '启用' }}</text>
           </view>
@@ -60,7 +63,7 @@
 import { ref, computed } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
 import { useAppStore } from '../../store/app.uts'
-import { getSkins, purchaseSkin, applySkin, getUserProfile } from '../../services/api.uts'
+import { getSkins, purchaseSkin, applySkin, sendGift as sendGiftApi, getUserProfile } from '../../services/api.uts'
 
 const appStore = useAppStore
 
@@ -147,8 +150,9 @@ onLoad(async () => {
       { id: 'badge_egg', kind: 'badge', name: '萌新彩蛋', price: 0, type: 'free', previewBg: '#f0fdf4' },
       { id: 'badge_sweet', kind: 'badge', name: '甜言蜜语', price: 300, type: 'points', previewBg: '#fdf2f8' },
       { id: 'badge_god', kind: 'badge', name: '情圣', price: 0, type: 'vip', vipOnly: true, previewBg: '#fefce8' },
-      { id: 'gift_rose', kind: 'gift', name: '心动玫瑰', price: 99, type: 'points', previewBg: '#fff1f2' },
-      { id: 'gift_ring', kind: 'gift', name: '永恒钻戒', price: 999, type: 'points', previewBg: '#eff6ff' }
+      { id: 'gift_rose', kind: 'gift', name: '心动玫瑰', price: 20, type: 'gift', previewBg: '#fff1f2' },
+      { id: 'gift_beer', kind: 'gift', name: '快乐啤酒', price: 30, type: 'gift', previewBg: '#fefce8' },
+      { id: 'gift_ring', kind: 'gift', name: '订婚戒指', price: 200, type: 'gift', previewBg: '#eff6ff' }
     ]
     owned.value = ['frame_pink', 'badge_egg']
     active.value = { frame: 'frame_pink', badge: 'badge_egg' }
@@ -194,6 +198,25 @@ const buy = async (skin: Skin) => {
     }
   } catch (e) {
     appStore.showToast('购买失败，请稍后重试')
+  }
+}
+
+const sendGift = async (skin: Skin) => {
+  if (points.value < skin.price) {
+    appStore.showToast(`积分不足，还差 ${skin.price - points.value}`)
+    return
+  }
+  try {
+    const res = await sendGiftApi(skin.id)
+    if (res && res.ok !== false) {
+      points.value = points.value - (res.points || skin.price)
+      appStore.showToast(res.message || `已送出「${skin.name}」`)
+    } else {
+      appStore.showToast((res && res.message) || '赠送失败')
+    }
+  } catch (e) {
+    points.value = points.value - skin.price
+    appStore.showToast(`已送出「${skin.name}」`)
   }
 }
 

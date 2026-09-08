@@ -399,7 +399,8 @@ export async function getSkins() {
         { id: 'badge_sweet', kind: 'badge', name: '甜言蜜语', price: 300, type: 'points', css: 'bg-pink-400' },
         { id: 'badge_god', kind: 'badge', name: '情圣', price: null, type: 'vip', vipOnly: true, css: 'bg-gradient-to-tr from-amber-400 to-yellow-500' }
       ],
-      owned: ['frame_pink']
+      owned: ['frame_pink'],
+      active: { frame: 'frame_pink', badge: null }
     };
   }
 }
@@ -409,6 +410,14 @@ export async function purchaseSkin(skinId) {
     const data = await request('/life/skins/purchase', { method: 'POST', body: JSON.stringify({ skinId }) });
     return data.data;
   } catch (e) { return { ok: true, owned: [] }; }
+}
+
+// 启用装扮（头像框/徽章设为当前使用）
+export async function applySkin(skinId) {
+  try {
+    const data = await request('/life/skins/apply', { method: 'POST', body: JSON.stringify({ skinId }) });
+    return data.data;
+  } catch (e) { return { ok: false }; }
 }
 
 // 虚拟礼物
