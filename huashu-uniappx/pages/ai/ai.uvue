@@ -278,6 +278,7 @@ const handleSend = async () => {
       context: inputStr,
       stage: contextStage.value,
       style: 'all',
+      personality: (appStore.lovePalette && appStore.lovePalette.type) || '',
       count: 4
     } as Record<string, any>)
 
@@ -323,6 +324,7 @@ const regenerate = async (msgId: string) => {
       context: lastContext,
       stage: contextStage.value,
       style: 'all',
+      personality: (appStore.lovePalette && appStore.lovePalette.type) || '',
       count: 4
     } as Record<string, any>)
 

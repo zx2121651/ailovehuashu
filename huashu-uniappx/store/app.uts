@@ -32,6 +32,9 @@ export const useAppStore = reactive({
   showSignModal: false,
   showContributeDrawer: false,
 
+  // 恋爱人格画像（对标 Soul MBTI）
+  lovePalette: getLocalJson('lovePalette') as any | null,
+
   // 缓存记录状态
   searchHistory: (getLocalJson('searchHistory') as string[] | null) || [] as string[],
   browsingFootprints: (getLocalJson('browsingFootprints') as any[] | null) || [] as any[],
@@ -44,6 +47,15 @@ export const useAppStore = reactive({
   setUserInfo(info: UserInfo) {
     this.userInfo = info;
     uni.setStorageSync('userInfo', JSON.stringify(info));
+  },
+
+  setLovePalette(palette: any | null) {
+    this.lovePalette = palette;
+    if (palette) {
+      uni.setStorageSync('lovePalette', JSON.stringify(palette));
+    } else {
+      uni.removeStorageSync('lovePalette');
+    }
   },
 
   logout() {

@@ -192,6 +192,21 @@ export async function saveMemorial(startDate: string): Promise<any> {
     return res.data
 }
 
+// 恋爱人格测评（对标 Soul MBTI）
+export async function getAssessmentQuestions(): Promise<any[]> {
+    const res = await request<any>({ url: '/life/assessment/questions' })
+    return res.data || []
+}
+
+export async function submitAssessment(answers: any[]): Promise<any> {
+    const res = await request<any>({
+        url: '/life/assessment/submit',
+        method: 'POST',
+        data: { answers }
+    })
+    return res.data
+}
+
 // Community API
 export async function getPostCategories(): Promise<any[]> {
     const res = await request<any>({ url: '/posts/categories' })
