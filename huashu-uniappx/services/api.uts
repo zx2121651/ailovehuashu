@@ -142,6 +142,24 @@ export async function getUserProfile(): Promise<any> {
     return res.data
 }
 
+// 每日签到（奖励积分 + 盲盒内容）
+export async function dailySignIn(): Promise<any> {
+    const res = await request<any>({
+        url: '/user/daily-signin',
+        method: 'POST'
+    })
+    return res.data
+}
+
+// 每日盲盒：消耗 50 积分开盒
+export async function openBlindBox(): Promise<any> {
+    const res = await request<any>({
+        url: '/user/open-blindbox',
+        method: 'POST'
+    })
+    return res.data
+}
+
 // AI API
 export async function chatWithAI(prompt: string): Promise<any> {
     const res = await request<any>({

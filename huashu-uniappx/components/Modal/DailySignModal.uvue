@@ -1,30 +1,69 @@
 <template>
   <view class="modal-overlay" v-if="isOpen">
-    <view class="modal-mask fade-in" @click="close"></view>
+    <view class="modal-mask fade-in" @click="onClose"></view>
     <view class="modal-content zoom-in">
-      <view class="sign-header">
-        <text class="sign-emoji">✨</text>
-        <text class="sign-title">签到成功</text>
-      </view>
 
-      <view class="reward-box">
-        <text class="reward-text">+10</text>
-        <text class="reward-label">积分</text>
-      </view>
-
-      <text class="streak-text">你已连续签到 <text class="streak-highlight">3</text> 天</text>
-      <text class="tip-text">明日签到可得 20 积分，保持哦！</text>
-
-      <view class="btn-wrap">
-        <view class="primary-btn" @click="close">
-          <text class="btn-text">开心收下</text>
+      <!-- 未加载：正在签到 -->
+      <template v-if="loading">
+        <view class="sign-header">
+          <text class="sign-emoji">✨</text>
+          <text class="sign-title">签到中…</text>
         </view>
-      </view>
+        <text class="tip-text">正在开启今日盲盒，请稍候</text>
+      </template>
+
+      <!-- 已签到成功 -->
+      <template v-else-if="result">
+        <view class="sign-header">
+          <text class="sign-emoji">{{ result.isBigPrize ? '🎉' : '✨' }}</text>
+          <text class="sign-title">签到成功</text>
+        </view>
+
+        <view class="reward-box" :class="{ 'reward-big': result.isBigPrize }">
+          <text class="reward-text">+{{ result.earnedPoints }}</text>
+          <text class="reward-label">积分</text>
+        </view>
+        <text v-if="result.isBigPrize" class="big-prize-tag">连续 7 天额外奖励</text>
+
+        <text class="streak-text">已连续签到 <text class="streak-highlight">{{ result.continuousDays }}</text> 天</text>
+
+        <!-- 盲盒内容 -->
+        <view v-if="result.blindBox" class="blind-box-card">
+          <text class="blind-box-title">🎁 今日盲盒</text>
+          <text class="blind-box-content">{{ result.blindBox.content || result.blindBox.question || '好运连连，明日再来' }}</text>
+          <text v-if="result.blindBox.author" class="blind-box-author">—— {{ result.blindBox.author }}</text>
+        </view>
+
+        <view class="btn-wrap">
+          <view class="primary-btn" @click="onClose">
+            <text class="btn-text">开心收下</text>
+          </view>
+        </view>
+      </template>
+
+      <!-- 今天已签到过 或 失败 -->
+      <template v-else-if="errorMsg">
+        <view class="sign-header">
+          <text class="sign-emoji">💡</text>
+          <text class="sign-title">{{ alreadySigned ? '今天已签到' : '签到未完成' }}</text>
+        </view>
+        <text class="tip-text">{{ errorMsg }}</text>
+        <view class="btn-wrap">
+          <view class="primary-btn" @click="onClose">
+            <text class="btn-text">我知道了</text>
+          </view>
+        </view>
+      </template>
+
     </view>
   </view>
 </template>
 
 <script setup lang="uts">
+import { ref, watch } from 'vue'
+import { dailySignIn } from '../../services/api.uts'
+import { useAppStore } from '../../store/app.uts'
+
 const props = defineProps<{
   isOpen: boolean
 }>()
@@ -33,27 +72,84 @@ const emit = defineEmits<{
   (e: 'close'): void
 }>()
 
-const close = () => {
+const appStore = useAppStore
+
+const loading = ref(false)
+const result = ref<any>(null)
+const errorMsg = ref('')
+const alreadySigned = ref(false)
+
+// 每次打开弹窗时触发签到
+watch(() => props.isOpen, (open) => {
+  if (open) {
+    loading.value = true
+    result.value = null
+    errorMsg.value = ''
+    alreadySigned.value = false
+    doSign()
+  }
+})
+
+const doSign = async () => {
+  try {
+    const res = await dailySignIn()
+    if (res && res.success && res.data) {
+      result.value = res.data
+      // 同步全局积分
+      if (appStore.userInfo) {
+        appStore.userInfo.points = res.data.totalPoints
+      }
+    } else {
+      // 一般情况：今天已签到
+      alreadySigned.value = true
+      errorMsg.value = (res && res.message) || '今天已经签到过了，明天再来吧'
+    }
+    loading.value = false
+  } catch (e) {
+    // 未登录或后端不可用：本地演示奖励
+    loading.value = false
+    result.value = {
+      earnedPoints: 10,
+      continuousDays: 3,
+      isBigPrize: false,
+      totalPoints: appStore.userInfo?.points || 1250,
+      blindBox: null
+    }
+    if (appStore.userInfo) {
+      appStore.userInfo.points = (appStore.userInfo.points || 1250) + 10
+    }
+  }
+}
+
+const onClose = () => {
   emit('close')
 }
 </script>
 
 <style>
-.modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 1000; align-items: center; justify-content: center; }
+.modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 1000; align-items: center; justify-content: center; padding: 0 32px; }
 .modal-mask { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0,0,0,0.6); }
-.modal-content { background-color: #ffffff; width: 280px; border-radius: 24px; padding: 32px 20px; align-items: center; z-index: 1001; position: relative; overflow: hidden; }
+.modal-content { background-color: #ffffff; width: 300px; border-radius: 24px; padding: 32px 24px; align-items: center; z-index: 1001; position: relative; overflow: hidden; }
 
-.sign-header { align-items: center; margin-bottom: 24px; }
+.sign-header { align-items: center; margin-bottom: 20px; }
 .sign-emoji { font-size: 40px; margin-bottom: 8px; }
 .sign-title { font-size: 20px; font-weight: 900; color: #db2777; letter-spacing: 2px; }
 
-.reward-box { background-image: linear-gradient(to bottom right, #fce7f3, #fdf2f8); border-width: 2px; border-style: dashed; border-color: #fbcfe8; width: 120px; height: 120px; border-radius: 60px; align-items: center; justify-content: center; margin-bottom: 24px; flex-direction: row; align-items: baseline; }
+.reward-box { background-image: linear-gradient(to bottom right, #fce7f3, #fdf2f8); border-width: 2px; border-style: dashed; border-color: #fbcfe8; width: 120px; height: 120px; border-radius: 60px; align-items: center; justify-content: center; margin-bottom: 8px; flex-direction: row; align-items: baseline; }
+.reward-big { background-image: linear-gradient(to bottom right, #fef3c7, #fffbeb); border-color: #fcd34d; }
 .reward-text { font-size: 48px; font-weight: 900; color: #e11d48; margin-right: 4px; }
 .reward-label { font-size: 14px; font-weight: bold; color: #e11d48; }
+.big-prize-tag { font-size: 11px; color: #f59e0b; font-weight: bold; margin-bottom: 12px; }
 
-.streak-text { font-size: 14px; color: #4b5563; font-weight: bold; margin-bottom: 8px; flex-direction: row; }
+.streak-text { font-size: 14px; color: #4b5563; font-weight: bold; margin-bottom: 12px; flex-direction: row; }
 .streak-highlight { color: #ec4899; font-size: 16px; margin: 0 4px; }
-.tip-text { font-size: 11px; color: #9ca3af; margin-bottom: 32px; }
+
+.blind-box-card { width: 100%; background-color: #f9fafb; border-radius: 16px; padding: 16px; align-items: center; margin-bottom: 20px; border-width: 1px; border-style: solid; border-color: #f3f4f6; }
+.blind-box-title { font-size: 13px; font-weight: bold; color: #db2777; margin-bottom: 8px; }
+.blind-box-content { font-size: 13px; color: #374151; text-align: center; line-height: 1.5; }
+.blind-box-author { font-size: 11px; color: #9ca3af; margin-top: 8px; }
+
+.tip-text { font-size: 12px; color: #9ca3af; margin-bottom: 32px; text-align: center; }
 
 .btn-wrap { width: 100%; padding: 0 20px; }
 .primary-btn { background-image: linear-gradient(to right, #ec4899, #f43f5e); padding: 12px 0; border-radius: 24px; align-items: center; box-shadow: 0 8px 20px rgba(236,72,153,0.3); }

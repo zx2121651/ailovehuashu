@@ -176,6 +176,56 @@ exports.updateUserRole = async (req, res) => {
 };
 
 /**
+ * 每日盲盒：消耗 50 积分，随机抽取奖励
+ */
+exports.openBlindBox = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) return res.status(404).json({ code: 404, message: "用户不存在" });
+
+    const COST = 50;
+    if ((user.points || 0) < COST) {
+      return res.status(402).json({ code: 402, message: "积分不足，快去完成任务赚取吧" });
+    }
+
+    // 奖池：prize 为中奖提示，points 为额外积分（可回流 50 造成"保底"体验）
+    const pool = [
+      { prize: '高情商话术包 x1', points: 0 },
+      { prize: '神级开场白 x3', points: 0 },
+      { prize: '导师咨询 9 折券', points: 0 },
+      { prize: '恋爱人格 VIP 深度解析', points: 0 },
+      { prize: '50 积分回流', points: 50, blindBox: { type: 'POINTS', content: '欧气爆棚！额外回馈 50 积分', author: '幸运女神' } },
+      { prize: '终身 Pro 会员（稀有）', points: 200, vip: true }
+    ];
+    const target = pool[Math.floor(Math.random() * pool.length)];
+
+    // 扣减开盒成本 + 发放奖励积分
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: { points: { increment: target.points - COST } }
+    });
+
+    res.json({
+      code: 200,
+      success: true,
+      message: "开启成功",
+      data: {
+        prize: target.prize,
+        earnedPoints: target.points,
+        cost: COST,
+        vipGranted: !!(target.vip),
+        totalPoints: updatedUser.points,
+        blindBox: target.blindBox || null
+      }
+    });
+  } catch (error) {
+    console.error('盲盒开启失败:', error);
+    res.status(500).json({ code: 500, message: "开盒失败，请稍后重试" });
+  }
+};
+
+/**
  * 每日签到 / 开启盲盒
  */
 exports.dailySignIn = async (req, res) => {

@@ -25,5 +25,8 @@ module.exports = router;
 // 每日签到
 router.post('/user/daily-signin', auth, userController.dailySignIn);
 
+// 每日盲盒
+router.post('/user/open-blindbox', auth, userController.openBlindBox);
+
 // 积分兑换 VIP
 router.post('/user/exchange-vip', auth, userController.exchangeVip);

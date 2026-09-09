@@ -41,7 +41,9 @@
 
 <script setup lang="uts">
 import { ref } from 'vue'
+import { onLoad } from '@dcloudio/uni-app'
 import { useAppStore } from '../../store/app.uts'
+import { getUserProfile, openBlindBox } from '../../services/api.uts'
 
 const appStore = useAppStore
 const currentPoints = ref(appStore.userInfo?.points || 1250)
@@ -49,7 +51,17 @@ const isOpening = ref(false)
 const boxOpen = ref(false)
 const rewardText = ref('')
 
-const handleOpenBox = () => {
+onLoad(async () => {
+  try {
+    const profile = await getUserProfile()
+    if (profile) {
+      currentPoints.value = profile.points || currentPoints.value
+      if (appStore.userInfo) appStore.userInfo.points = currentPoints.value
+    }
+  } catch (e) {}
+})
+
+const handleOpenBox = async () => {
   if (currentPoints.value < 50) {
     appStore.showToast('积分不足，快去完成任务赚取吧！')
     return
@@ -57,23 +69,32 @@ const handleOpenBox = () => {
 
   isOpening.value = true
 
-  // 模拟抽奖请求延迟
-  setTimeout(() => {
+  try {
+    const res = await openBlindBox()
+    isOpening.value = false
+    boxOpen.value = true
+    if (res && res.data) {
+      currentPoints.value = res.data.totalPoints
+      rewardText.value = res.data.vipGranted
+        ? `🏆 ${res.data.prize}`
+        : (res.data.blindBox ? `${res.data.blindBox.content}｜${res.data.prize}` : res.data.prize)
+      if (res.data.vipGranted) appStore.showToast('恭喜中得终身会员！')
+    } else {
+      appStore.showToast((res && res.message) || '开盒失败，请稍后重试')
+    }
+  } catch (e) {
+    // 本地兜底演示
     isOpening.value = false
     boxOpen.value = true
     currentPoints.value -= 50
-    // 更新全局状态的模拟
-    if (appStore.userInfo) {
-      appStore.userInfo.points = currentPoints.value
-    }
+    const rewards = ['高情商话术包 x1', '50 积分回流', '导师咨询优惠券', '神级开场白 x3']
+    rewardText.value = rewards[Math.floor(Math.random() * rewards.length)]
+  }
 
-    // 随机一个结果
-    const rewards = ['高情商话术包 x1', '200 积分', '导师咨询优惠券', '神级开场白 x3']
-    const randomIdx = Math.floor(Math.random() * rewards.length)
-    rewardText.value = rewards[randomIdx]
-
-    appStore.showToast('开启成功！')
-  }, 1500)
+  // 更新全局积分
+  if (appStore.userInfo) {
+    appStore.userInfo.points = currentPoints.value
+  }
 }
 
 const resetBox = () => {
