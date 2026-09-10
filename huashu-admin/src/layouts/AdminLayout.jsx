@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { hasPermission, PERMISSIONS } from '../utils/permissions';
 import {
   LayoutDashboard, Users, BookOpen, MessageSquare, LogOut, Tags,
   Settings, History, ShieldAlert, Image, Megaphone, ReceiptText,
@@ -27,50 +28,50 @@ const AdminLayout = () => {
     }));
   };
 
-  const isMentor = admin?.role === 'MENTOR';
+  const can = (p) => hasPermission(admin, p);
 
-  // 分组导航菜单
+  // 分组导航菜单：按权限点过滤
   const navGroups = [
     {
       name: '核心概览',
       items: [
         { name: '仪表盘', path: '/dashboard', icon: <LayoutDashboard size={18} /> },
-        ...(!isMentor ? [{ name: '系统设置', path: '/settings', icon: <Settings size={18} /> }] : []),
+        ...(can(PERMISSIONS.SYSTEM_MANAGE) ? [{ name: '系统设置', path: '/settings', icon: <Settings size={18} /> }] : []),
       ]
     },
     {
       name: '用户与分销',
       items: [
-        ...(!isMentor ? [{ name: '用户管理', path: '/users', icon: <Users size={18} /> }] : []),
-        ...(!isMentor ? [{ name: '分销商管理', path: '/distributors', icon: <Network size={18} /> }] : []),
-        ...(!isMentor ? [{ name: '提现审核', path: '/withdrawals', icon: <Wallet size={18} /> }] : []),
-        ...(!isMentor ? [{ name: '订单管理', path: '/orders', icon: <ReceiptText size={18} /> }] : []),
-      ].filter(Boolean)
+        ...(can(PERMISSIONS.USER_VIEW) ? [{ name: '用户管理', path: '/users', icon: <Users size={18} /> }] : []),
+        ...(can(PERMISSIONS.COMMISSION_REVIEW) ? [{ name: '分销商管理', path: '/distributors', icon: <Network size={18} /> }] : []),
+        ...(can(PERMISSIONS.COMMISSION_REVIEW) ? [{ name: '提现审核', path: '/withdrawals', icon: <Wallet size={18} /> }] : []),
+        ...(can(PERMISSIONS.ORDER_VIEW) ? [{ name: '订单管理', path: '/orders', icon: <ReceiptText size={18} /> }] : []),
+      ]
     },
     {
       name: '内容运营',
       items: [
         { name: '话术库管理', path: '/content', icon: <BookOpen size={18} /> },
-        ...(!isMentor ? [{ name: '悬浮窗话术', path: '/float-scripts', icon: <Sparkles size={18} /> }] : []),
-        ...(!isMentor ? [{ name: '盲盒管理', path: '/blind-box', icon: <Gift size={18} /> }] : []),
+        ...(can(PERMISSIONS.OPS_MANAGE) ? [{ name: '悬浮窗话术', path: '/float-scripts', icon: <Sparkles size={18} /> }] : []),
+        ...(can(PERMISSIONS.OPS_MANAGE) ? [{ name: '盲盒管理', path: '/blind-box', icon: <Gift size={18} /> }] : []),
         { name: '互动故事', path: '/interactive-stories', icon: <Drama size={18} /> },
         { name: '课程管理', path: '/courses', icon: <GraduationCap size={18} /> },
         { name: '话术分类管理', path: '/categories', icon: <Tags size={18} /> },
         { name: '话术标签管理', path: '/script-tags', icon: <Tags size={18} /> },
-        ...(!isMentor ? [{ name: '运营轮播图', path: '/banners', icon: <Image size={18} /> }] : []),
+        ...(can(PERMISSIONS.OPS_MANAGE) ? [{ name: '运营轮播图', path: '/banners', icon: <Image size={18} /> }] : []),
       ]
     },
     {
       name: '审核与互动',
       items: [
-        { name: 'UGC 审核', path: '/ugc', icon: <MessageSquare size={18} /> },
-        { name: '社区分类管理', path: '/community-categories', icon: <Tags size={18} /> },
-        { name: '社区动态墙', path: '/posts', icon: <Rss size={18} /> },
-        { name: '评论管理', path: '/comments', icon: <MessageCircle size={18} /> },
+        ...(can(PERMISSIONS.UGC_REVIEW) ? [{ name: 'UGC 审核', path: '/ugc', icon: <MessageSquare size={18} /> }] : []),
+        ...(can(PERMISSIONS.CONTENT_MODERATE) ? [{ name: '社区分类管理', path: '/community-categories', icon: <Tags size={18} /> }] : []),
+        ...(can(PERMISSIONS.CONTENT_MODERATE) ? [{ name: '社区动态墙', path: '/posts', icon: <Rss size={18} /> }] : []),
+        ...(can(PERMISSIONS.CONTENT_MODERATE) ? [{ name: '评论管理', path: '/comments', icon: <MessageCircle size={18} /> }] : []),
         { name: '用户反馈', path: '/feedback', icon: <Megaphone size={18} /> },
       ]
     },
-    ...(!isMentor ? [{
+    ...(can(PERMISSIONS.SYSTEM_MANAGE) ? [{
       name: '系统安全',
       items: [
         { name: '消息推送', path: '/notifications', icon: <Bell size={18} /> },
@@ -190,7 +191,7 @@ const AdminLayout = () => {
             </div>
             <div className="truncate flex-1">
               <div className="text-sm font-bold text-slate-800 truncate group-hover:text-indigo-700 transition-colors">{admin?.username || 'Super Admin'}</div>
-              <div className="text-xs text-slate-500 font-medium tracking-wide">{isMentor ? '系统导师' : '高级系统管理员'}</div>
+              <div className="text-xs text-slate-500 font-medium tracking-wide">{admin?.role === 'MENTOR' ? '系统导师' : '管理员'}</div>
             </div>
           </div>
           <button

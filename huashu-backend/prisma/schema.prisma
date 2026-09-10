@@ -16,6 +16,7 @@ model Admin {
   name      String?
   password  String
   role      String    @default("admin") // superadmin, admin, editor, reviewer
+  permissions String?  // 细粒度权限点数组 JSON;为空则按 role 的默认权限
   status    String    @default("ACTIVE") // ACTIVE, INACTIVE
   lastLogin DateTime?
   createdAt DateTime  @default(now())

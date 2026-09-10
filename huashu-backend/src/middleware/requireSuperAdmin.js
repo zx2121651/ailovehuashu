@@ -1,8 +1,4 @@
-const requireSuperAdmin = (req, res, next) => {
-  if (!req.admin || req.admin.role === 'MENTOR') {
-    return res.status(403).json({ success: false, message: 'Access denied: Requires superadmin privileges' });
-  }
-  next();
-};
+const requireSuperAdmin = require('./requireSystemManage');
 
+// 兼容旧调用方：requireSuperAdmin 等价于要求系统管理权限
 module.exports = requireSuperAdmin;

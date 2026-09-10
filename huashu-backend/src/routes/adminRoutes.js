@@ -3,6 +3,9 @@ const router = express.Router();
 
 const adminAuth = require('../middleware/adminAuth');
 const requireSuperAdmin = require('../middleware/requireSuperAdmin');
+const requirePermission = require('../middleware/requirePermission');
+const requireSystemManage = require('../middleware/requireSystemManage');
+const { PERMISSIONS } = require('../constants/permissions');
 const authController = require('../controllers/admin/authController');
 const statController = require('../controllers/admin/statController');
 const userController = require('../controllers/admin/userController');
@@ -28,29 +31,29 @@ router.get('/me', adminAuth, authController.getMe);
 router.get('/stats', adminAuth, statController.getDashboardStats);
 
 // --- User Management ---
-router.get('/users', adminAuth, requireSuperAdmin, userController.getUsers);
-router.put('/users/:id', adminAuth, requireSuperAdmin, userController.updateUser);
-router.delete('/users/:id', adminAuth, requireSuperAdmin, userController.deleteUser);
+router.get('/users', adminAuth, requirePermission(PERMISSIONS.USER_VIEW), userController.getUsers);
+router.put('/users/:id', adminAuth, requirePermission(PERMISSIONS.USER_EDIT), userController.updateUser);
+router.delete('/users/:id', adminAuth, requirePermission(PERMISSIONS.USER_DELETE), userController.deleteUser);
 
 // --- Content Management ---
 // Categories
 router.get('/categories', adminAuth, contentController.getCategories);
-router.post('/categories', adminAuth, requireSuperAdmin, contentController.createCategory);
-router.put('/categories/:id', adminAuth, requireSuperAdmin, contentController.updateCategory);
-router.delete('/categories/:id', adminAuth, requireSuperAdmin, contentController.deleteCategory);
+router.post('/categories', adminAuth, requirePermission(PERMISSIONS.CONTENT_CREATE), contentController.createCategory);
+router.put('/categories/:id', adminAuth, requirePermission(PERMISSIONS.CONTENT_EDIT), contentController.updateCategory);
+router.delete('/categories/:id', adminAuth, requirePermission(PERMISSIONS.CONTENT_DELETE), contentController.deleteCategory);
 
 // Scripts
 router.get('/scripts', adminAuth, contentController.getScripts);
-router.post('/scripts', adminAuth, contentController.createScript);
-router.put('/scripts/:id', adminAuth, contentController.updateScript);
-router.delete('/scripts/:id', adminAuth, requireSuperAdmin, contentController.deleteScript);
+router.post('/scripts', adminAuth, requirePermission(PERMISSIONS.CONTENT_CREATE), contentController.createScript);
+router.put('/scripts/:id', adminAuth, requirePermission(PERMISSIONS.CONTENT_EDIT), contentController.updateScript);
+router.delete('/scripts/:id', adminAuth, requirePermission(PERMISSIONS.CONTENT_DELETE), contentController.deleteScript);
 
 // --- UGC Management ---
 router.get('/contributions', adminAuth, ugcController.getContributions);
-router.post('/contributions/:id/review', adminAuth, ugcController.reviewContribution);
+router.post('/contributions/:id/review', adminAuth, requirePermission(PERMISSIONS.UGC_REVIEW), ugcController.reviewContribution);
 
 // --- Orders Management ---
-router.get('/orders', adminAuth, requireSuperAdmin, orderController.getOrders);
+router.get('/orders', adminAuth, requirePermission(PERMISSIONS.ORDER_VIEW), orderController.getOrders);
 
 // --- Notifications Management ---
 router.get('/notifications', adminAuth, notificationController.getNotifications);
@@ -69,10 +72,12 @@ router.put('/feedbacks/:id/reply', adminAuth, feedbackController.replyFeedback);
 router.delete('/feedbacks/:id', adminAuth, requireSuperAdmin, feedbackController.deleteFeedback);
 
 // --- Admins Management ---
-router.get('/admins', adminAuth, requireSuperAdmin, adminManagementController.getAdmins);
-router.post('/admins', adminAuth, requireSuperAdmin, adminManagementController.createAdmin);
-router.put('/admins/:id', adminAuth, requireSuperAdmin, adminManagementController.updateAdmin);
-router.delete('/admins/:id', adminAuth, requireSuperAdmin, adminManagementController.deleteAdmin);
+// 权限定义接口，需系统管理权限
+router.get('/permissions-definitions', adminAuth, requireSystemManage, adminManagementController.getPermissionDefinitions);
+router.get('/admins', adminAuth, requireSystemManage, adminManagementController.getAdmins);
+router.post('/admins', adminAuth, requireSystemManage, adminManagementController.createAdmin);
+router.put('/admins/:id', adminAuth, requireSystemManage, adminManagementController.updateAdmin);
+router.delete('/admins/:id', adminAuth, requireSystemManage, adminManagementController.deleteAdmin);
 
 // --- System Logs ---
 router.get('/logs', adminAuth, requireSuperAdmin, logController.getLogs);
