@@ -1,4 +1,5 @@
 const prisma = require('../../utils/prisma');
+const auditLog = require('../../utils/auditLogger');
 
 /**
  * 获取所有排序标签
@@ -51,6 +52,7 @@ const createScriptSortTab = async (req, res) => {
       message: '创建成功',
       data: tab
     });
+    auditLog({ admin: req.admin, action: 'CREATE', module: 'SCRIPT_TAG', detail: `新增排序标签：${label || key || ''}`, req });
   } catch (error) {
     console.error('创建排序标签失败:', error);
     res.status(500).json({ code: 500, success: false, message: '服务器错误' });
@@ -91,6 +93,7 @@ const updateScriptSortTab = async (req, res) => {
       message: '更新成功',
       data: tab
     });
+    auditLog({ admin: req.admin, action: 'UPDATE', module: 'SCRIPT_TAG', detail: `编辑排序标签 #${id}`, req });
   } catch (error) {
     console.error('更新排序标签失败:', error);
     res.status(500).json({ code: 500, success: false, message: '服务器错误' });
@@ -113,6 +116,7 @@ const deleteScriptSortTab = async (req, res) => {
       success: true,
       message: '删除成功'
     });
+    auditLog({ admin: req.admin, action: 'DELETE', module: 'SCRIPT_TAG', detail: `删除排序标签 #${id}`, req });
   } catch (error) {
     console.error('删除排序标签失败:', error);
     res.status(500).json({ code: 500, success: false, message: '服务器错误' });
@@ -188,6 +192,7 @@ const createCategoryTag = async (req, res) => {
       message: '创建成功',
       data: tag
     });
+    auditLog({ admin: req.admin, action: 'CREATE', module: 'SCRIPT_TAG', detail: `新增分类标签：${name || ''}（分类 #${categoryId}）`, req });
   } catch (error) {
     console.error('创建分类标签失败:', error);
     res.status(500).json({ code: 500, success: false, message: '服务器错误' });
@@ -216,6 +221,7 @@ const updateCategoryTag = async (req, res) => {
       message: '更新成功',
       data: tag
     });
+    auditLog({ admin: req.admin, action: 'UPDATE', module: 'SCRIPT_TAG', detail: `编辑分类标签 #${id}`, req });
   } catch (error) {
     console.error('更新分类标签失败:', error);
     res.status(500).json({ code: 500, success: false, message: '服务器错误' });
@@ -238,6 +244,7 @@ const deleteCategoryTag = async (req, res) => {
       success: true,
       message: '删除成功'
     });
+    auditLog({ admin: req.admin, action: 'DELETE', module: 'SCRIPT_TAG', detail: `删除分类标签 #${id}`, req });
   } catch (error) {
     console.error('删除分类标签失败:', error);
     res.status(500).json({ code: 500, success: false, message: '服务器错误' });

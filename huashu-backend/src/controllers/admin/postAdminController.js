@@ -1,4 +1,5 @@
 const prisma = require('../../utils/prisma');
+const auditLog = require('../../utils/auditLogger');
 
 // 获取所有帖子 (管理端)
 exports.getPosts = async (req, res) => {
@@ -92,6 +93,7 @@ exports.createPost = async (req, res) => {
       }
     });
 
+    auditLog({ admin: req.admin, action: 'CREATE', module: 'POST', detail: `发布帖子 #${newPost.id}（${(content || '').slice(0, 30)}）`, req });
     res.json({ success: true, data: newPost, message: 'Post created successfully' });
   } catch (error) {
     console.error('Admin create post error:', error);
@@ -123,6 +125,7 @@ exports.updatePost = async (req, res) => {
       data
     });
 
+    auditLog({ admin: req.admin, action: 'UPDATE', module: 'POST', detail: `编辑帖子 #${id}（${Object.keys(data).join(', ') || '无字段'}）`, req });
     res.json({ success: true, data: post, message: 'Post updated successfully' });
   } catch (error) {
     console.error('Admin update post error:', error);
@@ -146,6 +149,7 @@ exports.updatePostStatus = async (req, res) => {
       data: { status }
     });
 
+    auditLog({ admin: req.admin, action: 'UPDATE', module: 'POST', detail: `帖子 #${id} 状态改为 ${status}`, req });
     res.json({ success: true, data: post });
   } catch (error) {
     console.error('Admin update post error:', error);
@@ -158,6 +162,7 @@ exports.deletePost = async (req, res) => {
   try {
     const { id } = req.params;
     await prisma.post.delete({ where: { id: parseInt(id) } });
+    auditLog({ admin: req.admin, action: 'DELETE', module: 'POST', detail: `彻底删除帖子 #${id}`, req });
     res.json({ success: true, message: 'Post deleted successfully' });
   } catch (error) {
     console.error('Admin delete post error:', error);

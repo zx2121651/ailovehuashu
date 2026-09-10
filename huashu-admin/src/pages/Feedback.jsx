@@ -2,6 +2,8 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { Search, Filter, MessageSquare, CheckCircle, Clock, Trash2, X, Send, Download } from 'lucide-react';
 import { exportToCSV } from '../utils/exportCSV';
 import { useAuth } from '../context/AuthContext';
+import { PERMISSIONS } from '../utils/permissions';
+import PermissionGuard from '../components/PermissionGuard';
 
 const mockFeedback = [
   { id: 1, userId: '1024', userName: '用户A', type: 'BUG', content: '打开话术详情页闪退', status: 'PENDING', createTime: '2023-10-25 14:30:22', images: [] },
@@ -201,18 +203,22 @@ const Feedback = () => {
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity">
                       {item.status === 'PENDING' && (
                         <>
-                          <button
-                            onClick={() => handleOpenModal(item)}
-                            className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg mr-1 transition-colors" title="回复"
-                          >
-                            <MessageSquare size={16} />
-                          </button>
-                          <button
-                            onClick={() => handleIgnore(item.id)}
-                            className="p-1.5 text-slate-500 hover:bg-slate-100 rounded-lg mr-2 transition-colors" title="忽略"
-                          >
-                            <X size={16} />
-                          </button>
+                          <PermissionGuard permission={PERMISSIONS.OPS_MANAGE}>
+                            <button
+                              onClick={() => handleOpenModal(item)}
+                              className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg mr-1 transition-colors" title="回复"
+                            >
+                              <MessageSquare size={16} />
+                            </button>
+                          </PermissionGuard>
+                          <PermissionGuard permission={PERMISSIONS.OPS_MANAGE}>
+                            <button
+                              onClick={() => handleIgnore(item.id)}
+                              className="p-1.5 text-slate-500 hover:bg-slate-100 rounded-lg mr-2 transition-colors" title="忽略"
+                            >
+                              <X size={16} />
+                            </button>
+                          </PermissionGuard>
                         </>
                       )}
                       {item.status === 'REPLIED' && (
@@ -223,12 +229,14 @@ const Feedback = () => {
                             <Search size={16} />
                         </button>
                       )}
-                      <button
-                        onClick={() => handleDelete(item.id)}
-                        className="p-1.5 text-rose-600 hover:bg-rose-50 rounded-lg transition-colors" title="删除"
-                      >
-                        <Trash2 size={16} />
-                      </button>
+                      <PermissionGuard permission={PERMISSIONS.OPS_MANAGE}>
+                        <button
+                          onClick={() => handleDelete(item.id)}
+                          className="p-1.5 text-rose-600 hover:bg-rose-50 rounded-lg transition-colors" title="删除"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </PermissionGuard>
                     </td>
                   </tr>
                 ))

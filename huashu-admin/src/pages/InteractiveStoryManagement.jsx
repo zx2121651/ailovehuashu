@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Plus, Edit, Trash2, ListTree, Save, X, ChevronRight, ChevronDown, Sparkles, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { PERMISSIONS } from '../utils/permissions';
+import PermissionGuard from '../components/PermissionGuard';
 
 const API_BASE_URL = '/api/v1/admin'; // TODO: env variable
 
@@ -193,18 +195,22 @@ function InteractiveStoryManagement() {
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold text-gray-900">情感互动剧本管理</h1>
         <div className="flex space-x-3">
-          <button
-            onClick={() => setShowAiModal(true)}
-            className="bg-gradient-to-r from-indigo-500 to-purple-500 text-white px-4 py-2 rounded-lg hover:from-indigo-600 hover:to-purple-600 flex items-center shadow-sm"
-          >
-            <Sparkles className="w-4 h-4 mr-2" /> AI 一键生成剧本
-          </button>
-          <button
-            onClick={() => { setEditingStory(null); setShowStoryModal(true); }}
-            className="bg-rose-500 text-white px-4 py-2 rounded-lg hover:bg-rose-600 flex items-center shadow-sm"
-          >
-            <Plus className="w-4 h-4 mr-2" /> 手动新增
-          </button>
+          <PermissionGuard permission={PERMISSIONS.STORY_CREATE}>
+            <button
+              onClick={() => setShowAiModal(true)}
+              className="bg-gradient-to-r from-indigo-500 to-purple-500 text-white px-4 py-2 rounded-lg hover:from-indigo-600 hover:to-purple-600 flex items-center shadow-sm"
+            >
+              <Sparkles className="w-4 h-4 mr-2" /> AI 一键生成剧本
+            </button>
+          </PermissionGuard>
+          <PermissionGuard permission={PERMISSIONS.STORY_CREATE}>
+            <button
+              onClick={() => { setEditingStory(null); setShowStoryModal(true); }}
+              className="bg-rose-500 text-white px-4 py-2 rounded-lg hover:bg-rose-600 flex items-center shadow-sm"
+            >
+              <Plus className="w-4 h-4 mr-2" /> 手动新增
+            </button>
+          </PermissionGuard>
         </div>
       </div>
 
@@ -236,8 +242,12 @@ function InteractiveStoryManagement() {
                     </div>
                   </div>
                   <div className="flex space-x-2">
-                    <button onClick={(e) => { e.stopPropagation(); setEditingStory(story); setShowStoryModal(true); }} className="p-1 text-gray-400 hover:text-blue-500"><Edit className="w-4 h-4" /></button>
-                    <button onClick={(e) => { e.stopPropagation(); handleDeleteStory(story.id); }} className="p-1 text-gray-400 hover:text-red-500"><Trash2 className="w-4 h-4" /></button>
+                    <PermissionGuard permission={PERMISSIONS.STORY_EDIT}>
+                      <button onClick={(e) => { e.stopPropagation(); setEditingStory(story); setShowStoryModal(true); }} className="p-1 text-gray-400 hover:text-blue-500"><Edit className="w-4 h-4" /></button>
+                    </PermissionGuard>
+                    <PermissionGuard permission={PERMISSIONS.STORY_DELETE}>
+                      <button onClick={(e) => { e.stopPropagation(); handleDeleteStory(story.id); }} className="p-1 text-gray-400 hover:text-red-500"><Trash2 className="w-4 h-4" /></button>
+                    </PermissionGuard>
                   </div>
                 </div>
               </div>
@@ -251,12 +261,14 @@ function InteractiveStoryManagement() {
             <>
               <div className="p-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
                 <span className="font-medium">[{selectedStory.title}] 的节点关系图</span>
-                <button
-                  onClick={() => { setEditingNode(null); setShowNodeModal(true); }}
-                  className="text-rose-500 text-sm font-medium hover:text-rose-600 flex items-center"
-                >
-                  <Plus className="w-4 h-4 mr-1" /> 添加节点
-                </button>
+                <PermissionGuard permission={PERMISSIONS.STORY_EDIT}>
+                  <button
+                    onClick={() => { setEditingNode(null); setShowNodeModal(true); }}
+                    className="text-rose-500 text-sm font-medium hover:text-rose-600 flex items-center"
+                  >
+                    <Plus className="w-4 h-4 mr-1" /> 添加节点
+                  </button>
+                </PermissionGuard>
               </div>
               <div className="p-4 overflow-y-auto flex-1 space-y-4">
                 {nodes.length === 0 ? (
@@ -270,13 +282,17 @@ function InteractiveStoryManagement() {
                           <h4 className="font-bold text-gray-800">{node.name || '未命名节点'} {node.isEnd && <span className="ml-2 text-xs bg-red-100 text-red-600 px-2 py-1 rounded">结局节点</span>}</h4>
                         </div>
                         <div className="flex space-x-2">
-                          <button onClick={() => { setEditingNode(node); setShowNodeModal(true); }} className="text-gray-400 hover:text-blue-500"><Edit className="w-4 h-4" /></button>
-                          <button onClick={async () => {
-                              if(window.confirm('删除节点?')) {
-                                  await fetch(`${API_BASE_URL}/interactive-story-nodes/${node.id}`, { method:'DELETE', headers});
-                                  fetchNodes(selectedStory.id);
-                              }
-                          }} className="text-gray-400 hover:text-red-500"><Trash2 className="w-4 h-4" /></button>
+                          <PermissionGuard permission={PERMISSIONS.STORY_EDIT}>
+                            <button onClick={() => { setEditingNode(node); setShowNodeModal(true); }} className="text-gray-400 hover:text-blue-500"><Edit className="w-4 h-4" /></button>
+                          </PermissionGuard>
+                          <PermissionGuard permission={PERMISSIONS.STORY_DELETE}>
+                            <button onClick={async () => {
+                                if(window.confirm('删除节点?')) {
+                                    await fetch(`${API_BASE_URL}/interactive-story-nodes/${node.id}`, { method:'DELETE', headers});
+                                    fetchNodes(selectedStory.id);
+                                }
+                            }} className="text-gray-400 hover:text-red-500"><Trash2 className="w-4 h-4" /></button>
+                          </PermissionGuard>
                         </div>
                       </div>
 
@@ -290,12 +306,14 @@ function InteractiveStoryManagement() {
                         <div className="pl-4 border-l-2 border-rose-200 space-y-2">
                           <div className="text-xs text-gray-500 mb-2 flex items-center justify-between">
                             <span>玩家选项分支：</span>
-                            <button
-                              onClick={() => { setTargetNodeIdForChoice(node.id); setEditingChoice(null); setShowChoiceModal(true); }}
-                              className="text-rose-500 hover:underline flex items-center"
-                            >
-                              <Plus className="w-3 h-3 mr-1" /> 添加选项
-                            </button>
+                            <PermissionGuard permission={PERMISSIONS.STORY_EDIT}>
+                              <button
+                                onClick={() => { setTargetNodeIdForChoice(node.id); setEditingChoice(null); setShowChoiceModal(true); }}
+                                className="text-rose-500 hover:underline flex items-center"
+                              >
+                                <Plus className="w-3 h-3 mr-1" /> 添加选项
+                              </button>
+                            </PermissionGuard>
                           </div>
                           {node.choices?.map(choice => (
                             <div key={choice.id} className="flex items-center justify-between bg-white border border-gray-200 p-2 rounded text-sm">
@@ -311,7 +329,9 @@ function InteractiveStoryManagement() {
                                   </span>
                                 )}
                               </div>
-                              <button onClick={() => { setTargetNodeIdForChoice(node.id); setEditingChoice(choice); setShowChoiceModal(true); }} className="text-gray-400 hover:text-blue-500">修改</button>
+                              <PermissionGuard permission={PERMISSIONS.STORY_EDIT}>
+                                <button onClick={() => { setTargetNodeIdForChoice(node.id); setEditingChoice(choice); setShowChoiceModal(true); }} className="text-gray-400 hover:text-blue-500">修改</button>
+                              </PermissionGuard>
                             </div>
                           ))}
                           {node.choices?.length === 0 && <div className="text-xs text-gray-400 italic">未配置选项，剧情将在此卡住</div>}

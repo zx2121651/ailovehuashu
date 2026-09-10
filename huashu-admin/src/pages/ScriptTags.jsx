@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Tag, Plus, Trash2, Edit2, GripVertical, Save, X, ArrowLeft } from 'lucide-react';
+import { PERMISSIONS } from '../utils/permissions';
+import PermissionGuard from '../components/PermissionGuard';
 
 const ScriptTags = () => {
   const [activeTab, setActiveTab] = useState('sortTabs'); // 'sortTabs' or 'categoryTags'
@@ -287,13 +289,15 @@ const ScriptTags = () => {
               <h3 className="text-lg font-semibold text-slate-800">排序标签</h3>
               <p className="text-sm text-slate-500 mt-1">管理话术库页面的排序选项（最新、最热、推荐）</p>
             </div>
-            <button
-              onClick={() => openSortTabModal()}
-              className="flex items-center px-4 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700 transition-colors"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              添加标签
-            </button>
+            <PermissionGuard permission={PERMISSIONS.CONTENT_CREATE}>
+              <button
+                onClick={() => openSortTabModal()}
+                className="flex items-center px-4 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700 transition-colors"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                添加标签
+              </button>
+            </PermissionGuard>
           </div>
 
           <div className="divide-y divide-slate-100">
@@ -319,18 +323,22 @@ const ScriptTags = () => {
                   </div>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <button
-                    onClick={() => openSortTabModal(tab)}
-                    className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                  >
-                    <Edit2 className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => handleDeleteSortTab(tab.id)}
-                    className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                  <PermissionGuard permission={PERMISSIONS.CONTENT_EDIT}>
+                    <button
+                      onClick={() => openSortTabModal(tab)}
+                      className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                    >
+                      <Edit2 className="w-4 h-4" />
+                    </button>
+                  </PermissionGuard>
+                  <PermissionGuard permission={PERMISSIONS.CONTENT_DELETE}>
+                    <button
+                      onClick={() => handleDeleteSortTab(tab.id)}
+                      className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </PermissionGuard>
                 </div>
               </div>
             ))}
@@ -369,13 +377,15 @@ const ScriptTags = () => {
                 </h3>
                 <p className="text-sm text-slate-500 mt-1">管理该分类下的筛选标签</p>
               </div>
-              <button
-                onClick={() => openCategoryTagModal()}
-                className="flex items-center px-4 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700 transition-colors"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                添加标签
-              </button>
+              <PermissionGuard permission={PERMISSIONS.CONTENT_CREATE}>
+                <button
+                  onClick={() => openCategoryTagModal()}
+                  className="flex items-center px-4 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700 transition-colors"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  添加标签
+                </button>
+              </PermissionGuard>
             </div>
 
             <div className="divide-y divide-slate-100">
@@ -391,18 +401,22 @@ const ScriptTags = () => {
                     </div>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <button
-                      onClick={() => openCategoryTagModal(tag)}
-                      className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                    >
-                      <Edit2 className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => handleDeleteCategoryTag(tag.id)}
-                      className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                    <PermissionGuard permission={PERMISSIONS.CONTENT_EDIT}>
+                      <button
+                        onClick={() => openCategoryTagModal(tag)}
+                        className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </button>
+                    </PermissionGuard>
+                    <PermissionGuard permission={PERMISSIONS.CONTENT_DELETE}>
+                      <button
+                        onClick={() => handleDeleteCategoryTag(tag.id)}
+                        className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </PermissionGuard>
                   </div>
                 </div>
               ))}

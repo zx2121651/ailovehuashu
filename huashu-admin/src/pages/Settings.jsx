@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Settings as SettingsIcon, Save, RefreshCw, AlertCircle, Plus, Trash2, GripVertical } from 'lucide-react';
+import { PERMISSIONS } from '../utils/permissions';
+import PermissionGuard from '../components/PermissionGuard';
 
 const Settings = () => {
   const [activeTab, setActiveTab] = useState('basic');
@@ -202,14 +204,16 @@ const Settings = () => {
           <h2 className="text-3xl font-bold text-slate-800 tracking-tight">系统设置</h2>
           <p className="text-slate-500 mt-2">管理全局配置、积分规则与维护模式。</p>
         </div>
-        <button
-          onClick={handleSave}
-          disabled={loading}
-          className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors shadow-sm shadow-blue-500/30 disabled:opacity-70 disabled:cursor-not-allowed"
-        >
-          {loading ? <RefreshCw className="w-5 h-5 mr-2 animate-spin" /> : <Save className="w-5 h-5 mr-2" />}
-          保存所有设置
-        </button>
+        <PermissionGuard permission={PERMISSIONS.SYSTEM_MANAGE}>
+          <button
+            onClick={handleSave}
+            disabled={loading}
+            className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors shadow-sm shadow-blue-500/30 disabled:opacity-70 disabled:cursor-not-allowed"
+          >
+            {loading ? <RefreshCw className="w-5 h-5 mr-2 animate-spin" /> : <Save className="w-5 h-5 mr-2" />}
+            保存所有设置
+          </button>
+        </PermissionGuard>
       </div>
 
       {toast && (
@@ -537,14 +541,16 @@ const Settings = () => {
           <div className="p-8 space-y-8">
             <div className="flex justify-between items-center border-b border-pink-100 pb-4">
               <h3 className="text-xl font-bold text-pink-600">社区排序标签配置</h3>
-              <button
-                onClick={handleSaveSortTabs}
-                disabled={loading}
-                className="flex items-center px-4 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700 transition-colors shadow-sm shadow-pink-500/30 disabled:opacity-70 disabled:cursor-not-allowed text-sm"
-              >
-                {loading ? <RefreshCw className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
-                保存排序标签
-              </button>
+              <PermissionGuard permission={PERMISSIONS.SYSTEM_MANAGE}>
+                <button
+                  onClick={handleSaveSortTabs}
+                  disabled={loading}
+                  className="flex items-center px-4 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700 transition-colors shadow-sm shadow-pink-500/30 disabled:opacity-70 disabled:cursor-not-allowed text-sm"
+                >
+                  {loading ? <RefreshCw className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
+                  保存排序标签
+                </button>
+              </PermissionGuard>
             </div>
 
             <div className="bg-pink-50 border border-pink-100 p-4 rounded-xl flex items-start text-pink-800 text-sm">

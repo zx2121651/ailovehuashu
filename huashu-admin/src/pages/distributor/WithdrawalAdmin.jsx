@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { Search, Filter, CheckCircle, XCircle } from 'lucide-react';
+import { PERMISSIONS } from '../../utils/permissions';
+import PermissionGuard from '../../components/PermissionGuard';
 
 const WithdrawalAdmin = () => {
   const { token } = useAuth();
@@ -134,20 +136,24 @@ const WithdrawalAdmin = () => {
                     <td className="p-4">
                       {item.status === 'PENDING' ? (
                         <div className="flex justify-center space-x-2">
-                          <button
-                            onClick={() => handleReview(item.id, 'APPROVED')}
-                            className="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded"
-                            title="标记为已打款"
-                          >
-                            <CheckCircle size={18} />
-                          </button>
-                          <button
-                            onClick={() => handleReview(item.id, 'REJECTED')}
-                            className="p-1.5 text-rose-600 hover:bg-rose-50 rounded"
-                            title="驳回申请并退款"
-                          >
-                            <XCircle size={18} />
-                          </button>
+                          <PermissionGuard permission={PERMISSIONS.COMMISSION_REVIEW}>
+                            <button
+                              onClick={() => handleReview(item.id, 'APPROVED')}
+                              className="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded"
+                              title="标记为已打款"
+                            >
+                              <CheckCircle size={18} />
+                            </button>
+                          </PermissionGuard>
+                          <PermissionGuard permission={PERMISSIONS.COMMISSION_REVIEW}>
+                            <button
+                              onClick={() => handleReview(item.id, 'REJECTED')}
+                              className="p-1.5 text-rose-600 hover:bg-rose-50 rounded"
+                              title="驳回申请并退款"
+                            >
+                              <XCircle size={18} />
+                            </button>
+                          </PermissionGuard>
                         </div>
                       ) : (
                         <div className="text-center text-slate-400 text-xs">-</div>

@@ -2,6 +2,8 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { Search, Edit, Trash2, Plus, Image as ImageIcon, Link as LinkIcon, Calendar, CheckCircle, XCircle } from 'lucide-react';
 import { exportToCSV } from '../utils/exportCSV';
 import { useAuth } from '../context/AuthContext';
+import { PERMISSIONS } from '../utils/permissions';
+import PermissionGuard from '../components/PermissionGuard';
 
 const mockBanners = [
   { id: 1, title: '七夕节限时活动', type: 'BANNER', targetUrl: '/pages/activity/qixi', imageUrl: 'https://images.unsplash.com/photo-1518199266791-5375a83190b7?auto=format&fit=crop&q=80&w=400&h=200', sortOrder: 1, status: 'ACTIVE', startTime: '2023-08-20', endTime: '2023-08-25' },
@@ -136,15 +138,17 @@ const Banners = () => {
             />
           </div>
 
-          <button
-            onClick={() => handleOpenModal()}
-            className="flex-shrink-0 flex items-center justify-center space-x-2 bg-blue-600 text-white px-5 py-2.5 rounded-xl hover:bg-blue-700 transition-colors shadow-sm shadow-blue-500/20"
-          >
-            <Plus size={18} />
-            <span className="text-sm font-medium hidden sm:inline">
-              新增{activeTab === 'BANNER' ? '轮播' : '公告'}
-            </span>
-          </button>
+          <PermissionGuard permission={PERMISSIONS.OPS_MANAGE}>
+            <button
+              onClick={() => handleOpenModal()}
+              className="flex-shrink-0 flex items-center justify-center space-x-2 bg-blue-600 text-white px-5 py-2.5 rounded-xl hover:bg-blue-700 transition-colors shadow-sm shadow-blue-500/20"
+            >
+              <Plus size={18} />
+              <span className="text-sm font-medium hidden sm:inline">
+                新增{activeTab === 'BANNER' ? '轮播' : '公告'}
+              </span>
+            </button>
+          </PermissionGuard>
         </div>
       </div>
 
@@ -197,19 +201,25 @@ const Banners = () => {
               <div className="flex items-center justify-between pt-3 border-t border-slate-50">
                 <span className="text-xs text-slate-400 font-mono bg-slate-50 px-2 py-0.5 rounded">排序: {item.sortOrder}</span>
                 <div className="flex space-x-1">
-                  <button
-                    onClick={() => toggleStatus(item.id, item.status)}
-                    className={`p-1.5 rounded-lg transition-colors ${item.status === 'ACTIVE' ? 'text-amber-500 hover:bg-amber-50' : 'text-emerald-500 hover:bg-emerald-50'}`}
-                    title={item.status === 'ACTIVE' ? '下线' : '上线'}
-                  >
-                    {item.status === 'ACTIVE' ? <XCircle size={16} /> : <CheckCircle size={16} />}
-                  </button>
-                  <button onClick={() => handleOpenModal(item)} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="编辑">
-                    <Edit size={16} />
-                  </button>
-                  <button onClick={() => handleDelete(item.id)} className="p-1.5 text-rose-600 hover:bg-rose-50 rounded-lg transition-colors" title="删除">
-                    <Trash2 size={16} />
-                  </button>
+                  <PermissionGuard permission={PERMISSIONS.OPS_MANAGE}>
+                    <button
+                      onClick={() => toggleStatus(item.id, item.status)}
+                      className={`p-1.5 rounded-lg transition-colors ${item.status === 'ACTIVE' ? 'text-amber-500 hover:bg-amber-50' : 'text-emerald-500 hover:bg-emerald-50'}`}
+                      title={item.status === 'ACTIVE' ? '下线' : '上线'}
+                    >
+                      {item.status === 'ACTIVE' ? <XCircle size={16} /> : <CheckCircle size={16} />}
+                    </button>
+                  </PermissionGuard>
+                  <PermissionGuard permission={PERMISSIONS.OPS_MANAGE}>
+                    <button onClick={() => handleOpenModal(item)} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="编辑">
+                      <Edit size={16} />
+                    </button>
+                  </PermissionGuard>
+                  <PermissionGuard permission={PERMISSIONS.OPS_MANAGE}>
+                    <button onClick={() => handleDelete(item.id)} className="p-1.5 text-rose-600 hover:bg-rose-50 rounded-lg transition-colors" title="删除">
+                      <Trash2 size={16} />
+                    </button>
+                  </PermissionGuard>
                 </div>
               </div>
             </div>

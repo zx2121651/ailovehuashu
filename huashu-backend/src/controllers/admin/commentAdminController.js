@@ -1,4 +1,5 @@
 const prisma = require('../../utils/prisma');
+const auditLog = require('../../utils/auditLogger');
 
 // 获取所有评论（分页、搜索、过滤）
 exports.getComments = async (req, res) => {
@@ -65,6 +66,7 @@ exports.updateCommentStatus = async (req, res) => {
       where: { id: parseInt(id) },
       data: { status }
     });
+    auditLog({ admin: req.admin, action: 'UPDATE', module: 'COMMENT', detail: `评论 #${id} 状态改为 ${status}`, req });
 
     res.json({ success: true, data: comment });
   } catch (error) {
@@ -78,6 +80,7 @@ exports.deleteComment = async (req, res) => {
   try {
     const { id } = req.params;
     await prisma.comment.delete({ where: { id: parseInt(id) } });
+    auditLog({ admin: req.admin, action: 'DELETE', module: 'COMMENT', detail: `彻底删除评论 #${id}`, req });
     res.json({ success: true, message: 'Comment deleted successfully' });
   } catch (error) {
     console.error('Admin delete comment error:', error);

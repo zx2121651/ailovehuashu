@@ -1,5 +1,6 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
+const auditLog = require('../../utils/auditLogger');
 
 const getBanners = async (req, res) => {
   try {
@@ -37,6 +38,7 @@ const createBanner = async (req, res) => {
       message: '创建横幅成功',
       data: banner
     });
+    auditLog({ admin: req.admin, action: 'CREATE', module: 'BANNER', detail: `新增${type === 'ANNOUNCEMENT' ? '公告' : '轮播'}：${title || ''}`, req });
   } catch (error) {
     console.error('创建横幅失败:', error);
     res.status(500).json({ code: 500, success: false, message: '服务器错误' });
@@ -63,6 +65,7 @@ const updateBanner = async (req, res) => {
       message: '更新横幅成功',
       data: banner
     });
+    auditLog({ admin: req.admin, action: 'UPDATE', module: 'BANNER', detail: `编辑${type === 'ANNOUNCEMENT' ? '公告' : '轮播'} #${id}`, req });
   } catch (error) {
     console.error('更新横幅失败:', error);
     res.status(500).json({ code: 500, success: false, message: '服务器错误' });
@@ -81,6 +84,7 @@ const deleteBanner = async (req, res) => {
       success: true,
       message: '删除横幅成功'
     });
+    auditLog({ admin: req.admin, action: 'DELETE', module: 'BANNER', detail: `删除轮播/公告 #${id}`, req });
   } catch (error) {
     console.error('删除横幅失败:', error);
     res.status(500).json({ code: 500, success: false, message: '服务器错误' });

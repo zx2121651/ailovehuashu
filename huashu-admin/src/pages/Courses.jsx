@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Pencil, Trash2, Plus, CheckCircle, XCircle, Search, ToggleLeft, ToggleRight, Loader } from 'lucide-react';
+import { PERMISSIONS } from '../utils/permissions';
+import PermissionGuard from '../components/PermissionGuard';
 
 const Courses = () => {
   const { token } = useAuth();
@@ -144,13 +146,15 @@ const Courses = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center bg-white p-5 rounded-2xl shadow-sm border border-slate-100">
         <h2 className="text-xl font-bold text-slate-800">课程管理</h2>
-        <button
-          onClick={() => handleOpenModal()}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl flex items-center transition-colors shadow-sm shadow-blue-600/20"
-        >
-          <Plus size={18} className="mr-2" />
-          新增课程
-        </button>
+        <PermissionGuard permission={PERMISSIONS.COURSE_CREATE}>
+          <button
+            onClick={() => handleOpenModal()}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl flex items-center transition-colors shadow-sm shadow-blue-600/20"
+          >
+            <Plus size={18} className="mr-2" />
+            新增课程
+          </button>
+        </PermissionGuard>
       </div>
 
       <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100">
@@ -205,22 +209,28 @@ const Courses = () => {
                       )}
                     </td>
                     <td className="p-4">
-                      <button
-                        onClick={() => toggleRecommend(course.id, course.isRecommended)}
-                        className={`flex items-center space-x-1 ${course.isRecommended ? 'text-green-600' : 'text-slate-400'}`}
-                      >
-                        {course.isRecommended ? <ToggleRight size={24} /> : <ToggleLeft size={24} />}
-                        <span className="text-sm">{course.isRecommended ? '推荐中' : '未推荐'}</span>
-                      </button>
+                      <PermissionGuard permission={PERMISSIONS.COURSE_EDIT}>
+                        <button
+                          onClick={() => toggleRecommend(course.id, course.isRecommended)}
+                          className={`flex items-center space-x-1 ${course.isRecommended ? 'text-green-600' : 'text-slate-400'}`}
+                        >
+                          {course.isRecommended ? <ToggleRight size={24} /> : <ToggleLeft size={24} />}
+                          <span className="text-sm">{course.isRecommended ? '推荐中' : '未推荐'}</span>
+                        </button>
+                      </PermissionGuard>
                     </td>
                     <td className="p-4">
                       <div className="flex space-x-3">
-                        <button onClick={() => handleOpenModal(course)} className="text-blue-600 hover:text-blue-800 transition-colors" title="编辑">
-                          <Pencil size={18} />
-                        </button>
-                        <button onClick={() => handleDelete(course.id)} className="text-rose-500 hover:text-rose-700 transition-colors" title="删除">
-                          <Trash2 size={18} />
-                        </button>
+                        <PermissionGuard permission={PERMISSIONS.COURSE_EDIT}>
+                          <button onClick={() => handleOpenModal(course)} className="text-blue-600 hover:text-blue-800 transition-colors" title="编辑">
+                            <Pencil size={18} />
+                          </button>
+                        </PermissionGuard>
+                        <PermissionGuard permission={PERMISSIONS.COURSE_DELETE}>
+                          <button onClick={() => handleDelete(course.id)} className="text-rose-500 hover:text-rose-700 transition-colors" title="删除">
+                            <Trash2 size={18} />
+                          </button>
+                        </PermissionGuard>
                       </div>
                     </td>
                   </tr>

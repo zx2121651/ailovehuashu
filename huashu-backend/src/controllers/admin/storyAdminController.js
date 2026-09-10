@@ -1,5 +1,6 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
+const auditLog = require('../../utils/auditLogger');
 
 // === 剧本管理 ===
 exports.getStories = async (req, res) => {
@@ -20,6 +21,7 @@ exports.createStory = async (req, res) => {
         const story = await prisma.interactiveStory.create({
             data: { title, description, coverImage, category, authorName, difficulty: difficulty ? parseInt(difficulty) : 1, isPremium, pointsRequired, status }
         });
+        auditLog({ admin: req.admin, action: 'CREATE', module: 'STORY', detail: `新增剧本 #${story.id}：${title || ''}`, req });
         res.json({ success: true, data: story });
     } catch (error) {
         res.status(500).json({ success: false, message: '创建剧本失败' });
@@ -31,6 +33,7 @@ exports.updateStory = async (req, res) => {
         const { id } = req.params;
         const data = { ...req.body }; if(data.difficulty) data.difficulty = parseInt(data.difficulty);
         const story = await prisma.interactiveStory.update({ where: { id: parseInt(id) }, data });
+        auditLog({ admin: req.admin, action: 'UPDATE', module: 'STORY', detail: `编辑剧本 #${id}`, req });
         res.json({ success: true, data: story });
     } catch (error) {
         res.status(500).json({ success: false, message: '更新剧本失败' });
@@ -41,6 +44,7 @@ exports.deleteStory = async (req, res) => {
     try {
         const { id } = req.params;
         await prisma.interactiveStory.delete({ where: { id: parseInt(id) } });
+        auditLog({ admin: req.admin, action: 'DELETE', module: 'STORY', detail: `删除剧本 #${id}`, req });
         res.json({ success: true, message: '删除剧本成功' });
     } catch (error) {
         res.status(500).json({ success: false, message: '删除剧本失败，可能存在关联数据' });
@@ -70,6 +74,7 @@ exports.createNode = async (req, res) => {
         const node = await prisma.storyNode.create({
             data: { storyId: parseInt(storyId), name, content, speakerName, imageUrl, isEnd }
         });
+        auditLog({ admin: req.admin, action: 'CREATE', module: 'STORY_NODE', detail: `为剧本 #${storyId} 新增节点 #${node.id}：${name || ''}`, req });
         res.json({ success: true, data: node });
     } catch (error) {
         res.status(500).json({ success: false, message: '创建节点失败' });
@@ -81,6 +86,7 @@ exports.updateNode = async (req, res) => {
         const { id } = req.params;
         const data = { ...req.body }; if(data.difficulty) data.difficulty = parseInt(data.difficulty);
         const node = await prisma.storyNode.update({ where: { id: parseInt(id) }, data });
+        auditLog({ admin: req.admin, action: 'UPDATE', module: 'STORY_NODE', detail: `编辑节点 #${id}`, req });
         res.json({ success: true, data: node });
     } catch (error) {
         res.status(500).json({ success: false, message: '更新节点失败' });
@@ -91,6 +97,7 @@ exports.deleteNode = async (req, res) => {
     try {
         const { id } = req.params;
         await prisma.storyNode.delete({ where: { id: parseInt(id) } });
+        auditLog({ admin: req.admin, action: 'DELETE', module: 'STORY_NODE', detail: `删除节点 #${id}`, req });
         res.json({ success: true, message: '删除节点成功' });
     } catch (error) {
         res.status(500).json({ success: false, message: '删除节点失败' });
@@ -104,6 +111,7 @@ exports.createChoice = async (req, res) => {
         const choice = await prisma.storyChoice.create({
             data: { nodeId: parseInt(nodeId), content, nextNodeId: parseInt(nextNodeId) || null, affectionChange }
         });
+        auditLog({ admin: req.admin, action: 'CREATE', module: 'STORY_CHOICE', detail: `为节点 #${nodeId} 新增选项`, req });
         res.json({ success: true, data: choice });
     } catch (error) {
         res.status(500).json({ success: false, message: '创建选项失败' });
@@ -118,6 +126,7 @@ exports.updateChoice = async (req, res) => {
             where: { id: parseInt(id) },
             data: { content, nextNodeId: parseInt(nextNodeId) || null, affectionChange }
         });
+        auditLog({ admin: req.admin, action: 'UPDATE', module: 'STORY_CHOICE', detail: `编辑选项 #${id}`, req });
         res.json({ success: true, data: choice });
     } catch (error) {
         res.status(500).json({ success: false, message: '更新选项失败' });
@@ -128,6 +137,7 @@ exports.deleteChoice = async (req, res) => {
     try {
         const { id } = req.params;
         await prisma.storyChoice.delete({ where: { id: parseInt(id) } });
+        auditLog({ admin: req.admin, action: 'DELETE', module: 'STORY_CHOICE', detail: `删除选项 #${id}`, req });
         res.json({ success: true, message: '删除选项成功' });
     } catch (error) {
         res.status(500).json({ success: false, message: '删除选项失败' });
@@ -249,6 +259,7 @@ exports.generateStoryWithAI = async (req, res) => {
             return story;
         });
 
+        auditLog({ admin: req.admin, action: 'CREATE', module: 'STORY', detail: `AI 一键生成剧本 #${result.id}：《${theme}》`, req });
         res.json({ success: true, message: 'AI 生成剧本成功！', data: result });
     } catch (error) {
         console.error('AI Generate Error:', error);

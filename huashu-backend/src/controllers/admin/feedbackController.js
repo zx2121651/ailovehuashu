@@ -1,5 +1,6 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
+const auditLog = require('../../utils/auditLogger');
 
 const getFeedbacks = async (req, res) => {
   try {
@@ -38,6 +39,7 @@ const replyFeedback = async (req, res) => {
       message: '回复反馈成功',
       data: feedback
     });
+    auditLog({ admin: req.admin, action: 'REPLY', module: 'FEEDBACK', detail: `回复反馈 #${id}`, req });
   } catch (error) {
     console.error('回复反馈失败:', error);
     res.status(500).json({ code: 500, success: false, message: '服务器错误' });
@@ -56,6 +58,7 @@ const deleteFeedback = async (req, res) => {
       success: true,
       message: '删除反馈成功'
     });
+    auditLog({ admin: req.admin, action: 'DELETE', module: 'FEEDBACK', detail: `删除反馈 #${id}`, req });
   } catch (error) {
     console.error('删除反馈失败:', error);
     res.status(500).json({ code: 500, success: false, message: '服务器错误' });

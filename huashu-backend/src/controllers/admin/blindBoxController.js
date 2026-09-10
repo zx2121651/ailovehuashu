@@ -1,4 +1,5 @@
 const prisma = require('../../utils/prisma');
+const auditLog = require('../../utils/auditLogger');
 
 /**
  * 获取所有盲盒内容
@@ -25,6 +26,7 @@ exports.create = async (req, res) => {
     const card = await prisma.blindBoxCard.create({
       data: { content, type: type || 'QUOTE', author, status: status || 'ACTIVE' }
     });
+    auditLog({ admin: req.admin, action: 'CREATE', module: 'BLIND_BOX', detail: `新增盲盒内容 #${card.id}（${(content || '').slice(0, 30)}）`, req });
     res.json({ code: 200, message: "创建成功", data: card });
   } catch (error) {
     res.status(500).json({ code: 500, message: "创建失败" });
@@ -43,6 +45,7 @@ exports.update = async (req, res) => {
       where: { id: parseInt(id) },
       data: updates
     });
+    auditLog({ admin: req.admin, action: 'UPDATE', module: 'BLIND_BOX', detail: `编辑盲盒内容 #${id}`, req });
     res.json({ code: 200, message: "更新成功", data: card });
   } catch (error) {
     res.status(500).json({ code: 500, message: "更新失败" });
@@ -59,6 +62,7 @@ exports.delete = async (req, res) => {
     await prisma.blindBoxCard.delete({
       where: { id: parseInt(id) }
     });
+    auditLog({ admin: req.admin, action: 'DELETE', module: 'BLIND_BOX', detail: `删除盲盒内容 #${id}`, req });
     res.json({ code: 200, message: "删除成功" });
   } catch (error) {
     res.status(500).json({ code: 500, message: "删除失败" });

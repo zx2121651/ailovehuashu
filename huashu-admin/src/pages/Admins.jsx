@@ -2,6 +2,8 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { Search, Edit, Trash2, X, Plus, User, Download, CheckCircle, KeyRound } from 'lucide-react';
 import { exportToCSV } from '../utils/exportCSV';
 import { useAuth } from '../context/AuthContext';
+import { PERMISSIONS } from '../utils/permissions';
+import PermissionGuard from '../components/PermissionGuard';
 
 const roleLabels = {
   SUPER_ADMIN: { label: '超级管理员', color: 'bg-purple-100 text-purple-700 border-purple-200' },
@@ -231,13 +233,15 @@ const Admins = () => {
             />
           </div>
 
-          <button
-            onClick={openCreateModal}
-            className="flex items-center space-x-2 bg-blue-600 text-white px-5 py-2.5 rounded-xl hover:bg-blue-700 transition-colors shadow-sm shadow-blue-500/20"
-          >
-            <Plus size={18} />
-            <span className="text-sm font-medium">新增账号</span>
-          </button>
+          <PermissionGuard permission={PERMISSIONS.SYSTEM_MANAGE}>
+            <button
+              onClick={openCreateModal}
+              className="flex items-center space-x-2 bg-blue-600 text-white px-5 py-2.5 rounded-xl hover:bg-blue-700 transition-colors shadow-sm shadow-blue-500/20"
+            >
+              <Plus size={18} />
+              <span className="text-sm font-medium">新增账号</span>
+            </button>
+          </PermissionGuard>
         </div>
       </div>
 
@@ -307,19 +311,23 @@ const Admins = () => {
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button
-                        onClick={() => openEditModal(admin)}
-                        className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg mr-2 transition-colors" title="编辑"
-                      >
-                        <Edit size={16} />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(admin.id, admin.role)}
-                        disabled={admin.role === 'SUPER_ADMIN'}
-                        className="p-1.5 text-rose-600 hover:bg-rose-50 rounded-lg transition-colors disabled:opacity-30 disabled:cursor-not-allowed" title="删除"
-                      >
-                        <Trash2 size={16} />
-                      </button>
+                      <PermissionGuard permission={PERMISSIONS.SYSTEM_MANAGE}>
+                        <button
+                          onClick={() => openEditModal(admin)}
+                          className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg mr-2 transition-colors" title="编辑"
+                        >
+                          <Edit size={16} />
+                        </button>
+                      </PermissionGuard>
+                      <PermissionGuard permission={PERMISSIONS.SYSTEM_MANAGE}>
+                        <button
+                          onClick={() => handleDelete(admin.id, admin.role)}
+                          disabled={admin.role === 'SUPER_ADMIN'}
+                          className="p-1.5 text-rose-600 hover:bg-rose-50 rounded-lg transition-colors disabled:opacity-30 disabled:cursor-not-allowed" title="删除"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </PermissionGuard>
                     </td>
                   </tr>
                 ))

@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Trash2, Search, CheckCircle, XCircle, EyeOff, Eye, Loader, Image as ImageIcon, Plus, X, Upload } from 'lucide-react';
+import { PERMISSIONS } from '../utils/permissions';
+import PermissionGuard from '../components/PermissionGuard';
 
 const Posts = () => {
   const { token } = useAuth();
@@ -240,13 +242,15 @@ const Posts = () => {
           <h2 className="text-2xl font-bold text-slate-800">动态管理 (社区)</h2>
           <p className="text-sm text-slate-500 mt-1">管理用户发布的帖子，或以官方身份发布带有图文/视频的动态</p>
         </div>
-        <button
-          onClick={() => openModal()}
-          className="flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors shadow-sm"
-        >
-          <Plus className="w-5 h-5 mr-1.5" />
-          发布帖子
-        </button>
+        <PermissionGuard permission={PERMISSIONS.CONTENT_CREATE}>
+          <button
+            onClick={() => openModal()}
+            className="flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors shadow-sm"
+          >
+            <Plus className="w-5 h-5 mr-1.5" />
+            发布帖子
+          </button>
+        </PermissionGuard>
       </div>
 
       {/* 工具栏 */}
@@ -372,18 +376,22 @@ const Posts = () => {
                     <td className="p-4 text-slate-500">{new Date(post.createdAt).toLocaleString()}</td>
                     <td className="p-4">
                       <div className="flex justify-end space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        {post.status === 'ACTIVE' ? (
-                          <button onClick={() => updateStatus(post.id, 'HIDDEN')} className="p-1.5 text-orange-600 hover:bg-orange-50 rounded-lg tooltip" title="隐藏帖子">
-                            <EyeOff className="w-4 h-4" />
+                        <PermissionGuard permission={PERMISSIONS.CONTENT_MODERATE}>
+                          {post.status === 'ACTIVE' ? (
+                            <button onClick={() => updateStatus(post.id, 'HIDDEN')} className="p-1.5 text-orange-600 hover:bg-orange-50 rounded-lg tooltip" title="隐藏帖子">
+                              <EyeOff className="w-4 h-4" />
+                            </button>
+                          ) : (
+                            <button onClick={() => updateStatus(post.id, 'ACTIVE')} className="p-1.5 text-green-600 hover:bg-green-50 rounded-lg tooltip" title="恢复显示">
+                              <Eye className="w-4 h-4" />
+                            </button>
+                          )}
+                        </PermissionGuard>
+                        <PermissionGuard permission={PERMISSIONS.CONTENT_DELETE}>
+                          <button onClick={() => handleDelete(post.id)} className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg tooltip" title="彻底删除">
+                            <Trash2 className="w-4 h-4" />
                           </button>
-                        ) : (
-                          <button onClick={() => updateStatus(post.id, 'ACTIVE')} className="p-1.5 text-green-600 hover:bg-green-50 rounded-lg tooltip" title="恢复显示">
-                            <Eye className="w-4 h-4" />
-                          </button>
-                        )}
-                        <button onClick={() => handleDelete(post.id)} className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg tooltip" title="彻底删除">
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                        </PermissionGuard>
                       </div>
                     </td>
                   </tr>

@@ -1,5 +1,6 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
+const auditLog = require('../../utils/auditLogger');
 
 const getNotifications = async (req, res) => {
   try {
@@ -43,6 +44,7 @@ const createNotification = async (req, res) => {
       message: '创建推送成功',
       data: notification
     });
+    auditLog({ admin: req.admin, action: 'CREATE', module: 'NOTIFICATION', detail: `新建推送：${title || ''}（目标 ${target || 'ALL'}）`, req });
   } catch (error) {
     console.error('创建推送失败:', error);
     res.status(500).json({ code: 500, success: false, message: '服务器错误' });
@@ -61,6 +63,7 @@ const deleteNotification = async (req, res) => {
       success: true,
       message: '删除推送成功'
     });
+    auditLog({ admin: req.admin, action: 'DELETE', module: 'NOTIFICATION', detail: `删除推送 #${id}`, req });
   } catch (error) {
     console.error('删除推送失败:', error);
     res.status(500).json({ code: 500, success: false, message: '服务器错误' });

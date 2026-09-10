@@ -1,5 +1,6 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
+const auditLog = require('../../utils/auditLogger');
 
 exports.getCourses = async (req, res) => {
   try {
@@ -44,6 +45,7 @@ exports.createCourse = async (req, res) => {
         lessons: req.body.lessons || null,
       },
     });
+    auditLog({ admin: req.admin, action: 'CREATE', module: 'COURSE', detail: `新增课程 #${course.id}：${title || ''}`, req });
     res.json({ success: true, data: course });
   } catch (error) {
     console.error('创建课程失败:', error);
@@ -69,6 +71,7 @@ exports.updateCourse = async (req, res) => {
         lessons: req.body.lessons || undefined,
       },
     });
+    auditLog({ admin: req.admin, action: 'UPDATE', module: 'COURSE', detail: `编辑课程 #${req.params.id}`, req });
     res.json({ success: true, data: course });
   } catch (error) {
     console.error('更新课程失败:', error);
@@ -81,6 +84,7 @@ exports.deleteCourse = async (req, res) => {
     await prisma.course.delete({
       where: { id: parseInt(req.params.id) },
     });
+    auditLog({ admin: req.admin, action: 'DELETE', module: 'COURSE', detail: `删除课程 #${req.params.id}`, req });
     res.json({ success: true, message: '课程删除成功' });
   } catch (error) {
     console.error('删除课程失败:', error);
@@ -95,6 +99,7 @@ exports.toggleRecommended = async (req, res) => {
       where: { id: parseInt(req.params.id) },
       data: { isRecommended: Boolean(isRecommended) },
     });
+    auditLog({ admin: req.admin, action: 'UPDATE', module: 'COURSE', detail: `${isRecommended ? '推荐' : '取消推荐'}课程 #${req.params.id}`, req });
     res.json({ success: true, data: course });
   } catch (error) {
     console.error('切换推荐状态失败:', error);

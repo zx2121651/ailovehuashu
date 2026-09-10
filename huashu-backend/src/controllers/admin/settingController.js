@@ -1,5 +1,6 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
+const auditLog = require('../../utils/auditLogger');
 
 const getSettings = async (req, res) => {
   try {
@@ -43,6 +44,7 @@ const updateSettings = async (req, res) => {
       message: '更新系统设置成功',
       data: newSettings
     });
+    auditLog({ admin: req.admin, action: 'UPDATE', module: 'SETTING', detail: `更新系统设置：${Object.keys(newSettings).join(', ') || '无字段'}`, req });
   } catch (error) {
     console.error('更新系统设置失败:', error);
     res.status(500).json({ code: 500, success: false, message: '服务器错误' });

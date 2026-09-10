@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Edit, Folder, Palette, Plus, Trash2 } from 'lucide-react';
+import { PERMISSIONS } from '../utils/permissions';
+import PermissionGuard from '../components/PermissionGuard';
 
 const Categories = ({ type = 'SCRIPT' }) => {
   const [categories, setCategories] = useState([]);
@@ -135,13 +137,15 @@ const Categories = ({ type = 'SCRIPT' }) => {
           <h2 className="text-3xl font-bold text-slate-800 tracking-tight">{pageTitle}</h2>
           <p className="text-slate-500 mt-2">{pageDesc}</p>
         </div>
-        <button
-          onClick={() => openModal()}
-          className="flex items-center px-5 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-medium transition-all shadow-md shadow-blue-500/20 hover:shadow-lg hover:shadow-blue-500/30"
-        >
-          <Plus size={20} className="mr-2" />
-          新建分类
-        </button>
+        <PermissionGuard permission={PERMISSIONS.CONTENT_CREATE}>
+          <button
+            onClick={() => openModal()}
+            className="flex items-center px-5 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-medium transition-all shadow-md shadow-blue-500/20 hover:shadow-lg hover:shadow-blue-500/30"
+          >
+            <Plus size={20} className="mr-2" />
+            新建分类
+          </button>
+        </PermissionGuard>
       </div>
 
       {error && <div className="bg-red-50 text-red-500 p-4 rounded-xl border border-red-100">{error}</div>}
@@ -164,20 +168,24 @@ const Categories = ({ type = 'SCRIPT' }) => {
               </div>
               <div className="p-6 relative">
                 <div className="absolute -top-6 right-6 flex space-x-2 z-10">
-                  <button
-                    onClick={() => openModal(category)}
-                    className="w-12 h-12 bg-white rounded-full shadow-lg flex items-center justify-center text-blue-600 hover:text-blue-700 hover:bg-blue-50 transition-colors border border-slate-100"
-                    title="编辑分类"
-                  >
-                    <Edit size={20} />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(category.id)}
-                    className="w-12 h-12 bg-white rounded-full shadow-lg flex items-center justify-center text-red-500 hover:text-red-600 hover:bg-red-50 transition-colors border border-slate-100"
-                    title="删除分类"
-                  >
-                    <Trash2 size={20} />
-                  </button>
+                  <PermissionGuard permission={PERMISSIONS.CONTENT_EDIT}>
+                    <button
+                      onClick={() => openModal(category)}
+                      className="w-12 h-12 bg-white rounded-full shadow-lg flex items-center justify-center text-blue-600 hover:text-blue-700 hover:bg-blue-50 transition-colors border border-slate-100"
+                      title="编辑分类"
+                    >
+                      <Edit size={20} />
+                    </button>
+                  </PermissionGuard>
+                  <PermissionGuard permission={PERMISSIONS.CONTENT_DELETE}>
+                    <button
+                      onClick={() => handleDelete(category.id)}
+                      className="w-12 h-12 bg-white rounded-full shadow-lg flex items-center justify-center text-red-500 hover:text-red-600 hover:bg-red-50 transition-colors border border-slate-100"
+                      title="删除分类"
+                    >
+                      <Trash2 size={20} />
+                    </button>
+                  </PermissionGuard>
                 </div>
                 <h3 className="text-xl font-bold text-slate-800 mb-1">{category.name}</h3>
                 <div className="flex items-center text-sm text-slate-500 mt-3">

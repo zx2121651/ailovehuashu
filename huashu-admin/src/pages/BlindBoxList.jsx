@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Edit, Trash2, Search, X, AlertTriangle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { PERMISSIONS } from '../utils/permissions';
+import PermissionGuard from '../components/PermissionGuard';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts'; // keep for UI
 
 const BlindBoxList = () => {
@@ -106,13 +108,15 @@ const BlindBoxList = () => {
           <h2 className="text-2xl font-bold text-gray-800">每日盲盒管理</h2>
           <p className="text-sm text-gray-500 mt-1">管理用户每日签到抽取的专属盲盒卡片内容</p>
         </div>
-        <button
-          onClick={() => openModal()}
-          className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg flex items-center transition-colors"
-        >
-          <Plus size={18} className="mr-2" />
-          新增盲盒内容
-        </button>
+        <PermissionGuard permission={PERMISSIONS.CONTENT_CREATE}>
+          <button
+            onClick={() => openModal()}
+            className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg flex items-center transition-colors"
+          >
+            <Plus size={18} className="mr-2" />
+            新增盲盒内容
+          </button>
+        </PermissionGuard>
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
@@ -145,8 +149,12 @@ const BlindBoxList = () => {
                     </span>
                   </td>
                   <td className="px-6 py-4 text-right space-x-3">
-                    <button onClick={() => openModal(card)} className="text-blue-600 hover:text-blue-800 transition-colors"><Edit size={16} /></button>
-                    <button onClick={() => handleDelete(card.id)} className="text-red-600 hover:text-red-800 transition-colors"><Trash2 size={16} /></button>
+                    <PermissionGuard permission={PERMISSIONS.CONTENT_EDIT}>
+                      <button onClick={() => openModal(card)} className="text-blue-600 hover:text-blue-800 transition-colors"><Edit size={16} /></button>
+                    </PermissionGuard>
+                    <PermissionGuard permission={PERMISSIONS.CONTENT_DELETE}>
+                      <button onClick={() => handleDelete(card.id)} className="text-red-600 hover:text-red-800 transition-colors"><Trash2 size={16} /></button>
+                    </PermissionGuard>
                   </td>
                 </tr>
               ))}

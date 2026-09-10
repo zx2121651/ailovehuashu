@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Search, Edit2, Trash2, CheckCircle, XCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { PERMISSIONS } from '../utils/permissions';
+import PermissionGuard from '../components/PermissionGuard';
 
 const FloatScripts = () => {
   const { token } = useAuth();
@@ -107,13 +109,15 @@ const FloatScripts = () => {
           <h1 className="text-2xl font-bold text-gray-800">悬浮窗话术配置</h1>
           <p className="text-gray-500 text-sm mt-1">管理推送到移动端 App 悬浮窗的“杀手锏”话术，仅限 VIP 用户可见。</p>
         </div>
-        <button
-          onClick={() => handleOpenModal()}
-          className="bg-pink-600 text-white px-4 py-2 rounded-lg flex items-center hover:bg-pink-700 transition"
-        >
-          <Plus size={18} className="mr-2" />
-          新增悬浮话术
-        </button>
+        <PermissionGuard permission={PERMISSIONS.CONTENT_CREATE}>
+          <button
+            onClick={() => handleOpenModal()}
+            className="bg-pink-600 text-white px-4 py-2 rounded-lg flex items-center hover:bg-pink-700 transition"
+          >
+            <Plus size={18} className="mr-2" />
+            新增悬浮话术
+          </button>
+        </PermissionGuard>
       </div>
 
       {/* 搜索栏 */}
@@ -170,23 +174,29 @@ const FloatScripts = () => {
                     {script.order}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <button
-                      onClick={() => toggleStatus(script)}
-                      className={`inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded shadow-sm text-white focus:outline-none ${
-                        script.isActive ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-400 hover:bg-gray-500'
-                      }`}
-                    >
-                      {script.isActive ? <CheckCircle size={14} className="mr-1" /> : <XCircle size={14} className="mr-1" />}
-                      {script.isActive ? '已启用' : '已禁用'}
-                    </button>
+                    <PermissionGuard permission={PERMISSIONS.OPS_MANAGE}>
+                      <button
+                        onClick={() => toggleStatus(script)}
+                        className={`inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded shadow-sm text-white focus:outline-none ${
+                          script.isActive ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-400 hover:bg-gray-500'
+                        }`}
+                      >
+                        {script.isActive ? <CheckCircle size={14} className="mr-1" /> : <XCircle size={14} className="mr-1" />}
+                        {script.isActive ? '已启用' : '已禁用'}
+                      </button>
+                    </PermissionGuard>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <button onClick={() => handleOpenModal(script)} className="text-indigo-600 hover:text-indigo-900 mr-4">
-                      <Edit2 size={18} />
-                    </button>
-                    <button onClick={() => handleDelete(script.id)} className="text-red-600 hover:text-red-900">
-                      <Trash2 size={18} />
-                    </button>
+                    <PermissionGuard permission={PERMISSIONS.CONTENT_EDIT}>
+                      <button onClick={() => handleOpenModal(script)} className="text-indigo-600 hover:text-indigo-900 mr-4">
+                        <Edit2 size={18} />
+                      </button>
+                    </PermissionGuard>
+                    <PermissionGuard permission={PERMISSIONS.CONTENT_DELETE}>
+                      <button onClick={() => handleDelete(script.id)} className="text-red-600 hover:text-red-900">
+                        <Trash2 size={18} />
+                      </button>
+                    </PermissionGuard>
                   </td>
                 </tr>
               ))
