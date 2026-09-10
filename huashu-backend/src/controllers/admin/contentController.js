@@ -1,4 +1,5 @@
 const prisma = require('../../utils/prisma');
+const auditLog = require('../../utils/auditLogger');
 
 const contentController = {
   // --- Scripts CRUD ---
@@ -30,6 +31,7 @@ const contentController = {
   createScript: async (req, res) => {
     try {
       const script = await prisma.script.create({ data: req.body });
+      auditLog({ admin: req.admin, action: 'CREATE', module: 'CONTENT', detail: `新增话术 #${script.id}：${script.question || ''}`, req });
       res.json({ success: true, data: script });
     } catch (err) {
       console.error('Admin createScript error:', err.message);
@@ -44,6 +46,7 @@ const contentController = {
         where: { id: parseInt(id) },
         data: req.body
       });
+      auditLog({ admin: req.admin, action: 'UPDATE', module: 'CONTENT', detail: `编辑话术 #${id}`, req });
       res.json({ success: true, data: script });
     } catch (err) {
       console.error('Admin updateScript error:', err.message);
@@ -55,6 +58,7 @@ const contentController = {
     try {
       const { id } = req.params;
       await prisma.script.delete({ where: { id: parseInt(id) } });
+      auditLog({ admin: req.admin, action: 'DELETE', module: 'CONTENT', detail: `删除话术 #${id}`, req });
       res.json({ success: true, message: 'Deleted successfully' });
     } catch (err) {
       console.error('Admin deleteScript error:', err.message);
@@ -103,6 +107,7 @@ const contentController = {
         where: { id: parseInt(id) },
         data: req.body
       });
+      auditLog({ admin: req.admin, action: 'UPDATE', module: 'CONTENT', detail: `编辑分类 #${id}：${category.name || ''}`, req });
       res.json({ success: true, data: category });
     } catch (err) {
       console.error('Admin updateCategory error:', err.message);
@@ -122,6 +127,7 @@ const contentController = {
         data: { name, icon, color, type: type || 'SCRIPT' }
       });
 
+      auditLog({ admin: req.admin, action: 'CREATE', module: 'CONTENT', detail: `新增分类：${name}（${type || 'SCRIPT'}）`, req });
       res.status(201).json({ success: true, data: newCategory });
     } catch (err) {
       console.error('Admin createCategory error:', err.message);
@@ -154,6 +160,7 @@ const contentController = {
         where: { id: parseInt(id) }
       });
 
+      auditLog({ admin: req.admin, action: 'DELETE', module: 'CONTENT', detail: `删除分类 #${id}：${category.name || ''}`, req });
       res.json({ success: true, message: '分类删除成功' });
     } catch (err) {
       console.error('Admin deleteCategory error:', err.message);

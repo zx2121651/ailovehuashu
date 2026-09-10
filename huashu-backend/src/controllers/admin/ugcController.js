@@ -1,4 +1,5 @@
 const prisma = require('../../utils/prisma');
+const auditLog = require('../../utils/auditLogger');
 
 const ugcController = {
   getContributions: async (req, res) => {
@@ -74,6 +75,7 @@ const ugcController = {
            data: { points: { increment: 50 } }
         });
 
+        auditLog({ admin: req.admin, action: 'APPROVE', module: 'UGC', detail: `通过投稿 #${id} 并转入话术库（类型 ${type}）`, req });
         res.json({ success: true, message: 'Contribution approved and converted to script' });
       } else if (action === 'reject') {
         await prisma.contribution.update({
@@ -83,6 +85,7 @@ const ugcController = {
             reason: reason || 'Not suitable'
           }
         });
+        auditLog({ admin: req.admin, action: 'REJECT', module: 'UGC', detail: `驳回投稿 #${id}${reason ? `（${reason}）` : ''}`, req });
         res.json({ success: true, message: 'Contribution rejected' });
       } else {
         res.status(400).json({ success: false, message: 'Invalid action' });

@@ -10,6 +10,8 @@ import {
   Save,
 } from "lucide-react";
 import { exportToCSV } from "../utils/exportCSV";
+import { PERMISSIONS } from "../utils/permissions";
+import PermissionGuard from "../components/PermissionGuard";
 
 const UGC = () => {
   const [contributions, setContributions] = useState([]);
@@ -277,26 +279,30 @@ const UGC = () => {
                   <div className="flex md:flex-col gap-3 mt-4 md:mt-0 md:min-w-[140px]">
                     {item.status === "pending" ? (
                       <>
-                        <button
-                          onClick={() => openApproveModal(item)}
-                          className="flex items-center justify-center space-x-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-500 hover:text-white hover:border-emerald-500 hover:shadow-lg hover:shadow-emerald-500/20 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 w-full"
-                        >
-                          <Check size={16} />
-                          <span>通过入库</span>
-                        </button>
-                        <button
-                          onClick={() => {
-                            const reason =
-                              window.prompt("请输入拒绝原因 (可选):");
-                            if (reason !== null) {
-                              handleReview(item.id, "reject", reason);
-                            }
-                          }}
-                          className="flex items-center justify-center space-x-1.5 bg-white text-rose-600 border border-rose-200 hover:bg-rose-50 px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors w-full"
-                        >
-                          <X size={16} />
-                          <span>拒绝采用</span>
-                        </button>
+                        <PermissionGuard permission={PERMISSIONS.UGC_REVIEW}>
+                          <button
+                            onClick={() => openApproveModal(item)}
+                            className="flex items-center justify-center space-x-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-500 hover:text-white hover:border-emerald-500 hover:shadow-lg hover:shadow-emerald-500/20 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 w-full"
+                          >
+                            <Check size={16} />
+                            <span>通过入库</span>
+                          </button>
+                        </PermissionGuard>
+                        <PermissionGuard permission={PERMISSIONS.UGC_REVIEW}>
+                          <button
+                            onClick={() => {
+                              const reason =
+                                window.prompt("请输入拒绝原因 (可选):");
+                              if (reason !== null) {
+                                handleReview(item.id, "reject", reason);
+                              }
+                            }}
+                            className="flex items-center justify-center space-x-1.5 bg-white text-rose-600 border border-rose-200 hover:bg-rose-50 px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors w-full"
+                          >
+                            <X size={16} />
+                            <span>拒绝采用</span>
+                          </button>
+                        </PermissionGuard>
                       </>
                     ) : (
                       <div className="text-center text-sm font-medium text-slate-400 py-3 px-4 border-2 border-dashed border-slate-200 rounded-xl bg-slate-50/50">

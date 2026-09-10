@@ -1,4 +1,5 @@
 const prisma = require('../../utils/prisma');
+const auditLog = require('../../utils/auditLogger');
 
 const userController = {
   getUsers: async (req, res) => {
@@ -53,6 +54,7 @@ const userController = {
         data: updates
       });
 
+      auditLog({ admin: req.admin, action: 'UPDATE', module: 'USER', detail: `编辑用户 ${id}（${Object.keys(updates).join(', ') || '无字段'}）`, req });
       res.json({ success: true, data: user });
     } catch (err) {
       console.error('Admin updateUser error:', err.message);
@@ -91,6 +93,7 @@ const userController = {
         }
       });
 
+      auditLog({ admin: req.admin, action: 'DELETE', module: 'USER', detail: `注销用户 ${id}（${user.name || ''}）`, req });
       res.json({ success: true, message: 'User deleted (banned)' });
     } catch (err) {
       console.error('Admin deleteUser error:', err.message);

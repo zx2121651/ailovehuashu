@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Trash2, Search, CheckCircle, XCircle, EyeOff, Eye, Loader } from 'lucide-react';
+import { PERMISSIONS } from '../utils/permissions';
+import PermissionGuard from '../components/PermissionGuard';
 
 const Comments = () => {
   const { token } = useAuth();
@@ -198,18 +200,22 @@ const Comments = () => {
                     <td className="p-4 text-slate-500">{new Date(comment.createdAt).toLocaleString()}</td>
                     <td className="p-4">
                       <div className="flex justify-end space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        {comment.status === 'ACTIVE' ? (
-                          <button onClick={() => updateStatus(comment.id, 'HIDDEN')} className="p-1.5 text-orange-600 hover:bg-orange-50 rounded-lg tooltip" title="隐藏">
-                            <EyeOff className="w-4 h-4" />
+                        <PermissionGuard permission={PERMISSIONS.CONTENT_MODERATE}>
+                          {comment.status === 'ACTIVE' ? (
+                            <button onClick={() => updateStatus(comment.id, 'HIDDEN')} className="p-1.5 text-orange-600 hover:bg-orange-50 rounded-lg tooltip" title="隐藏">
+                              <EyeOff className="w-4 h-4" />
+                            </button>
+                          ) : (
+                            <button onClick={() => updateStatus(comment.id, 'ACTIVE')} className="p-1.5 text-green-600 hover:bg-green-50 rounded-lg tooltip" title="恢复显示">
+                              <Eye className="w-4 h-4" />
+                            </button>
+                          )}
+                        </PermissionGuard>
+                        <PermissionGuard permission={PERMISSIONS.CONTENT_MODERATE}>
+                          <button onClick={() => handleDelete(comment.id)} className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg tooltip" title="彻底删除">
+                            <Trash2 className="w-4 h-4" />
                           </button>
-                        ) : (
-                          <button onClick={() => updateStatus(comment.id, 'ACTIVE')} className="p-1.5 text-green-600 hover:bg-green-50 rounded-lg tooltip" title="恢复显示">
-                            <Eye className="w-4 h-4" />
-                          </button>
-                        )}
-                        <button onClick={() => handleDelete(comment.id)} className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg tooltip" title="彻底删除">
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                        </PermissionGuard>
                       </div>
                     </td>
                   </tr>
