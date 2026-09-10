@@ -2,6 +2,8 @@ import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Plus, Edit, Trash2, Tag, ThumbsUp, X, PlusCircle, MinusCircle, Search, Download } from 'lucide-react';
 import { exportToCSV } from '../utils/exportCSV';
+import { PERMISSIONS } from '../utils/permissions';
+import PermissionGuard from '../components/PermissionGuard';
 
 const Content = () => {
   const [scripts, setScripts] = useState([]);
@@ -201,13 +203,15 @@ const Content = () => {
             />
           </div>
 
-          <button
-            onClick={() => openModal()}
-            className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl text-sm font-medium transition-all shadow-md shadow-blue-500/20 hover:shadow-blue-500/30 hover:-translate-y-0.5"
-          >
-            <Plus size={18} />
-            <span>添加话术</span>
-          </button>
+          <PermissionGuard permission={PERMISSIONS.CONTENT_CREATE}>
+            <button
+              onClick={() => openModal()}
+              className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl text-sm font-medium transition-all shadow-md shadow-blue-500/20 hover:shadow-blue-500/30 hover:-translate-y-0.5"
+            >
+              <Plus size={18} />
+              <span>添加话术</span>
+            </button>
+          </PermissionGuard>
         </div>
       </div>
 
@@ -292,18 +296,22 @@ const Content = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button
-                        onClick={() => openModal(script)}
-                        className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg mr-2 transition-colors" title="编辑"
-                      >
-                        <Edit size={16} />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(script.id)}
-                        className="p-1.5 text-rose-600 hover:bg-rose-50 rounded-lg transition-colors" title="删除"
-                      >
-                        <Trash2 size={16} />
-                      </button>
+                      <PermissionGuard permission={PERMISSIONS.CONTENT_EDIT}>
+                        <button
+                          onClick={() => openModal(script)}
+                          className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg mr-2 transition-colors" title="编辑"
+                        >
+                          <Edit size={16} />
+                        </button>
+                      </PermissionGuard>
+                      <PermissionGuard permission={PERMISSIONS.CONTENT_DELETE}>
+                        <button
+                          onClick={() => handleDelete(script.id)}
+                          className="p-1.5 text-rose-600 hover:bg-rose-50 rounded-lg transition-colors" title="删除"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </PermissionGuard>
                     </td>
                   </tr>
                 ))

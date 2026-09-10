@@ -2,6 +2,7 @@ const prisma = require('../../utils/prisma');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { getAdminPermissions } = require('../../utils/permissionHelper');
+const auditLog = require('../../utils/auditLogger');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'huashu_admin_super_secret_key_2026';
 
@@ -26,6 +27,7 @@ const authController = {
       if (admin) {
         const isMatch = await bcrypt.compare(password, admin.password);
         if (!isMatch) {
+          auditLog({ admin: { username }, action: 'LOGIN', module: 'AUTH', status: 'fail', detail: '密码错误', req });
           return res.status(400).json({ success: false, message: 'Invalid Credentials' });
         }
         role = admin.role;
@@ -76,6 +78,7 @@ const authController = {
         { expiresIn: '24h' },
         (err, token) => {
           if (err) throw err;
+          auditLog({ admin: { username: finalUsername }, action: 'LOGIN', module: 'AUTH', detail: `管理员登录成功 (${role})`, req });
           res.json({
             success: true,
             data: {

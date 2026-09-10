@@ -1,6 +1,8 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { PERMISSIONS } from './utils/permissions';
+import PermissionGuard from './components/PermissionGuard';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Users from './pages/Users';
@@ -25,6 +27,7 @@ import FloatScripts from './pages/FloatScripts';
 import InteractiveStoryManagement from './pages/InteractiveStoryManagement';
 import ScriptTags from './pages/ScriptTags';
 import AdminLayout from './layouts/AdminLayout';
+import Forbidden from './pages/Forbidden';
 
 const ProtectedRoute = ({ children }) => {
   const { admin, loading } = useAuth();
@@ -40,35 +43,43 @@ const ProtectedRoute = ({ children }) => {
   return children;
 };
 
+// 路由级权限守卫：未授权则跳转 403 页面
+const GuardRoute = ({ permission, children }) => (
+  <PermissionGuard permission={permission} fallback={<Navigate to="/403" replace />}>
+    {children}
+  </PermissionGuard>
+);
+
 const AppRoutes = () => {
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
       <Route path="/" element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}>
         <Route index element={<Navigate to="/dashboard" replace />} />
+        <Route path="403" element={<Forbidden />} />
         <Route path="dashboard" element={<Dashboard />} />
-        <Route path="users" element={<Users />} />
+        <Route path="users" element={<GuardRoute permission={PERMISSIONS.USER_VIEW}><Users /></GuardRoute>} />
         <Route path="content" element={<Content />} />
-        <Route path="float-scripts" element={<FloatScripts />} />
+        <Route path="float-scripts" element={<GuardRoute permission={PERMISSIONS.OPS_MANAGE}><FloatScripts /></GuardRoute>} />
         <Route path="interactive-stories" element={<InteractiveStoryManagement />} />
-        <Route path="blind-box" element={<BlindBoxList />} />
+        <Route path="blind-box" element={<GuardRoute permission={PERMISSIONS.OPS_MANAGE}><BlindBoxList /></GuardRoute>} />
         <Route path="categories" element={<Categories type="SCRIPT" />} />
-        <Route path="community-categories" element={<Categories type="POST" />} />
+        <Route path="community-categories" element={<GuardRoute permission={PERMISSIONS.CONTENT_MODERATE}><Categories type="POST" /></GuardRoute>} />
         <Route path="script-tags" element={<ScriptTags />} />
-        <Route path="ugc" element={<UGC />} />
-        <Route path="settings" element={<Settings />} />
-        <Route path="logs" element={<Logs />} />
-        <Route path="admins" element={<Admins />} />
+        <Route path="ugc" element={<GuardRoute permission={PERMISSIONS.UGC_REVIEW}><UGC /></GuardRoute>} />
+        <Route path="settings" element={<GuardRoute permission={PERMISSIONS.SYSTEM_MANAGE}><Settings /></GuardRoute>} />
+        <Route path="logs" element={<GuardRoute permission={PERMISSIONS.SYSTEM_MANAGE}><Logs /></GuardRoute>} />
+        <Route path="admins" element={<GuardRoute permission={PERMISSIONS.SYSTEM_MANAGE}><Admins /></GuardRoute>} />
         <Route path="feedback" element={<Feedback />} />
-        <Route path="banners" element={<Banners />} />
-        <Route path="orders" element={<Orders />} />
+        <Route path="banners" element={<GuardRoute permission={PERMISSIONS.OPS_MANAGE}><Banners /></GuardRoute>} />
+        <Route path="orders" element={<GuardRoute permission={PERMISSIONS.ORDER_VIEW}><Orders /></GuardRoute>} />
         <Route path="courses" element={<Courses />} />
-        <Route path="posts" element={<Posts />} />
-        <Route path="comments" element={<Comments />} />
-        <Route path="notifications" element={<Notifications />} />
-        <Route path="distributors" element={<Distributors />} />
-        <Route path="withdrawals" element={<WithdrawalAdmin />} />
-        <Route path="commissions" element={<CommissionLogs />} />
+        <Route path="posts" element={<GuardRoute permission={PERMISSIONS.CONTENT_MODERATE}><Posts /></GuardRoute>} />
+        <Route path="comments" element={<GuardRoute permission={PERMISSIONS.CONTENT_MODERATE}><Comments /></GuardRoute>} />
+        <Route path="notifications" element={<GuardRoute permission={PERMISSIONS.SYSTEM_MANAGE}><Notifications /></GuardRoute>} />
+        <Route path="distributors" element={<GuardRoute permission={PERMISSIONS.COMMISSION_REVIEW}><Distributors /></GuardRoute>} />
+        <Route path="withdrawals" element={<GuardRoute permission={PERMISSIONS.COMMISSION_REVIEW}><WithdrawalAdmin /></GuardRoute>} />
+        <Route path="commissions" element={<GuardRoute permission={PERMISSIONS.COMMISSION_REVIEW}><CommissionLogs /></GuardRoute>} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

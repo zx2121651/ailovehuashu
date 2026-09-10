@@ -1,6 +1,7 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 const bcrypt = require('bcryptjs');
+const auditLog = require('../../utils/auditLogger');
 
 const getAdmins = async (req, res) => {
   try {
@@ -66,6 +67,7 @@ const createAdmin = async (req, res) => {
       }
     });
 
+    auditLog({ admin: req.admin, action: 'CREATE', module: 'ADMIN', detail: `创建管理员 ${username}（角色 ${role}）`, req });
     res.json({ code: 200, success: true, message: '创建管理员成功', data: admin });
   } catch (error) {
     console.error('创建管理员失败:', error);
@@ -93,6 +95,18 @@ const updateAdmin = async (req, res) => {
       select: { id: true, username: true, name: true, role: true, permissions: true, status: true }
     });
 
+    // 区分权限变更与普通更新
+    const isPermissionChange = permissions !== undefined;
+    auditLog({
+      admin: req.admin,
+      action: isPermissionChange ? 'PERMISSION' : 'UPDATE',
+      module: 'ADMIN',
+      detail: isPermissionChange
+        ? `调整管理员权限 ${username}（角色 ${role}，权限点=${Array.isArray(permissions) ? permissions.length : 0}）`
+        : `更新管理员 ${username}（角色 ${role}，状态 ${status}）`,
+      req
+    });
+
     res.json({ code: 200, success: true, message: '更新管理员成功', data: admin });
   } catch (error) {
     console.error('更新管理员失败:', error);
@@ -103,7 +117,13 @@ const updateAdmin = async (req, res) => {
 const deleteAdmin = async (req, res) => {
   try {
     const { id } = req.params;
+    // 记录被删除账号的用户名，便于审计
+    const target = await prisma.admin.findUnique({
+      where: { id: Number(id) },
+      select: { username: true }
+    });
     await prisma.admin.delete({ where: { id: Number(id) } });
+    auditLog({ admin: req.admin, action: 'DELETE', module: 'ADMIN', detail: `删除管理员 ${target?.username || id}`, req });
     res.json({ code: 200, success: true, message: '删除管理员成功' });
   } catch (error) {
     console.error('删除管理员失败:', error);

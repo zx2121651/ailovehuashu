@@ -2,6 +2,8 @@ import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Search, Edit, Trash2, X, Download } from 'lucide-react';
 import { exportToCSV } from '../utils/exportCSV';
+import { PERMISSIONS } from '../utils/permissions';
+import PermissionGuard from '../components/PermissionGuard';
 
 const Users = () => {
   const [users, setUsers] = useState([]);
@@ -297,20 +299,24 @@ const Users = () => {
                     </td>
                     <td className="px-6 py-5 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex items-center justify-end space-x-2 opacity-0 group-hover:opacity-100 transition-all translate-x-4 group-hover:translate-x-0">
-                        <button
-                          onClick={() => openEditModal(user)}
-                          className="p-2 text-blue-600 hover:bg-blue-100 bg-blue-50 rounded-xl transition-colors shadow-sm" title="编辑资料"
-                        >
-                          <Edit size={16} />
-                        </button>
-                        {user.role !== 'BANNED' && (
+                        <PermissionGuard permission={PERMISSIONS.USER_EDIT}>
                           <button
-                            onClick={() => handleDelete(user.id)}
-                            className="p-2 text-rose-600 hover:bg-rose-100 bg-rose-50 rounded-xl transition-colors shadow-sm" title="注销账号"
+                            onClick={() => openEditModal(user)}
+                            className="p-2 text-blue-600 hover:bg-blue-100 bg-blue-50 rounded-xl transition-colors shadow-sm" title="编辑资料"
                           >
-                            <Trash2 size={16} />
+                            <Edit size={16} />
                           </button>
-                        )}
+                        </PermissionGuard>
+                        <PermissionGuard permission={PERMISSIONS.USER_DELETE}>
+                          {user.role !== 'BANNED' && (
+                            <button
+                              onClick={() => handleDelete(user.id)}
+                              className="p-2 text-rose-600 hover:bg-rose-100 bg-rose-50 rounded-xl transition-colors shadow-sm" title="注销账号"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          )}
+                        </PermissionGuard>
                       </div>
                     </td>
                   </tr>

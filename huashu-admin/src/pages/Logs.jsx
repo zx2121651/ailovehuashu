@@ -20,7 +20,8 @@ const actionColors = {
   DELETE: 'text-red-700 bg-red-100 border-red-200',
   LOGIN: 'text-purple-700 bg-purple-100 border-purple-200',
   APPROVE: 'text-teal-700 bg-teal-100 border-teal-200',
-  REJECT: 'text-orange-700 bg-orange-100 border-orange-200'
+  REJECT: 'text-orange-700 bg-orange-100 border-orange-200',
+  PERMISSION: 'text-indigo-700 bg-indigo-100 border-indigo-200'
 };
 
 const moduleNames = {
@@ -28,7 +29,9 @@ const moduleNames = {
   USER: '用户管理',
   AUTH: '身份认证',
   SETTINGS: '系统设置',
-  UGC: '用户投稿'
+  UGC: '用户投稿',
+  ADMIN: '权限管理',
+  ORDER: '订单管理'
 };
 
 const Logs = () => {
@@ -61,11 +64,25 @@ const Logs = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterModule, setFilterModule] = useState('ALL');
 
+  // 兼容后端 createdAt(ISO) 与旧的 timestamp 字段
+  const formatTime = (log) => {
+    if (log.timestamp) return log.timestamp;
+    if (log.createdAt) {
+      const d = new Date(log.createdAt);
+      if (!isNaN(d.getTime())) {
+        const pad = (n) => String(n).padStart(2, '0');
+        return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+      }
+    }
+    return '-';
+  };
+
   const filteredLogs = useMemo(() => {
     return logs.filter(log => {
-      const matchesSearch = log.admin.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                            log.detail.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                            log.ip.includes(searchTerm);
+      const operator = (log.adminUsername || log.admin || '');
+      const matchesSearch = operator.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                            (log.detail || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                            ((log.ip || '')).includes(searchTerm);
       const matchesModule = filterModule === 'ALL' || log.module === filterModule;
       return matchesSearch && matchesModule;
     });
@@ -143,9 +160,9 @@ const Logs = () => {
                     <td className="py-4 px-6 text-sm font-medium text-slate-800">
                       <div className="flex items-center space-x-2">
                         <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-xs">
-                          {log.admin.charAt(0).toUpperCase()}
+                          {(() => { const o = (log.adminUsername || log.admin || '?'); return o.charAt(0).toUpperCase(); })()}
                         </div>
-                        <span>{log.admin}</span>
+                        <span>{log.adminUsername || log.admin}</span>
                       </div>
                     </td>
                     <td className="py-4 px-6">
@@ -163,7 +180,7 @@ const Logs = () => {
                       {log.ip}
                     </td>
                     <td className="py-4 px-6 text-sm text-slate-500 whitespace-nowrap">
-                      {log.timestamp}
+                      {formatTime(log)}
                     </td>
                     <td className="py-4 px-6 text-center">
                       {log.status === 'success' ? (
