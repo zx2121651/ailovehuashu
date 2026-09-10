@@ -69,11 +69,24 @@
 
 <script setup lang="uts">
 import { ref } from 'vue'
+import { onLoad } from '@dcloudio/uni-app'
 import { useAppStore } from '../../store/app.uts'
+import { getDistributorInfo } from '../../services/api.uts'
 
 const appStore = useAppStore
 
 const inviteCode = ref(appStore.userInfo?.id || 'HSHU8829')
+
+onLoad(async () => {
+  try {
+    const info = await getDistributorInfo()
+    if (info && info.inviteCode) {
+      inviteCode.value = info.inviteCode
+    } else if (info && info.user && info.user.inviteCode) {
+      inviteCode.value = info.user.inviteCode
+    }
+  } catch (e) {}
+})
 
 const copyCode = () => {
   uni.setClipboardData({
