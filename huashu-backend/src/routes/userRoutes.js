@@ -28,5 +28,8 @@ router.post('/user/daily-signin', auth, userController.dailySignIn);
 // 每日盲盒
 router.post('/user/open-blindbox', auth, userController.openBlindBox);
 
+// 完成任务领积分
+router.post('/user/claim-task', auth, userController.claimTask);
+
 // 积分兑换 VIP
 router.post('/user/exchange-vip', auth, userController.exchangeVip);

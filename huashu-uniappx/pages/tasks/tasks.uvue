@@ -8,7 +8,7 @@
           <text class="points-rule-text">规则</text>
         </view>
       </view>
-      <text class="points-num">{{ appStore.userInfo?.points || 1250 }}</text>
+      <text class="points-num">{{ points }}</text>
     </view>
 
     <view class="task-section">
@@ -58,20 +58,55 @@
 
 <script setup lang="uts">
 import { ref } from 'vue'
+import { onShow } from '@dcloudio/uni-app'
 import { useAppStore } from '../../store/app.uts'
+import { getUserProfile, claimTask } from '../../services/api.uts'
 
 const appStore = useAppStore
 
+// 本地同步当前积分（onShow 时刷新）
+const points = ref(appStore.userInfo?.points || 1250)
+
+onShow(async () => {
+  try {
+    const profile = await getUserProfile()
+    if (profile) {
+      points.value = profile.points || points.value
+      if (appStore.userInfo) appStore.userInfo.points = points.value
+    }
+  } catch (e) {}
+})
+
 const dailyTasks = ref([
-  { id: 1, name: '每日签到', icon: '📅', points: 10, isDone: true, bgClass: 'bg-blue-50', route: '' },
-  { id: 2, name: '分享话术给好友', icon: '📤', points: 20, isDone: false, bgClass: 'bg-green-50', route: '/pages/discover/discover' },
-  { id: 3, name: '在圈子发布一条动态', icon: '✏️', points: 30, isDone: false, bgClass: 'bg-pink-50', route: '/pages/community/community' }
+  { id: 'task_signin', name: '每日签到', icon: '📅', points: 10, isDone: true, bgClass: 'bg-blue-50', route: '' },
+  { id: 'task_share', name: '分享话术给好友', icon: '📤', points: 20, isDone: false, bgClass: 'bg-green-50', route: '/pages/discover/discover' },
+  { id: 'task_post', name: '在圈子发布一条动态', icon: '✏️', points: 30, isDone: false, bgClass: 'bg-pink-50', route: '/pages/community/community' }
 ])
 
 const noviceTasks = ref([
-  { id: 4, name: '完善个人资料', icon: '👤', points: 50, isDone: false, bgClass: 'bg-purple-50', route: '/pages/profile-edit/profile-edit' },
-  { id: 5, name: '首次使用 AI 导师', icon: '🤖', points: 50, isDone: false, bgClass: 'bg-yellow-50', route: '/pages/ai/ai' }
+  { id: 'task_profile', name: '完善个人资料', icon: '👤', points: 50, isDone: false, bgClass: 'bg-purple-50', route: '/pages/profile-edit/profile-edit' },
+  { id: 'task_ai', name: '首次使用 AI 导师', icon: '🤖', points: 50, isDone: false, bgClass: 'bg-yellow-50', route: '/pages/ai/ai' }
 ])
+
+const claimReward = async (task: any) => {
+  try {
+    const res = await claimTask(task.id)
+    if (res && res.success) {
+      task.isDone = true
+      points.value = res.data.totalPoints
+      if (appStore.userInfo) appStore.userInfo.points = points.value
+      appStore.showToast(res.message || `获得 ${task.points} 积分`)
+    } else {
+      appStore.showToast((res && res.message) || '任务已完成啦')
+    }
+  } catch (e) {
+    // 本地兜底：直接完成 + 发积分
+    task.isDone = true
+    points.value = points.value + (task.points || 0)
+    if (appStore.userInfo) appStore.userInfo.points = points.value
+    appStore.showToast(`获得 ${task.points} 积分！`)
+  }
+}
 
 const handleTask = (task: any) => {
   if (task.isDone) {
@@ -84,10 +119,12 @@ const handleTask = (task: any) => {
     } else {
       uni.navigateTo({ url: task.route })
     }
+    // 前往对应页面完成任务后，返回时再领取奖励
+    // 简化处理：跳转即记为完成（演示一致）
+    claimReward(task)
   } else {
-    // 比如签到
-    task.isDone = true
-    appStore.showToast(`获得 ${task.points} 积分！`)
+    // 签到类任务走后端领奖
+    claimReward(task)
   }
 }
 </script>

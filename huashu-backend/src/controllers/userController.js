@@ -176,6 +176,47 @@ exports.updateUserRole = async (req, res) => {
 };
 
 /**
+ * 完成任务领积分（积分经济上游：每日/新手任务）
+ */
+const TASK_POINTS_MAP = { task_signin: 10, task_share: 20, task_post: 30, task_profile: 50, task_ai: 50 };
+
+exports.claimTask = async (req, res) => {
+  try {
+    const { taskId } = req.body;
+    const points = TASK_POINTS_MAP[taskId];
+    if (!points) return res.status(400).json({ code: 400, message: "任务不存在" });
+
+    const userId = req.user.userId;
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) return res.status(404).json({ code: 404, message: "用户不存在" });
+
+    // 去重：记录该任务已完成，防止重复领取
+    const done = user.completedTasks ? JSON.parse(user.completedTasks) : [];
+    if (Array.isArray(done) && done.includes(taskId)) {
+      return res.json({ code: 200, success: false, message: "任务已完成，不能重复领取" });
+    }
+
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: {
+        points: { increment: points },
+        completedTasks: JSON.stringify([...(done.filter(Boolean)), taskId])
+      }
+    });
+
+    res.json({
+      code: 200,
+      success: true,
+      message: `获得 ${points} 积分`,
+      data: { taskId, earnedPoints: points, totalPoints: updatedUser.points }
+    });
+  } catch (error) {
+    console.error('领任务奖励失败:', error);
+    res.status(500).json({ code: 500, message: "领取失败，请稍后重试" });
+  }
+};
+
+/**
  * 每日盲盒：消耗 50 积分，随机抽取奖励
  */
 exports.openBlindBox = async (req, res) => {

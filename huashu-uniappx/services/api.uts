@@ -160,6 +160,16 @@ export async function openBlindBox(): Promise<any> {
     return res.data
 }
 
+// 完成任务领积分
+export async function claimTask(taskId: string): Promise<any> {
+    const res = await request<any>({
+        url: '/user/claim-task',
+        method: 'POST',
+        data: { taskId }
+    })
+    return res.data
+}
+
 // AI API
 export async function chatWithAI(prompt: string): Promise<any> {
     const res = await request<any>({

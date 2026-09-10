@@ -125,6 +125,7 @@ model User {
   // 每日打卡与盲盒系统字段
   lastSignInAt       DateTime?
   continuousSignDays Int       @default(0)
+  completedTasks     String?   // 已完成任务 id 数组 JSON（积分任务去重）
   vipExpireAt        DateTime? // 增加 VIP 过期时间字段，方便积分兑换
 
   // ===== 生活方式/情感增值（恋爱人格·装扮·纪念日）=====

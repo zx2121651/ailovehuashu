@@ -354,6 +354,28 @@ export async function exchangeVip(pointsToUse, daysToGet) {
   return data;
 }
 
+// 每日盲盒：消耗 50 积分开盒
+export async function openBlindBox() {
+  try {
+    const data = await request('/user/open-blindbox', { method: 'POST' });
+    return data;
+  } catch (error) {
+    console.warn('Backend unavailable, mock blind box:', error);
+    const rewards = ['高情商话术包 x1', '50 积分回流', '导师咨询优惠券', '神级开场白 x3'];
+    return {
+      code: 200,
+      data: {
+        prize: rewards[Math.floor(Math.random() * rewards.length)],
+        earnedPoints: 0,
+        cost: 50,
+        vipGranted: false,
+        totalPoints: 810,
+        blindBox: null
+      }
+    };
+  }
+}
+
 // ==========================================
 // 生活方式 / 情感增值（恋爱人格·装扮·礼物·纪念日）
 // ==========================================
