@@ -57,19 +57,19 @@ router.get('/orders', adminAuth, requirePermission(PERMISSIONS.ORDER_VIEW), orde
 
 // --- Notifications Management ---
 router.get('/notifications', adminAuth, notificationController.getNotifications);
-router.post('/notifications', adminAuth, requireSuperAdmin, notificationController.createNotification);
-router.delete('/notifications/:id', adminAuth, requireSuperAdmin, notificationController.deleteNotification);
+router.post('/notifications', adminAuth, requirePermission(PERMISSIONS.OPS_MANAGE), notificationController.createNotification);
+router.delete('/notifications/:id', adminAuth, requirePermission(PERMISSIONS.OPS_MANAGE), notificationController.deleteNotification);
 
 // --- Banners Management ---
-router.get('/banners', adminAuth, requireSuperAdmin, bannerController.getBanners);
-router.post('/banners', adminAuth, requireSuperAdmin, bannerController.createBanner);
-router.put('/banners/:id', adminAuth, requireSuperAdmin, bannerController.updateBanner);
-router.delete('/banners/:id', adminAuth, requireSuperAdmin, bannerController.deleteBanner);
+router.get('/banners', adminAuth, bannerController.getBanners);
+router.post('/banners', adminAuth, requirePermission(PERMISSIONS.OPS_MANAGE), bannerController.createBanner);
+router.put('/banners/:id', adminAuth, requirePermission(PERMISSIONS.OPS_MANAGE), bannerController.updateBanner);
+router.delete('/banners/:id', adminAuth, requirePermission(PERMISSIONS.OPS_MANAGE), bannerController.deleteBanner);
 
 // --- Feedbacks Management ---
 router.get('/feedbacks', adminAuth, feedbackController.getFeedbacks);
-router.put('/feedbacks/:id/reply', adminAuth, feedbackController.replyFeedback);
-router.delete('/feedbacks/:id', adminAuth, requireSuperAdmin, feedbackController.deleteFeedback);
+router.put('/feedbacks/:id/reply', adminAuth, requirePermission(PERMISSIONS.OPS_MANAGE), feedbackController.replyFeedback);
+router.delete('/feedbacks/:id', adminAuth, requirePermission(PERMISSIONS.OPS_MANAGE), feedbackController.deleteFeedback);
 
 // --- Admins Management ---
 // 权限定义接口，需系统管理权限
@@ -89,76 +89,76 @@ router.put('/settings', adminAuth, requireSuperAdmin, settingController.updateSe
 // --- Course Management ---
 router.get('/courses', adminAuth, courseController.getCourses);
 router.get('/courses/:id', adminAuth, courseController.getCourseById);
-router.post('/courses', adminAuth, courseController.createCourse);
-router.put('/courses/:id', adminAuth, courseController.updateCourse);
-router.delete('/courses/:id', adminAuth, requireSuperAdmin, courseController.deleteCourse);
-router.patch('/courses/:id/recommend', adminAuth, requireSuperAdmin, courseController.toggleRecommended);
+router.post('/courses', adminAuth, requirePermission(PERMISSIONS.COURSE_CREATE), courseController.createCourse);
+router.put('/courses/:id', adminAuth, requirePermission(PERMISSIONS.COURSE_EDIT), courseController.updateCourse);
+router.delete('/courses/:id', adminAuth, requirePermission(PERMISSIONS.COURSE_DELETE), courseController.deleteCourse);
+router.patch('/courses/:id/recommend', adminAuth, requirePermission(PERMISSIONS.COURSE_EDIT), courseController.toggleRecommended);
 
 // 分销管理
 const commissionController = require('../controllers/admin/commissionController');
-router.get('/withdrawals', adminAuth, requireSuperAdmin, commissionController.getWithdrawals);
-router.post('/withdrawals/:id/review', adminAuth, requireSuperAdmin, commissionController.reviewWithdrawal);
-router.get('/commissions', adminAuth, requireSuperAdmin, commissionController.getAllCommissionLogs);
-router.get('/distributors', adminAuth, requireSuperAdmin, commissionController.getDistributors);
+router.get('/withdrawals', adminAuth, requirePermission(PERMISSIONS.COMMISSION_REVIEW), commissionController.getWithdrawals);
+router.post('/withdrawals/:id/review', adminAuth, requirePermission(PERMISSIONS.COMMISSION_REVIEW), commissionController.reviewWithdrawal);
+router.get('/commissions', adminAuth, requirePermission(PERMISSIONS.COMMISSION_REVIEW), commissionController.getAllCommissionLogs);
+router.get('/distributors', adminAuth, requirePermission(PERMISSIONS.COMMISSION_REVIEW), commissionController.getDistributors);
 
 // --- Comments Management ---
 router.get('/comments', adminAuth, commentAdminController.getComments);
-router.patch('/comments/:id/status', adminAuth, commentAdminController.updateCommentStatus);
-router.delete('/comments/:id', adminAuth, requireSuperAdmin, commentAdminController.deleteComment);
+router.patch('/comments/:id/status', adminAuth, requirePermission(PERMISSIONS.CONTENT_MODERATE), commentAdminController.updateCommentStatus);
+router.delete('/comments/:id', adminAuth, requirePermission(PERMISSIONS.CONTENT_MODERATE), commentAdminController.deleteComment);
 
 // --- Posts (Community) Management ---
 router.get('/posts', adminAuth, postAdminController.getPosts);
-router.post('/posts', adminAuth, postAdminController.createPost);
-router.put('/posts/:id', adminAuth, postAdminController.updatePost);
-router.patch('/posts/:id/status', adminAuth, postAdminController.updatePostStatus);
-router.delete('/posts/:id', adminAuth, requireSuperAdmin, postAdminController.deletePost);
+router.post('/posts', adminAuth, requirePermission(PERMISSIONS.CONTENT_CREATE), postAdminController.createPost);
+router.put('/posts/:id', adminAuth, requirePermission(PERMISSIONS.CONTENT_EDIT), postAdminController.updatePost);
+router.patch('/posts/:id/status', adminAuth, requirePermission(PERMISSIONS.CONTENT_MODERATE), postAdminController.updatePostStatus);
+router.delete('/posts/:id', adminAuth, requirePermission(PERMISSIONS.CONTENT_DELETE), postAdminController.deletePost);
 
 // 每日盲盒管理
 const blindBoxController = require('../controllers/admin/blindBoxController');
 router.get('/blind-box', adminAuth, blindBoxController.getAll);
-router.post('/blind-box', adminAuth, requireSuperAdmin, blindBoxController.create);
-router.put('/blind-box/:id', adminAuth, requireSuperAdmin, blindBoxController.update);
-router.delete('/blind-box/:id', adminAuth, requireSuperAdmin, blindBoxController.delete);
+router.post('/blind-box', adminAuth, requirePermission(PERMISSIONS.CONTENT_CREATE), blindBoxController.create);
+router.put('/blind-box/:id', adminAuth, requirePermission(PERMISSIONS.CONTENT_EDIT), blindBoxController.update);
+router.delete('/blind-box/:id', adminAuth, requirePermission(PERMISSIONS.CONTENT_DELETE), blindBoxController.delete);
 
 // --- Float Scripts ---
-router.get('/float-scripts', adminAuth, requireSuperAdmin, floatScriptController.adminGetFloatScripts);
-router.post('/float-scripts', adminAuth, requireSuperAdmin, floatScriptController.adminCreateFloatScript);
-router.put('/float-scripts/:id', adminAuth, requireSuperAdmin, floatScriptController.adminUpdateFloatScript);
-router.delete('/float-scripts/:id', adminAuth, requireSuperAdmin, floatScriptController.adminDeleteFloatScript);
+router.get('/float-scripts', adminAuth, requirePermission(PERMISSIONS.OPS_MANAGE), floatScriptController.adminGetFloatScripts);
+router.post('/float-scripts', adminAuth, requirePermission(PERMISSIONS.CONTENT_CREATE), floatScriptController.adminCreateFloatScript);
+router.put('/float-scripts/:id', adminAuth, requirePermission(PERMISSIONS.CONTENT_EDIT), floatScriptController.adminUpdateFloatScript);
+router.delete('/float-scripts/:id', adminAuth, requirePermission(PERMISSIONS.CONTENT_DELETE), floatScriptController.adminDeleteFloatScript);
 
 // --- Script Tags Management ---
 const scriptTagController = require('../controllers/admin/scriptTagController');
 // 排序标签管理
 router.get('/script-sort-tabs', adminAuth, scriptTagController.getScriptSortTabs);
-router.post('/script-sort-tabs', adminAuth, requireSuperAdmin, scriptTagController.createScriptSortTab);
-router.put('/script-sort-tabs/:id', adminAuth, requireSuperAdmin, scriptTagController.updateScriptSortTab);
-router.delete('/script-sort-tabs/:id', adminAuth, requireSuperAdmin, scriptTagController.deleteScriptSortTab);
+router.post('/script-sort-tabs', adminAuth, requirePermission(PERMISSIONS.CONTENT_CREATE), scriptTagController.createScriptSortTab);
+router.put('/script-sort-tabs/:id', adminAuth, requirePermission(PERMISSIONS.CONTENT_EDIT), scriptTagController.updateScriptSortTab);
+router.delete('/script-sort-tabs/:id', adminAuth, requirePermission(PERMISSIONS.CONTENT_DELETE), scriptTagController.deleteScriptSortTab);
 // 分类标签管理
 router.get('/category-tags', adminAuth, scriptTagController.getAllCategoryTags);
 router.get('/categories/:categoryId/tags', adminAuth, scriptTagController.getCategoryTags);
-router.post('/category-tags', adminAuth, requireSuperAdmin, scriptTagController.createCategoryTag);
-router.put('/category-tags/:id', adminAuth, requireSuperAdmin, scriptTagController.updateCategoryTag);
-router.delete('/category-tags/:id', adminAuth, requireSuperAdmin, scriptTagController.deleteCategoryTag);
+router.post('/category-tags', adminAuth, requirePermission(PERMISSIONS.CONTENT_CREATE), scriptTagController.createCategoryTag);
+router.put('/category-tags/:id', adminAuth, requirePermission(PERMISSIONS.CONTENT_EDIT), scriptTagController.updateCategoryTag);
+router.delete('/category-tags/:id', adminAuth, requirePermission(PERMISSIONS.CONTENT_DELETE), scriptTagController.deleteCategoryTag);
 
 // --- Interactive Stories Management ---
 const storyAdminController = require('../controllers/admin/storyAdminController');
 
 // 剧本管理
-router.post('/interactive-stories/generate', adminAuth, requireSuperAdmin, storyAdminController.generateStoryWithAI);
+router.post('/interactive-stories/generate', adminAuth, requirePermission(PERMISSIONS.STORY_CREATE), storyAdminController.generateStoryWithAI);
 router.get('/interactive-stories', adminAuth, storyAdminController.getStories);
-router.post('/interactive-stories', adminAuth, requireSuperAdmin, storyAdminController.createStory);
-router.put('/interactive-stories/:id', adminAuth, requireSuperAdmin, storyAdminController.updateStory);
-router.delete('/interactive-stories/:id', adminAuth, requireSuperAdmin, storyAdminController.deleteStory);
+router.post('/interactive-stories', adminAuth, requirePermission(PERMISSIONS.STORY_CREATE), storyAdminController.createStory);
+router.put('/interactive-stories/:id', adminAuth, requirePermission(PERMISSIONS.STORY_EDIT), storyAdminController.updateStory);
+router.delete('/interactive-stories/:id', adminAuth, requirePermission(PERMISSIONS.STORY_DELETE), storyAdminController.deleteStory);
 
 // 节点管理
 router.get('/interactive-story-nodes', adminAuth, storyAdminController.getNodes);
-router.post('/interactive-story-nodes', adminAuth, requireSuperAdmin, storyAdminController.createNode);
-router.put('/interactive-story-nodes/:id', adminAuth, requireSuperAdmin, storyAdminController.updateNode);
-router.delete('/interactive-story-nodes/:id', adminAuth, requireSuperAdmin, storyAdminController.deleteNode);
+router.post('/interactive-story-nodes', adminAuth, requirePermission(PERMISSIONS.STORY_EDIT), storyAdminController.createNode);
+router.put('/interactive-story-nodes/:id', adminAuth, requirePermission(PERMISSIONS.STORY_EDIT), storyAdminController.updateNode);
+router.delete('/interactive-story-nodes/:id', adminAuth, requirePermission(PERMISSIONS.STORY_DELETE), storyAdminController.deleteNode);
 
 // 选项管理
-router.post('/interactive-story-choices', adminAuth, requireSuperAdmin, storyAdminController.createChoice);
-router.put('/interactive-story-choices/:id', adminAuth, requireSuperAdmin, storyAdminController.updateChoice);
-router.delete('/interactive-story-choices/:id', adminAuth, requireSuperAdmin, storyAdminController.deleteChoice);
+router.post('/interactive-story-choices', adminAuth, requirePermission(PERMISSIONS.STORY_EDIT), storyAdminController.createChoice);
+router.put('/interactive-story-choices/:id', adminAuth, requirePermission(PERMISSIONS.STORY_EDIT), storyAdminController.updateChoice);
+router.delete('/interactive-story-choices/:id', adminAuth, requirePermission(PERMISSIONS.STORY_DELETE), storyAdminController.deleteChoice);
 
 module.exports = router;
